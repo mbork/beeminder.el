@@ -1,0 +1,7 @@
+What to do?
+
+* DONE Get goals: remember them in some variable
+* DONE submit datapoint
+* TODO sort goals according to various criteria
+* TODO Display goals: make a (configurable) list of beeminder goals
+* TODO goals mode: a major mode displaying all goals
