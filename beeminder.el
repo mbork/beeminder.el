@@ -139,26 +139,6 @@ textual representation of a goal."
   (ewoc-create #'beeminder-goal-pp
 	       (format "Beeminder goals for user %s\n" beeminder-username) ""))
 
-;; (defun ewoc-enter-sorted (node ewoc predicate)
-;;   "Insert NODE into EWOC at the right position, using PREDICATE as
-;; a sorting function."
-;;   (let (previous (current (ewoc-nth ewoc 0)))
-;;     (if (or (null current)
-;; 	    (funcall predicate node (ewoc-data current)))
-;; 	(ewoc-enter-first ewoc node)
-;;       (while (not (funcall predicate node (ewoc-data current)))
-;; 	(setq previous current
-;; 	      current (ewoc-next ewoc current)))
-;;       (ewoc-enter-after ewoc previous node))))
-
-;; (defun ewoc-sort (ewoc predicate)
-;;   "Sort an EWOC, using PREDICATE as a comparing function.  PREDICATE,
-;; when called with two data nodes from EWOC, should return non-nil iff
-;; they are in the right order.  Works by creating a second, temporary
-;; EWOC and inserting nodes to it one by one in the right positions."
-;;   (let ((ewoc-temp (ewoc-create #'insert "header!" "footer!")))
-;;     (ewoc-map #'ewoc-enter-sorted ewoc ewoc-temp predicate)
-;;     (setq ewoc ewoc-temp)))
 
 (defun beeminder-goal-list ()
   "Switch to a buffer containing the list of Beeminder goals."
@@ -173,9 +153,6 @@ textual representation of a goal."
     (ewoc-refresh beeminder-goals-ewoc))
   (goto-char (point-min))
   (beeminder-mode)
-  ;; (ewoc-nth beeminder-goals-ewoc 0)
-  ;; (seq-doseq (goal beeminder-goals)
-  ;;   (beeminder-goal-pp goal))
   )
 
 ;; Beeminder mode
@@ -190,13 +167,4 @@ textual representation of a goal."
 ;; pledge: float (6)
 ;; runits: string (one character) (1)
 ;; limsum: string (what remains to do) (16)
-
-;; Beeminder mode
-
-;; (define-derived-mode beeminder-mode special-mode "Beeminder"
-;;   "A mode for the (unofficial) Emacs Beeminder client.
- 
-;; TODO: fill in the docs"
-;;   ;;  TODO: mode definitions?
-;;   )
 
