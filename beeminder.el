@@ -131,7 +131,7 @@ textual representation of a goal."
   "Face for displaying Beeminder goals in green.")
 
 (defface beeminder-blue '((t :foreground "#008"))
-  "Face for disppaying Beeminder goals in blue.")
+  "Face for displaying Beeminder goals in blue.")
 
 (defface beeminder-yellow '((t :foreground "#880"))
   "Face for displaying Beeminder goals in green.")
