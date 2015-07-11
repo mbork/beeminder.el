@@ -6,6 +6,7 @@
 (require 'ewoc)
 (require 'seq)
 
+;; Settings
 (defcustom beeminder-username ""
   "User name for the Beeminder account.")
 
@@ -23,6 +24,9 @@ https://www.beeminder.com/api/v1/auth_token.json.")
 (defcustom beeminder-default-timeout 4
   "Default timeout for HTTP requests sent over to
 beeminder.com.")
+
+
+;; API interface
 
 (defun beeminder-create-api-url (string)
   "Prepend the Beeminder site address and the username to the
@@ -49,6 +53,8 @@ the auth token."
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
 
+;; API calls (currently synchronous only)
+
 (defun beeminder-get-goals ()
   "Get all the user's Beeminder goals.  The request returns
 a vector of sexps - each sexp describes one goal."
@@ -65,6 +71,8 @@ a vector of sexps - each sexp describes one goal."
 					  beeminder-auth-token
 					  amount
 					  (or comment "entered+by+beeminder.el")))))
+
+;; Displaying goals
 
 (defvar beeminder-human-time-use-weekday t
   "Whether BEEMINDER-HUMAN-TIME uses weekdays or number of days from
