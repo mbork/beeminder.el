@@ -147,6 +147,13 @@ textual representation of a goal."
   (ewoc-create #'beeminder-goal-pp
 	       (format "Beeminder goals for user %s\n" beeminder-username) ""))
 
+(defun beeminder-recreate-ewoc ()
+  "Recreate Beeminder EWOC from the goal list."
+  (ewoc-filter beeminder-goals-ewoc #'ignore)
+  (seq-doseq (goal beeminder-goals)
+    (ewoc-enter-last beeminder-goals-ewoc goal))
+  (ewoc-refresh beeminder-goals-ewoc)
+  (goto-char (point-min)))
 
 (defun beeminder-goal-list ()
   "Switch to a buffer containing the list of Beeminder goals."
@@ -156,12 +163,8 @@ textual representation of a goal."
   (let ((inhibit-read-only t))
     (erase-buffer)
     (setq beeminder-goals-ewoc (beeminder-create-ewoc))
-    (seq-doseq (goal beeminder-goals)
-      (ewoc-enter-last beeminder-goals-ewoc goal))
-    (ewoc-refresh beeminder-goals-ewoc))
-  (goto-char (point-min))
-  (beeminder-mode)
-  )
+    (beeminder-recreate-ewoc))
+  (beeminder-mode))
 
 ;; Beeminder mode
 (define-derived-mode beeminder-mode special-mode "Beeminder"
