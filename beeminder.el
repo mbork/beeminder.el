@@ -155,7 +155,7 @@ textual representation of a goal."
   (ewoc-refresh beeminder-goals-ewoc)
   (goto-char (point-min)))
 
-(defun beeminder-goal-list ()
+(defun beeminder-list-goals ()
   "Switch to a buffer containing the list of Beeminder goals."
   (interactive)
   (switch-to-buffer "*Beemider goals*")
