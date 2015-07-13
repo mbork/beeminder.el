@@ -170,6 +170,26 @@ textual representation of a goal."
 (define-derived-mode beeminder-mode special-mode "Beeminder"
   "A major mode for a buffer with Beeminder goal list.")
 
+(defun beeminder-sort-by-field (field pred)
+  "Sort entries in beeminder-goals by deadline."
+  (setq beeminder-goals
+	(sort beeminder-goals
+	      (lambda (x y) (funcall pred (cdr (assoc field x)) (cdr (assoc field y)))))))
+
+(defun beeminder-sort-by-deadline ()
+  "Sort entries in beeminder-goals by deadline."
+  (interactive)
+  (beeminder-sort-by-field 'losedate #'<)
+  (beeminder-recreate-ewoc))
+
+(defun beeminder-sort-by-midnight ()
+  "Sort entries in beeminder-goals by deadline."
+  (interactive)
+  (beeminder-sort-by-field 'deadline #'<)
+  (beeminder-recreate-ewoc))
+
+(define-key beeminder-mode-map "d" #'beeminder-sort-by-deadline)
+(define-key beeminder-mode-map "m" #'beeminder-sort-by-midnight)
 
 ;; slug: string (12)
 ;; title: string (12)
