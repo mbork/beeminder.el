@@ -118,7 +118,7 @@ textual representation of a goal."
 			      (cdr (assoc 'rate goal))
 			      (cdr (assoc 'runits goal))
 			      (beeminder-human-time (seconds-to-time
-						     (cdr (assoc 'losedate goal))))
+						     (1+ (cdr (assoc 'losedate goal)))))
 			      (cdr (assoc 'limsum goal))
 			      (cdr (assoc 'pledge goal))
 			      (cdr (assoc 'title goal)))
