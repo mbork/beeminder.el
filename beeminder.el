@@ -71,6 +71,21 @@ a vector of sexps - each sexp describes one goal."
 					  beeminder-auth-token
 					  amount
 					  (or comment "entered+by+beeminder.el")))))
+;; Sorting EWOC
+
+(defun true (&rest args)
+  "Always return t."
+  t)
+
+(defun ewoc-sort (ewoc pred)
+  "Sort EWOC, comparing its nodes using PRED.  Since the author of
+EWOC didn't really care for sorting, and neither do I, we first
+collect the nodes into a list, sort it using Elisp's sort, and then
+recreate the EWOC."
+  (let ((ewoc-list (ewoc-collect ewoc #'true)))
+    (ewoc-filter ewoc #'ignore)
+    (mapcar (lambda (node) (ewoc-enter-last ewoc node))
+	    (sort ewoc-list pred))))
 
 ;; Displaying goals
 
