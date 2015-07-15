@@ -205,17 +205,41 @@ to compare them."
   (ewoc-refresh beeminder-goals-ewoc)
   (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0)))
 
-(defun beeminder-sort-by-deadline ()
-  "Sort entries in beeminder-goals by deadline."
+(defun beeminder-sort-by-losedate ()
+  "Sort entries in beeminder-goals by losedate."
   (interactive)
   (beeminder-sort-by-field 'losedate #'<))
 
-(defun beeminder-sort-by-midnight ()
-  "Sort entries in beeminder-goals by deadline."
-  (interactive)
-  (beeminder-sort-by-field 'deadline #'<))
+(defun beeminder-seconds-to-from-midnight (time)
+  "Convert TIME to seconds from midnight.  If after 6:00, convert to
+seconds to midnight (with a minus sign)."
+  (let* ((decoded-time (decode-time time))
+	 (seconds (+ (car decoded-time)
+		     (* 60 (cadr decoded-time))
+		     (* 3600 (caddr decoded-time)))))
+    (if (> seconds (* 6 60 60))
+	(- seconds (* 24 60 60))
+      seconds)))
 
-(define-key beeminder-mode-map "d" #'beeminder-sort-by-deadline)
+(defun beeminder-earlier-midnight (sec1 sec2 time)
+  "Compare SEC1 and SEC2, as midnight times, taking into account
+the TIME (expressed as the result of calling
+`beeminder-seconds-to-from-midnight'.  If SEC1 < SEC2 < TIME,
+return t.  If TIME < SEC1 < SEC2, return t.  If SEC2 < TIME <
+SEC1, return t.  In all other cases, return nil."
+  (or (< sec1 sec2 time)
+      (< time sec1 sec2)
+      (< sec2 time sec1)))
+
+(defun beeminder-sort-by-midnight ()
+  "Sort entries in beeminder-goals by their midnight, taking current time into consideration."
+  (interactive)
+  (beeminder-sort-by-field
+   'deadline
+   (lambda (x y)
+     (beeminder-earlier-midnight x y (beeminder-seconds-to-from-midnight (current-time))))))
+
+(define-key beeminder-mode-map "l" #'beeminder-sort-by-losedate)
 (define-key beeminder-mode-map "m" #'beeminder-sort-by-midnight)
 
 
