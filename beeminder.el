@@ -6,6 +6,7 @@
 (require 'ewoc)
 (require 'seq)
 
+
 ;; Settings
 (defcustom beeminder-username ""
   "User name for the Beeminder account.")
@@ -53,6 +54,7 @@ the auth token."
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
 
+
 ;; API calls (currently synchronous only)
 
 (defun beeminder-get-goals ()
@@ -71,6 +73,8 @@ a vector of sexps - each sexp describes one goal."
 					  beeminder-auth-token
 					  amount
 					  (or comment "entered+by+beeminder.el")))))
+
+
 ;; Sorting EWOC
 
 (defun true (&rest args)
@@ -86,6 +90,7 @@ recreate the EWOC."
     (ewoc-filter ewoc #'ignore)
     (mapcar (lambda (node) (ewoc-enter-last ewoc node))
 	    (sort ewoc-list pred))))
+
 
 ;; Displaying goals
 
@@ -141,7 +146,9 @@ textual representation of a goal."
 				       (* (cdr (assoc 'yaw goal))
 					  (beeminder-normalize-lane (cdr (assoc 'lane goal))))))))
 
+
 ;; Faces for goals
+
 (defface beeminder-green '((t :foreground "#080"))
   "Face for displaying Beeminder goals in green.")
 
@@ -154,7 +161,9 @@ textual representation of a goal."
 (defface beeminder-red '((t :foreground "#800"))
   "Face for displaying Beeminder goals in red.")
 
-;; EWOC
+
+;; Beeminder EWOC
+
 (defvar beeminder-goals-ewoc nil)
 
 (defun beeminder-create-ewoc ()
@@ -181,15 +190,11 @@ textual representation of a goal."
     (beeminder-recreate-ewoc))
   (beeminder-mode))
 
+
 ;; Beeminder mode
+
 (define-derived-mode beeminder-mode special-mode "Beeminder"
   "A major mode for a buffer with Beeminder goal list.")
-
-;; (defun beeminder-sort-by-field (field pred)
-;;   "Sort entries in beeminder-goals by deadline."
-;;   (setq beeminder-goals
-;; 	(sort beeminder-goals
-;; 	      (lambda (x y) (funcall pred (cdr (assoc field x)) (cdr (assoc field y)))))))
 
 (defun beeminder-sort-by-field (field predicate)
   "Sort entries in beeminder-goals-ewoc by FIELD, using PREDICATE
@@ -212,6 +217,8 @@ to compare them."
 
 (define-key beeminder-mode-map "d" #'beeminder-sort-by-deadline)
 (define-key beeminder-mode-map "m" #'beeminder-sort-by-midnight)
+
+
 
 ;; slug: string (12)
 ;; title: string (12)
