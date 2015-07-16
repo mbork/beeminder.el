@@ -182,7 +182,7 @@ textual representation of a goal."
 (defun beeminder-list-goals ()
   "Switch to a buffer containing the list of Beeminder goals."
   (interactive)
-  (switch-to-buffer "*Beemider goals*")
+  (switch-to-buffer "*Beeminder goals*")
   (buffer-disable-undo)
   (let ((inhibit-read-only t))
     (erase-buffer)
