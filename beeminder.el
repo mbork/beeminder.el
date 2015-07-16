@@ -166,16 +166,30 @@ textual representation of a goal."
 
 (defvar beeminder-goals-ewoc nil)
 
+(defvar beeminder-sort-criterion "losedate"
+  "Current goals sorting criterion.")
+
+(defun beeminder-ewoc-header ()
+  "Generate header for the Beeminder EWOC"
+  (concat (format "Beeminder goals for user %s"
+		  beeminder-username)
+	  (propertize (concat (format " (sorted by %s"
+				      beeminder-sort-criterion)
+			      ")\n")
+		      'face 'shadow)))
+
 (defun beeminder-create-ewoc ()
   "Return a newly created EWOC for Beeminder goals."
   (ewoc-create #'beeminder-goal-pp
-	       (format "Beeminder goals for user %s\n" beeminder-username) ""))
+	       (beeminder-ewoc-header)""))
 
 (defun beeminder-recreate-ewoc ()
   "Recreate Beeminder EWOC from the goal list."
   (ewoc-filter beeminder-goals-ewoc #'ignore)
   (seq-doseq (goal beeminder-goals)
     (ewoc-enter-last beeminder-goals-ewoc goal))
+  (setq beeminder-sort-criterion "losedate")
+  (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
   (ewoc-refresh beeminder-goals-ewoc)
   (goto-char (point-min)))
 
@@ -208,11 +222,13 @@ to compare them."
 							 (cdr (assoc field x))
 							 (cdr (assoc field y)))))
   (ewoc-refresh beeminder-goals-ewoc)
+  (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
   (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0)))
 
 (defun beeminder-sort-by-losedate ()
   "Sort entries in beeminder-goals by losedate."
   (interactive)
+  (setq beeminder-sort-criterion "losedate")
   (beeminder-sort-by-field 'losedate #'<))
 
 (defun beeminder-seconds-to-from-midnight (time)
@@ -239,6 +255,7 @@ SEC1, return t.  In all other cases, return nil."
 (defun beeminder-sort-by-midnight ()
   "Sort entries in beeminder-goals by their midnight, taking current time into consideration."
   (interactive)
+  (setq beeminder-sort-criterion "midnight")
   (beeminder-sort-by-field
    'deadline
    (lambda (x y)
