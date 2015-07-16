@@ -122,7 +122,7 @@ format:
 	  (t (format-time-string "%Y-%m-%d" time)))))
 
 (defconst beeminder-lanes-to-faces-plist
-  '(-2 'beeminder-red -1 'beeminder-yellow 1 'beeminder-blue 2 'beeminder-green)
+  '(-2 beeminder-red -1 beeminder-yellow 1 beeminder-blue 2 beeminder-green)
   "Plist mapping the (normalized) value of lane to goal colors.")
 
 (defun beeminder-normalize-lane (lane)
