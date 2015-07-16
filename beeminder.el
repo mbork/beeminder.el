@@ -248,6 +248,44 @@ SEC1, return t.  In all other cases, return nil."
 (define-key beeminder-mode-map "m" #'beeminder-sort-by-midnight)
 
 
+;; Refreshing goals
+(defcustom beeminder-refresh-ask-for-download-if-after-losedate t
+  "If t, ask for downloading the goal list from the server if the
+earliest losedate already passed when refreshing.")
+
+(defcustom beeminder-refresh-ask-for-download-interval (* 24 60 60)
+  "If that many seconds passed after last gownloading of the goal list
+from the server, ask for downloading them again when refreshing.  If
+0, never do it.")
+
+(defvar beeminder-last-goal-download-time (seconds-to-time 0)
+  "Time of the last downloading of goals from the server.")
+
+(defun beeminder-refresh-goals-list (&optional get-goals)
+  "Refresh goals list.  This cancels any filtering and sorting,
+returning to the default sorting (by losedate).  It works by
+recreating the EWOC from the goal list.  If called with a prefix
+argument, reload the goals from the server."
+  (interactive "P")
+  (when (or get-goals
+	    (and
+	     (or (and
+		  (not (zerop beeminder-refresh-ask-for-download-interval))
+		  (>= (time-to-seconds (beeminder-current-time))
+		      (+ (time-to-seconds beeminder-last-goal-download-time)
+			 beeminder-refresh-ask-for-download-interval)))
+		 (and beeminder-refresh-ask-for-download-if-after-losedate
+		      (> (time-to-seconds (beeminder-current-time))
+			 (cdr (assoc 'losedate (elt beeminder-goals 0))))))
+	     (y-or-n-p "Reload Beeminder goals from the server? ")))
+    (message "Beeminder goals downloading...")
+    (beeminder-get-goals)
+    (message "Beeminder goals downloading...  Done.")
+    (setf beeminder-last-goal-download-time (beeminder-current-time)))
+  (beeminder-recreate-ewoc))
+
+(define-key beeminder-mode-map "g" #'beeminder-refresh-goals-list)
+
 
 ;; slug: string (12)
 ;; title: string (12)
