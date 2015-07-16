@@ -110,7 +110,7 @@ format:
   a number of days (depending on BEEMINDER-HUMAN-TIME-USE-WEEKDAY) and
   the time;
 - for later times, iso date without time."
-  (let ((delta (- (time-to-days time) (time-to-days (current-time)))))
+  (let ((delta (- (time-to-days time) (time-to-days (beeminder-current-time)))))
     (cond ((zerop delta) (format-time-string "     %R" time))
 	  ((= 1 delta) (concat " " beeminder-tomorrow-code
 			       (format-time-string " %R" time)))
@@ -191,6 +191,11 @@ textual representation of a goal."
   (beeminder-mode))
 
 
+;; Current time function
+
+(defalias 'beeminder-current-time 'current-time
+  "An alias for current-time, useful for testing/debugging.")
+
 ;; Beeminder mode
 
 (define-derived-mode beeminder-mode special-mode "Beeminder"
@@ -237,7 +242,7 @@ SEC1, return t.  In all other cases, return nil."
   (beeminder-sort-by-field
    'deadline
    (lambda (x y)
-     (beeminder-earlier-midnight x y (beeminder-seconds-to-from-midnight (current-time))))))
+     (beeminder-earlier-midnight x y (beeminder-seconds-to-from-midnight (beeminder-current-time))))))
 
 (define-key beeminder-mode-map "l" #'beeminder-sort-by-losedate)
 (define-key beeminder-mode-map "m" #'beeminder-sort-by-midnight)
