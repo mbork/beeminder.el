@@ -215,12 +215,13 @@ textual representation of a goal."
 (define-derived-mode beeminder-mode special-mode "Beeminder"
   "A major mode for a buffer with Beeminder goal list.")
 
-(defun beeminder-sort-by-field (field predicate)
+(defun beeminder-sort-by-field (field predicate info)
   "Sort entries in beeminder-goals-ewoc by FIELD, using PREDICATE
-to compare them."
+to compare them and displaying INFO."
   (ewoc-sort beeminder-goals-ewoc (lambda (x y) (funcall predicate
 							 (cdr (assoc field x))
 							 (cdr (assoc field y)))))
+  (setq beeminder-sort-criterion info)
   (ewoc-refresh beeminder-goals-ewoc)
   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
   (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0)))
@@ -228,8 +229,7 @@ to compare them."
 (defun beeminder-sort-by-losedate ()
   "Sort entries in beeminder-goals by losedate."
   (interactive)
-  (setq beeminder-sort-criterion "losedate")
-  (beeminder-sort-by-field 'losedate #'<))
+  (beeminder-sort-by-field 'losedate #'< "losedate"))
 
 (defun beeminder-seconds-to-from-midnight (time)
   "Convert TIME to seconds from midnight.  If after 6:00, convert to
@@ -255,11 +255,13 @@ SEC1, return t.  In all other cases, return nil."
 (defun beeminder-sort-by-midnight ()
   "Sort entries in beeminder-goals by their midnight, taking current time into consideration."
   (interactive)
-  (setq beeminder-sort-criterion "midnight")
   (beeminder-sort-by-field
    'deadline
    (lambda (x y)
-     (beeminder-earlier-midnight x y (beeminder-seconds-to-from-midnight (beeminder-current-time))))))
+     (beeminder-earlier-midnight
+      x y (beeminder-seconds-to-from-midnight
+	   (beeminder-current-time))))
+    "midnight"))
 
 (define-key beeminder-mode-map "l" #'beeminder-sort-by-losedate)
 (define-key beeminder-mode-map "m" #'beeminder-sort-by-midnight)
