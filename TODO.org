@@ -2,6 +2,20 @@ What to do?
 
 * DONE Get goals: remember them in some variable
 * DONE submit datapoint
-* TODO sort goals according to various criteria
-* TODO Display goals: make a (configurable) list of beeminder goals
-* TODO goals mode: a major mode displaying all goals
+* DONE sort goals according to various criteria
+* DONE Display goals: make a (configurable) list of beeminder goals
+* DONE goals mode: a major mode displaying all goals
+* TODO beeminder-mode-map
+- C-k: delete goal (for display only)
+- C-u C-k: delete this and all subsequent goals
+- g: refresh
+- C-u g: download goals and refresh
+- l: sort by losedate
+- m: sort by midnight
+- RET: submit data (ask for amount; by default - 1; with prefix arg - this much)
+- h: datapoints (h as in history)
+- d: road dial
+- r: edit road
+* TODO temporary removing of goals
+* TODO configurable midnight
+* DONE refresh should suggest reloading if past at least one deadline
