@@ -271,6 +271,11 @@ textual representation of a goal."
 (defalias 'beeminder-current-time 'current-time
   "An alias for current-time, useful for testing/debugging.")
 
+
+;; Sorting
+
+(defvar beeminder-current-sorting-setting (list 'losedate #'< "losedate"))
+
 (defun beeminder-sort-by-field (field predicate info)
   "Sort entries in beeminder-goals-ewoc by FIELD, using PREDICATE
 to compare them and displaying INFO."
@@ -280,7 +285,8 @@ to compare them and displaying INFO."
   (setq beeminder-sort-criterion info)
   (ewoc-refresh beeminder-goals-ewoc)
   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
-  (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0)))
+  (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0))
+  (setq beeminder-current-sorting-setting (list field predicate info)))
 
 (defun beeminder-sort-by-losedate ()
   "Sort entries in beeminder-goals by losedate."
@@ -337,8 +343,7 @@ from the server, ask for downloading them again when refreshing.  If
   "Time of the last downloading of goals from the server.")
 
 (defun beeminder-refresh-goals-list (&optional get-goals)
-  "Refresh goals list.  This cancels any filtering and sorting,
-returning to the default sorting (by losedate).  It works by
+  "Refresh goals list, applying the last sort.  It works by
 recreating the EWOC from the goal list.  If called with a prefix
 argument, reload the goals from the server."
   (interactive "P")
@@ -357,7 +362,8 @@ argument, reload the goals from the server."
     (beeminder-get-goals)
     (message "Beeminder goals downloading...  Done.")
     (setf beeminder-last-goal-download-time (beeminder-current-time)))
-  (beeminder-recreate-ewoc))
+  (beeminder-recreate-ewoc)
+  (apply #'beeminder-sort-by-field beeminder-current-sorting-setting))
 
 (define-key beeminder-mode-map "g" #'beeminder-refresh-goals-list)
 
