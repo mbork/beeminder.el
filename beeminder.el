@@ -27,6 +27,12 @@ https://www.beeminder.com/api/v1/auth_token.json.")
 beeminder.com.")
 
 
+;; Beeminder mode
+
+(define-derived-mode beeminder-mode special-mode "Beeminder"
+  "A major mode for a buffer with Beeminder goal list.")
+
+
 ;; API interface
 
 (defun beeminder-create-api-url (string)
@@ -115,6 +121,8 @@ non-nil, print suitable messages in the echo area."
 					  (or comment default-comment)
 					  (or timestamp current-timestamp))))
   (if print-message (message (format "Submitting datapoint of %d for goal %s...  Done." amount slug))))
+
+(define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
 
 
 ;; Sorting EWOC
@@ -252,11 +260,6 @@ textual representation of a goal."
 (defalias 'beeminder-current-time 'current-time
   "An alias for current-time, useful for testing/debugging.")
 
-;; Beeminder mode
-
-(define-derived-mode beeminder-mode special-mode "Beeminder"
-  "A major mode for a buffer with Beeminder goal list.")
-
 (defun beeminder-sort-by-field (field predicate info)
   "Sort entries in beeminder-goals-ewoc by FIELD, using PREDICATE
 to compare them and displaying INFO."
@@ -346,8 +349,6 @@ argument, reload the goals from the server."
   (beeminder-recreate-ewoc))
 
 (define-key beeminder-mode-map "g" #'beeminder-refresh-goals-list)
-
-(define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
 
 ;; Filtering goals
 
