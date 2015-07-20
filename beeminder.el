@@ -66,13 +66,55 @@ a vector of sexps - each sexp describes one goal."
   "Refresh autodata and graph."
   (beeminder-request-get (concat "/goals/" slug "/refresh_graph.json")))
 
-(defun beeminder-submit-datapoint (slug amount &optional comment)
-  "Submit a datapoint to beeminder.com."
+
+;; Submitting datapoints
+
+(defun current-time-hmsz-string (&optional timestamp)
+  "Return current time (or TIMESTAMP ,given as Unix time) as
+a string, in the format hh:mm:ss tz."
+  (let ((decoded-time (decode-time (or (seconds-to-time timestamp)
+				       (current-time)))))
+    (format "%02d:%02d:%02d %s"
+	    (caddr decoded-time)
+	    (cadr decoded-time)
+	    (car decoded-time)
+	    (cadr (current-time-zone (apply #'encode-time decoded-time))))))
+
+(defun beeminder-submit-datapoint (slug amount &optional comment timestamp print-message)
+  "Submit a datapoint to beeminder goal SLUG with data: AMOUNT,
+COMMENT and TIMESTAMP (as Unix time).  If PRINT-MESSAGE is
+non-nil, print suitable messages in the echo area."
+  (interactive
+   (let* ((slug (cdr (assoc 'slug (ewoc-data (ewoc-locate
+					      beeminder-goals-ewoc)))))
+	  (amount (if (numberp current-prefix-arg)
+		      current-prefix-arg
+		    (string-to-number (read-string
+				       (format "Datapoint value for %s: " slug)
+				       nil nil "1"))))
+	  (current-timestamp (time-to-seconds (current-time)))
+	  (default-comment (concat
+			    "via Emacs "
+			    (current-time-hmsz-string current-timestamp))))
+     (list slug
+	   amount
+	   (read-string
+	    (format "Comment for amount %d for goal %s: " amount slug)
+	    nil nil default-comment)
+	   (or (if (eq current-prefix-arg '-)
+		   (- current-timestamp (* 24 60 60)))
+	       (if (consp current-prefix-arg)
+		   (ask-for-timestamp))
+	       current-timestamp)
+	   t)))
+  (if print-message (message (format "Submitting datapoint of %d for goal %s..." amount slug)))
   (beeminder-request-post (format "/goals/%s/datapoints.json" slug)
-			  (concat (format "auth_token=%s&value=%f&comment=%s"
+			  (concat (format "auth_token=%s&value=%f&comment=%s&timestamp=%d"
 					  beeminder-auth-token
 					  amount
-					  (or comment "entered+by+beeminder.el")))))
+					  (or comment default-comment)
+					  (or timestamp current-timestamp))))
+  (if print-message (message (format "Submitting datapoint of %d for goal %s...  Done." amount slug))))
 
 
 ;; Sorting EWOC
@@ -304,6 +346,10 @@ argument, reload the goals from the server."
   (beeminder-recreate-ewoc))
 
 (define-key beeminder-mode-map "g" #'beeminder-refresh-goals-list)
+
+(define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
+
+;; Filtering goals
 
 
 ;; slug: string (12)
