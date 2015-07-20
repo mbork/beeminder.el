@@ -1,0 +1,4 @@
+#+TITLE: Beeminder client for Emacs
+#+AUTHOR: Marcin Borkowski
+#+EMAIL: mbork@mbork.pl
+
