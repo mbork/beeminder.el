@@ -273,7 +273,7 @@ SEC1, return t.  In all other cases, return nil."
 earliest losedate already passed when refreshing.")
 
 (defcustom beeminder-refresh-ask-for-download-interval (* 24 60 60)
-  "If that many seconds passed after last gownloading of the goal list
+  "If that many seconds passed after last downloading of the goal list
 from the server, ask for downloading them again when refreshing.  If
 0, never do it.")
 
