@@ -151,6 +151,14 @@ today for times within a week from now.")
 (defvar beeminder-tomorrow-code "tom"
   "The abbreviation for \"tomorrow\".")
 
+(defun midnight-p (time)
+  "Return t if TIME is exactly midnight."
+  (let ((decoded-time (decode-time time)))
+    (= 0
+       (car decoded-time)
+       (cadr decoded-time)
+       (caddr decoded-time))))
+
 (defun beeminder-human-time (time)
   "Convert TIME (which is set in the future) to a human-friendly
 format:
@@ -159,8 +167,11 @@ format:
 - for times within a week, abbreviation of the weekday or a plus and
   a number of days (depending on BEEMINDER-HUMAN-TIME-USE-WEEKDAY) and
   the time;
-- for later times, iso date without time."
-  (let ((delta (- (time-to-days time) (time-to-days (beeminder-current-time)))))
+- for later times, iso date without time.
+Midnight is treated as belonging to the previous day, not the following one."
+  (let ((delta (- (time-to-days time)
+		  (time-to-days (beeminder-current-time))
+		  (if (midnight-p time) 1 0))))
     (cond ((zerop delta) (format-time-string "     %R" time))
 	  ((= 1 delta) (concat " " beeminder-tomorrow-code
 			       (format-time-string " %R" time)))
