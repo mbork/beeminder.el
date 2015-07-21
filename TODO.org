@@ -1,5 +1,13 @@
 What to do?
 
+* TODO Define macro save-current-goal, add it to refreshing routine
+* TODO Add "some goals killed" to the sorting/filtering info
+* TODO Add a "dirty" flag after updating a goal, so that refreshing will download goals
+* TODO Add overstrike over dirty goals, preserve it if downloading doesn't change anything 
+* TODO Add filtering by lane
+* TODO Add filtering by safe days
+* TODO Add filtering by "done anything today"
+* TODO Add filtering by "done today's share"
 * DONE Get goals: remember them in some variable
 * DONE submit datapoint
 * DONE sort goals according to various criteria
