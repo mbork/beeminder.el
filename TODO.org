@@ -17,5 +17,5 @@ What to do?
 - d: road dial
 - r: edit road
 * TODO temporary removing of goals
-* TODO configurable midnight
+* DONE configurable midnight
 * DONE refresh should suggest reloading if past at least one deadline
