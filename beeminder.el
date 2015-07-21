@@ -289,8 +289,9 @@ to compare them and displaying INFO."
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
     (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0))
     (let ((current-node (ewoc-nth beeminder-goals-ewoc 0)))
-      (while (not (string= (cdr (assoc 'slug (ewoc-data current-node)))
-			   current-goal-slug))
+      (while (and current-node
+		  (not (string= (cdr (assoc 'slug (ewoc-data current-node)))
+				current-goal-slug)))
 	(ewoc-goto-next beeminder-goals-ewoc 1)
 	(setq current-node (ewoc-next beeminder-goals-ewoc current-node))))
     (setq beeminder-current-sorting-setting (list field predicate info))))
