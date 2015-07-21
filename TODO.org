@@ -16,6 +16,6 @@ What to do?
 - h: datapoints (h as in history)
 - d: road dial
 - r: edit road
-* TODO temporary removing of goals
+* DONE temporary removing of goals
 * DONE configurable midnight
 * DONE refresh should suggest reloading if past at least one deadline

@@ -370,6 +370,20 @@ argument, reload the goals from the server."
 
 ;; Filtering goals
 
+(defun beeminder-kill-goal (goal)
+  "Delete GOAL from `beeminder-goals-ewoc'."
+  (interactive (list (ewoc-locate beeminder-goals-ewoc)))
+  (let ((inhibit-read-only t)
+	(next-goal (or (ewoc-next beeminder-goals-ewoc goal)
+		       (ewoc-prev beeminder-goals-ewoc goal))))
+    (ewoc-delete beeminder-goals-ewoc goal)
+    (ewoc-refresh beeminder-goals-ewoc)
+    (if next-goal
+	(ewoc-goto-node beeminder-goals-ewoc next-goal)
+      (goto-char (point-min)))))
+
+(define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
+
 
 ;; slug: string (12)
 ;; title: string (12)
