@@ -240,6 +240,10 @@ textual representation of a goal."
 		  beeminder-username)
 	  (propertize (concat (format " (sorted by %s"
 				      beeminder-sort-criterion)
+			      (if (> beeminder-killed 0)
+				  (format "; %d goal%s killed"
+					  beeminder-killed
+					  (if (= beeminder-killed 1) "" "s")))
 			      ")\n")
 		      'face 'shadow)))
 
@@ -254,6 +258,7 @@ textual representation of a goal."
   (seq-doseq (goal beeminder-goals)
     (ewoc-enter-last beeminder-goals-ewoc goal))
   (setq beeminder-sort-criterion "losedate")
+  (setq beeminder-killed 0)
   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
   (ewoc-refresh beeminder-goals-ewoc)
   (goto-char (point-min)))
@@ -381,6 +386,8 @@ argument, reload the goals from the server."
 
 ;; Filtering goals
 
+(defvar beeminder-killed 0)
+
 (defun beeminder-kill-goal (goal)
   "Delete GOAL from `beeminder-goals-ewoc'."
   (interactive (list (ewoc-locate beeminder-goals-ewoc)))
@@ -389,6 +396,8 @@ argument, reload the goals from the server."
 		       (ewoc-prev beeminder-goals-ewoc goal))))
     (ewoc-delete beeminder-goals-ewoc goal)
     (ewoc-refresh beeminder-goals-ewoc)
+    (cl-incf beeminder-killed)
+    (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
     (if next-goal
 	(ewoc-goto-node beeminder-goals-ewoc next-goal)
       (goto-char (point-min)))))
