@@ -6,7 +6,7 @@
 (require 'ewoc)
 (require 'seq)
 
-
+
 ;; Settings
 (defcustom beeminder-username ""
   "User name for the Beeminder account.")
@@ -26,13 +26,13 @@ https://www.beeminder.com/api/v1/auth_token.json.")
   "Default timeout for HTTP requests sent over to
 beeminder.com.")
 
-
+
 ;; Beeminder mode
 
 (define-derived-mode beeminder-mode special-mode "Beeminder"
   "A major mode for a buffer with Beeminder goal list.")
 
-
+
 ;; API interface
 
 (defun beeminder-create-api-url (string)
@@ -60,7 +60,7 @@ the auth token."
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
 
-
+
 ;; API calls (currently synchronous only)
 
 (defun beeminder-get-goals ()
@@ -72,7 +72,7 @@ a vector of sexps - each sexp describes one goal."
   "Refresh autodata and graph."
   (beeminder-request-get (concat "/goals/" slug "/refresh_graph.json")))
 
-
+
 ;; Submitting datapoints
 
 (defun current-time-hmsz-string (&optional timestamp)
@@ -124,7 +124,7 @@ non-nil, print suitable messages in the echo area."
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
 
-
+
 ;; Sorting EWOC
 
 (defun true (&rest args)
@@ -141,7 +141,7 @@ recreate the EWOC."
     (mapcar (lambda (node) (ewoc-enter-last ewoc node))
 	    (sort ewoc-list pred))))
 
-
+
 ;; Displaying goals
 
 (defvar beeminder-human-time-use-weekday t
@@ -208,7 +208,7 @@ textual representation of a goal."
 				       (* (cdr (assoc 'yaw goal))
 					  (beeminder-normalize-lane (cdr (assoc 'lane goal))))))))
 
-
+
 ;; Faces for goals
 
 (defface beeminder-green '((t :foreground "#080"))
@@ -223,7 +223,7 @@ textual representation of a goal."
 (defface beeminder-red '((t :foreground "#800"))
   "Face for displaying Beeminder goals in red.")
 
-
+
 ;; Beeminder EWOC
 
 (defvar beeminder-goals-ewoc nil)
@@ -266,13 +266,13 @@ textual representation of a goal."
     (beeminder-recreate-ewoc))
   (beeminder-mode))
 
-
+
 ;; Current time function
 
 (defalias 'beeminder-current-time 'current-time
   "An alias for current-time, useful for testing/debugging.")
 
-
+
 ;; Sorting
 
 (defvar beeminder-current-sorting-setting (list 'losedate #'< "losedate"))
@@ -336,7 +336,7 @@ SEC1, return t.  In all other cases, return nil."
 (define-key beeminder-mode-map "l" #'beeminder-sort-by-losedate)
 (define-key beeminder-mode-map "m" #'beeminder-sort-by-midnight)
 
-
+
 ;; Refreshing goals
 (defcustom beeminder-refresh-ask-for-download-if-after-losedate t
   "If t, ask for downloading the goal list from the server if the
@@ -375,6 +375,7 @@ argument, reload the goals from the server."
 
 (define-key beeminder-mode-map "g" #'beeminder-refresh-goals-list)
 
+
 ;; Filtering goals
 
 (defun beeminder-kill-goal (goal)
