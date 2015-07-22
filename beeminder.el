@@ -44,7 +44,10 @@ given STRING.  STRING should begin with a slash."
   "Send a GET request to beeminder.com, adding the necessary
 details (including the username and the auth token)."
   (request-response-data
-   (request (concat (beeminder-create-api-url req) "?auth_token=" beeminder-auth-token)
+   (request (concat (beeminder-create-api-url req)
+		    (if (string-match "\\?" req) "&" "?") ; this is hackish...
+		    "auth_token="
+		    beeminder-auth-token)
 	    :parser #'json-read
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
