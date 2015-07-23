@@ -355,7 +355,7 @@ to compare them and displaying INFO."
     (setq beeminder-current-sorting-setting (list field predicate info))))
 
 (defun beeminder-sort-by-losedate ()
-  "Sort entries in beeminder-goals by losedate."
+  "Sort entries in `beeminder-goals' by losedate."
   (interactive)
   (beeminder-sort-by-field 'losedate #'< "losedate"))
 
@@ -381,7 +381,7 @@ SEC1, return t.  In all other cases, return nil."
       (< sec2 time sec1)))
 
 (defun beeminder-sort-by-midnight ()
-  "Sort entries in beeminder-goals by their midnight, taking current time into consideration."
+  "Sort entries in `beeminder-goals' by their midnight, taking current time into consideration."
   (interactive)
   (beeminder-sort-by-field
    'deadline
