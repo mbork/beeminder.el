@@ -72,6 +72,23 @@ the auth token."
 
 ;; API calls (currently synchronous only)
 
+(defun last-midnight (goal-deadline now)
+  "Return a Unix timestamp of the last \"midnight\" for the given
+GOAL-DEADLINE (as an offset from real midnight in seconds), assuming
+that the current time is NOW."
+  (let* ((now-decoded (decode-time now))
+	 (last-real-midnight (encode-time 0 0 0
+					  (cadddr now-decoded)
+					  (nth 4 now-decoded)
+					  (nth 5 now-decoded)
+					  (nth 8 now-decoded)))
+	 (last-midnight (+ goal-deadline
+			   (time-to-seconds last-real-midnight))))
+    (if (> last-midnight
+	   (time-to-seconds now))
+	(- last-midnight (* 24 60 60))
+      last-midnight)))
+
 (defun beeminder-get-goals ()
   "Get all the user's Beeminder goals.  The request returns
 a vector of sexps - each sexp describes one goal."
