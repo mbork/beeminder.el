@@ -102,7 +102,7 @@ a vector of sexps - each sexp describes one goal."
 ;; Submitting datapoints
 
 (defun current-time-hmsz-string (&optional timestamp)
-  "Return current time (or TIMESTAMP ,given as Unix time) as
+  "Return current time (or TIMESTAMP, given as Unix time) as
 a string, in the format hh:mm:ss tz."
   (let ((decoded-time (decode-time (or (seconds-to-time timestamp)
 				       (current-time)))))
