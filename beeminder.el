@@ -7,6 +7,12 @@
 (require 'seq)
 
 
+;; Utilities
+(defun cdr-assoc (key list)
+  "Composition of `cdr' and `assoc' of KEY and LIST."
+  (cdr (assoc key list)))
+
+
 ;; Settings
 (defcustom beeminder-username ""
   "User name for the Beeminder account.")
