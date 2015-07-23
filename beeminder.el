@@ -91,8 +91,34 @@ that the current time is NOW."
 
 (defun beeminder-get-goals ()
   "Get all the user's Beeminder goals.  The request returns
-a vector of sexps - each sexp describes one goal."
-  (setq beeminder-goals (beeminder-request-get "/goals.json")))
+a list of sexps - each sexp describes one goal."
+  (let ((goals (beeminder-request-get "/goals.json"))
+	(today-values
+	 (mapcar
+	  (lambda (goal)
+	    (let ((last-midnight (last-midnight (cdr-assoc 'deadline goal)
+						(beeminder-current-time))))
+	      (cons (cdr-assoc 'slug goal)
+		    (cl-reduce #'+
+			       (mapcar (lambda (datapoint)
+					 (if (> (cdr-assoc 'timestamp datapoint)
+						last-midnight)
+					     (cdr-assoc 'value datapoint)
+					   0))
+				       (cdr-assoc 'datapoints goal))))))
+	  (cdr-assoc 'goals (beeminder-request-get
+			     (format ".json?diff_since=%d"
+				     (- (time-to-seconds
+					 (current-time))
+					(* 24 60 60))))))))
+    (setq beeminder-goals (mapcar
+			   (lambda (goal) (cons
+					   (cons 'donetoday
+						 (cdr-assoc
+						  (cdr-assoc 'slug goal)
+						  today-values))
+					   goal))
+			   goals))))
 
 (defun beeminder-refresh-goal (slug)
   "Refresh autodata and graph."
@@ -278,8 +304,9 @@ textual representation of a goal."
 (defun beeminder-recreate-ewoc ()
   "Recreate Beeminder EWOC from the goal list."
   (ewoc-filter beeminder-goals-ewoc #'ignore)
-  (seq-doseq (goal beeminder-goals)
-    (ewoc-enter-last beeminder-goals-ewoc goal))
+  (mapcar (lambda (goal)
+	    (ewoc-enter-last beeminder-goals-ewoc goal))
+	  beeminder-goals)
   (setq beeminder-sort-criterion "losedate")
   (setq beeminder-killed 0)
   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
@@ -395,7 +422,7 @@ argument, reload the goals from the server."
 			 beeminder-refresh-ask-for-download-interval)))
 		 (and beeminder-refresh-ask-for-download-if-after-losedate
 		      (> (time-to-seconds (beeminder-current-time))
-			 (cdr (assoc 'losedate (elt beeminder-goals 0))))))
+			 (cdr (assoc 'losedate (car beeminder-goals))))))
 	     (y-or-n-p "Reload Beeminder goals from the server? ")))
     (message "Beeminder goals downloading...")
     (beeminder-get-goals)
