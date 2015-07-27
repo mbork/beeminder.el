@@ -318,6 +318,7 @@ textual representation of a goal."
   (interactive)
   (switch-to-buffer "*Beeminder goals*")
   (buffer-disable-undo)
+  (unless beeminder-goals (beeminder-get-goals))
   (let ((inhibit-read-only t))
     (erase-buffer)
     (setq beeminder-goals-ewoc (beeminder-create-ewoc))
