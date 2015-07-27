@@ -1,7 +1,7 @@
 What to do?
 
 * TODO Define macro save-current-goal, add it to refreshing routine
-* TODO Add "some goals killed" to the sorting/filtering info
+* DONE Add "some goals killed" to the sorting/filtering info
 * TODO Add a "dirty" flag after updating a goal, so that refreshing will download goals
 * TODO Add overstrike over dirty goals, preserve it if downloading doesn't change anything 
 * TODO Add filtering by lane
