@@ -455,6 +455,7 @@ argument, reload the goals from the server."
 
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
 
+(provide 'beeminder)
 
 ;; slug: string (12)
 ;; title: string (12)
