@@ -299,7 +299,13 @@ textual representation of a goal."
 				     "; displaying goals with"
 				     (awhen (plist-get beeminder-current-filters :days)
 				       (setq first-filterp nil)
-				       (format " %d days left" it)))))
+				       (format " %d days left" it))
+				     (awhen (plist-get beeminder-current-filters :donetoday)
+				       (format "%s less than %d%% today's work done"
+					       (if first-filterp
+						   (progn (setq first-filterp nil) "")
+						 " and")
+					       it)))))
 			      ")\n")
 		      'face 'shadow)))
 
@@ -494,7 +500,30 @@ filter, which is not supported."
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
     (ewoc-refresh beeminder-goals-ewoc)))
 
+(defun beeminder-filter-by-donetoday (percentage)
+  "Filter the goals by PERCENTAGE of what should be done today."
+  (interactive "p")
+  (if (and (numberp (plist-get beeminder-current-filters :donetoday))
+	   (< (plist-get beeminder-current-filters :donetoday) percentage))
+      (beeminder-message-filter-loosening)
+    (ewoc-filter beeminder-goals-ewoc
+		 (lambda (goal)
+		   (< (/ (* 100 (cdr-assoc 'donetoday goal))
+			 (/ (cdr-assoc 'rate goal)
+			    (cl-case (intern (cdr-assoc 'runits goal))
+			      (y 365)
+			      (m (/ 365 12))
+			      (w 7)
+			      (d 1)
+			      (h (/ 1 24)))))
+		      percentage)))
+    (setq beeminder-current-filters
+	  (plist-put beeminder-current-filters :donetoday percentage))
+    (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
+    (ewoc-refresh beeminder-goals-ewoc)))))
+
 (define-key beeminder-mode-map (kbd "d") #'beeminder-filter-by-days)
+(define-key beeminder-mode-map (kbd "t") #'beeminder-filter-by-donetoday)
 
 (provide 'beeminder)
 
