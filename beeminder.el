@@ -293,6 +293,13 @@ textual representation of a goal."
 				  (format "; %d goal%s killed"
 					  beeminder-killed
 					  (if (= beeminder-killed 1) "" "s")))
+			      (if beeminder-current-filters
+				  (let ((first-filterp t))
+				    (concat
+				     "; displaying goals with"
+				     (awhen (plist-get beeminder-current-filters :days)
+				       (setq first-filterp nil)
+				       (format " %d days left" it)))))
 			      ")\n")
 		      'face 'shadow)))
 
@@ -308,6 +315,7 @@ textual representation of a goal."
 	    (ewoc-enter-last beeminder-goals-ewoc goal))
 	  beeminder-goals)
   (setq beeminder-sort-criterion "losedate")
+  (setq beeminder-current-filters '())
   (setq beeminder-killed 0)
   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
   (ewoc-refresh beeminder-goals-ewoc)
@@ -455,7 +463,46 @@ argument, reload the goals from the server."
 
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
 
+(defvar beeminder-current-filters '())
+
+(defun beeminder-filter-by-field (field predicate)
+  "Filter out goals whose FIELD satisfy PREDICATE."
+  (ewoc-filter beeminder-goals-ewoc
+	       (lambda (goal) (funcall predicate (cdr-assoc field goal)))))
+
+(defcustom beeminder-default-filter-days 3
+  "Defalt number of days used for filtering.  If the user doesn't
+specify the number of days for filtering, all goals with more
+than this amount of days left to losedate will be filtered out.")
+
+(defun beeminder-message-filter-loosening ()
+  "Display a suitable message when the user tries to loosen the
+filter, which is not supported."
+  (message "In order to loosen the filter, refresh the goal list first!"))
+
+(defun beeminder-filter-by-days (&optional days)
+  "Filter the goals by DAYS."
+  (interactive "P")
+  (if days
+      (setq days (prefix-numeric-value days))
+    (setq days beeminder-default-filter-days))
+  (if (and (numberp (plist-get beeminder-current-filters :days))
+	   (< (plist-get beeminder-current-filters :days) days))
+      (beeminder-message-filter-loosening)
+    (beeminder-filter-by-field 'losedate
+			       (lambda (l)
+				 (<= (- (beeminder-time-to-days l)
+					(beeminder-time-to-days (beeminder-current-time)))
+				     days)))
+    (setq beeminder-current-filters
+	  (plist-put beeminder-current-filters :days days))
+    (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
+    (ewoc-refresh beeminder-goals-ewoc)))
+
+(define-key beeminder-mode-map (kbd "d") #'beeminder-filter-by-days)
+
 (provide 'beeminder)
+
 
 ;; slug: string (12)
 ;; title: string (12)
