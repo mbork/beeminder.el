@@ -465,11 +465,6 @@ argument, reload the goals from the server."
 
 (defvar beeminder-current-filters '())
 
-(defun beeminder-filter-by-field (field predicate)
-  "Filter out goals whose FIELD satisfy PREDICATE."
-  (ewoc-filter beeminder-goals-ewoc
-	       (lambda (goal) (funcall predicate (cdr-assoc field goal)))))
-
 (defcustom beeminder-default-filter-days 3
   "Defalt number of days used for filtering.  If the user doesn't
 specify the number of days for filtering, all goals with more
@@ -489,11 +484,11 @@ filter, which is not supported."
   (if (and (numberp (plist-get beeminder-current-filters :days))
 	   (< (plist-get beeminder-current-filters :days) days))
       (beeminder-message-filter-loosening)
-    (beeminder-filter-by-field 'losedate
-			       (lambda (l)
-				 (<= (- (beeminder-time-to-days l)
-					(beeminder-time-to-days (beeminder-current-time)))
-				     days)))
+    (ewoc-filter beeminder-goals-ewoc
+		 (lambda (goal)
+		   (<= (- (beeminder-time-to-days (cdr-assoc 'losedate goal))
+			  (beeminder-time-to-days (beeminder-current-time)))
+		       days)))
     (setq beeminder-current-filters
 	  (plist-put beeminder-current-filters :days days))
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
