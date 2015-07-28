@@ -480,7 +480,7 @@ than this amount of days left to losedate will be filtered out.")
 filter, which is not supported."
   (message "In order to loosen the filter, refresh the goal list first!"))
 
-(defun beeminder-filter-by-days (&optional days)
+(defun beeminder-filter-by-days (days)
   "Filter the goals by DAYS."
   (interactive "P")
   (if days
