@@ -4,26 +4,27 @@ What to do?
 * DONE Add "some goals killed" to the sorting/filtering info
 * TODO Add a "dirty" flag after updating a goal, so that refreshing will download goals
 * TODO Add overstrike over dirty goals, preserve it if downloading doesn't change anything 
-* TODO Add filtering by lane
-* TODO Add filtering by safe days
-* TODO Add filtering by "done anything today"
-* TODO Add filtering by "done today's share"
+* DONE Add filtering by safe days
+* DONE Add filtering by "done anything today"
+* DONE Add filtering by "done today's share"
 * DONE Get goals: remember them in some variable
 * DONE submit datapoint
 * DONE sort goals according to various criteria
 * DONE Display goals: make a (configurable) list of beeminder goals
 * DONE goals mode: a major mode displaying all goals
-* TODO beeminder-mode-map
-- C-k: delete goal (for display only)
-- C-u C-k: delete this and all subsequent goals
-- g: refresh
-- C-u g: download goals and refresh
-- l: sort by losedate
-- m: sort by midnight
-- RET: submit data (ask for amount; by default - 1; with prefix arg - this much)
-- h: datapoints (h as in history)
-- d: road dial
-- r: edit road
+* TODO beeminder-mode-map [8/12]
+- [X] C-k: delete goal (for display only)
+- [X] g: refresh
+- [X] C-u g: download goals and refresh
+- [X] l: sort by losedate
+- [X] m: sort by midnight
+- [X] d: filter by days
+- [X] t: filter by donetoday
+- [ ] a: display all goals (i.e. undo filtering)
+- [X] RET: submit data (ask for amount; by default - 1; with prefix arg - this much)
+- [ ] h: datapoints (h as in history)
+- [ ] : road dial
+- [ ] : edit road
 * DONE temporary removing of goals
 * DONE configurable midnight
 * DONE refresh should suggest reloading if past at least one deadline
