@@ -289,10 +289,10 @@ textual representation of a goal."
 		  beeminder-username)
 	  (propertize (concat (format " (sorted by %s"
 				      beeminder-sort-criterion)
-			      (if (> beeminder-killed 0)
+			      (aif (plist-get beeminder-current-filters :killed)
 				  (format "; %d goal%s killed"
-					  beeminder-killed
-					  (if (= beeminder-killed 1) "" "s")))
+					  (length it)
+					  (if (= (length it) 1) "" "s")))
 			      (if beeminder-current-filters
 				  (let ((first-filterp t))
 				    (concat
@@ -459,7 +459,7 @@ argument, reload the goals from the server."
 
 ;; Filtering goals
 
-(defvar beeminder-killed 0)
+(defvar beeminder-current-filters '())
 
 (defun beeminder-kill-goal (goal)
   "Delete GOAL from `beeminder-goals-ewoc'."
@@ -469,15 +469,16 @@ argument, reload the goals from the server."
 		       (ewoc-prev beeminder-goals-ewoc goal))))
     (ewoc-delete beeminder-goals-ewoc goal)
     (ewoc-refresh beeminder-goals-ewoc)
-    (cl-incf beeminder-killed)
+    (let ((killed (plist-get beeminder-current-filters :killed)))
+      (setq beeminder-current-filters (plist-put beeminder-current-filters :killed
+						 (cons (cdr-assoc 'slug (ewoc-data goal))
+						       killed))))
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
     (if next-goal
 	(ewoc-goto-node beeminder-goals-ewoc next-goal)
       (goto-char (point-min)))))
 
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
-
-(defvar beeminder-current-filters '())
 
 (defcustom beeminder-default-filter-days 3
   "Defalt number of days used for filtering.  If the user doesn't
