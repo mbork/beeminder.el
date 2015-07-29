@@ -520,7 +520,7 @@ filter, which is not supported."
     (setq beeminder-current-filters
 	  (plist-put beeminder-current-filters :donetoday percentage))
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
-    (ewoc-refresh beeminder-goals-ewoc)))))
+    (ewoc-refresh beeminder-goals-ewoc)))
 
 (define-key beeminder-mode-map (kbd "d") #'beeminder-filter-by-days)
 (define-key beeminder-mode-map (kbd "t") #'beeminder-filter-by-donetoday)
