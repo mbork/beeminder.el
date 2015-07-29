@@ -361,7 +361,7 @@ textual representation of a goal."
 				 current-goal-slug)))
 	 (ewoc-goto-next beeminder-goals-ewoc 1)
 	 (setq current-node (ewoc-next beeminder-goals-ewoc current-node)))
-       (unless current-node (ewoc-goto-node beeminder-ewoc (ewoc-nth beeminder-ewoc 0))))))
+       (unless current-node (goto-char (point-min))))))
 
 (defun beeminder-sort-by-field (field predicate info)
   "Sort entries in beeminder-goals-ewoc by FIELD, using PREDICATE
