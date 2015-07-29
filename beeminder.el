@@ -285,28 +285,28 @@ textual representation of a goal."
 
 (defun beeminder-ewoc-header ()
   "Generate header for the Beeminder EWOC"
-  (concat (format "Beeminder goals for user %s"
+  (concat (format "Beeminder goals for user %s\n"
 		  beeminder-username)
-	  (propertize (concat (format " (sorted by %s"
+	  (propertize (concat (format "sorting criterion: %s\n"
 				      beeminder-sort-criterion)
-			      (aif (plist-get beeminder-current-filters :killed)
-				  (format "; %d goal%s killed"
-					  (length it)
-					  (if (= (length it) 1) "" "s")))
 			      (if beeminder-current-filters
-				  (let ((first-filterp t))
-				    (concat
-				     "; displaying goals with"
-				     (awhen (plist-get beeminder-current-filters :days)
-				       (setq first-filterp nil)
-				       (format " %d days left" it))
-				     (awhen (plist-get beeminder-current-filters :donetoday)
-				       (format "%s less than %d%% today's work done"
-					       (if first-filterp
-						   (progn (setq first-filterp nil) "")
-						 " and")
-					       it)))))
-			      ")\n")
+				  (format "filter%s:%s\n"
+					  (if (> (length beeminder-current-filters) 2) "s" "")
+					  (let ((firstp t))
+					    (concat
+					     (awhen (plist-get beeminder-current-filters :days)
+					       (setq firstp nil)
+					       (format " days to derailment (%d)" it))
+					     (awhen (plist-get beeminder-current-filters :donetoday)
+					       (prog1
+						   (format "%s done today (%d%%)"
+							   (if firstp "" ",")
+							   it)
+						 (setq firstp nil)))
+					     (awhen (plist-get beeminder-current-filters :killed)
+					       (format "%s individual goals killed (%d)"
+						       (if firstp "" ",")
+						       (length it))))))))
 		      'face 'shadow)))
 
 (defun beeminder-create-ewoc ()
