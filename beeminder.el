@@ -145,10 +145,13 @@ non-nil, print suitable messages in the echo area."
   (interactive
    (let* ((slug (cdr (assoc 'slug (ewoc-data (ewoc-locate
 					      beeminder-goals-ewoc)))))
+	  (yesterdayp (eq current-prefix-arg '-))
 	  (amount (if (numberp current-prefix-arg)
 		      current-prefix-arg
 		    (string-to-number (read-string
-				       (format "Datapoint value for %s: " slug)
+				       (format "Datapoint value for %s%s: "
+					       slug
+					       (if yesterdayp " (yesterday)" ""))
 				       nil nil "1"))))
 	  (current-timestamp (time-to-seconds (current-time)))
 	  (default-comment (concat
@@ -159,7 +162,7 @@ non-nil, print suitable messages in the echo area."
 	   (read-string
 	    (format "Comment for amount %d for goal %s: " amount slug)
 	    nil nil default-comment)
-	   (or (if (eq current-prefix-arg '-)
+	   (or (if yesterdayp
 		   (- current-timestamp (* 24 60 60)))
 	       (if (consp current-prefix-arg)
 		   (ask-for-timestamp))
