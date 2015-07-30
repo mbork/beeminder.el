@@ -437,6 +437,14 @@ SEC1, return t.  In all other cases, return nil."
 
 (defvar beeminder-current-filters '())
 
+(defun beeminder-clear-filters ()
+  "Clear all filters."
+  (interactive)
+  (setq beeminder-current-filters '())
+  (beeminder-recreate-ewoc))
+
+(define-key beeminder-mode-map "c" #'beeminder-clear-filters)
+
 (defun beeminder-kill-goal (goal)
   "Delete GOAL from `beeminder-goals-ewoc'."
   (interactive (list (ewoc-locate beeminder-goals-ewoc)))
