@@ -1,6 +1,6 @@
 What to do?
 
-* TODO Define macro save-current-goal, add it to refreshing routine
+* DONE Define macro save-current-goal, add it to refreshing routine
 * DONE Add "some goals killed" to the sorting/filtering info
 * TODO Add asking for goal slug (with completion) when submitting on header
 * TODO Customizable goal display

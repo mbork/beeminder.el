@@ -437,23 +437,24 @@ from the server, ask for downloading them again when refreshing.  If
 recreating the EWOC from the goal list.  If called with a prefix
 argument, reload the goals from the server."
   (interactive "P")
-  (when (or get-goals
-	    (and
-	     (or (and
-		  (not (zerop beeminder-refresh-ask-for-download-interval))
-		  (>= (time-to-seconds (beeminder-current-time))
-		      (+ (time-to-seconds beeminder-last-goal-download-time)
-			 beeminder-refresh-ask-for-download-interval)))
-		 (and beeminder-refresh-ask-for-download-if-after-losedate
-		      (> (time-to-seconds (beeminder-current-time))
-			 (cdr (assoc 'losedate (car beeminder-goals))))))
-	     (y-or-n-p "Reload Beeminder goals from the server? ")))
-    (message "Beeminder goals downloading...")
-    (beeminder-get-goals)
-    (message "Beeminder goals downloading...  Done.")
-    (setf beeminder-last-goal-download-time (beeminder-current-time)))
-  (beeminder-recreate-ewoc)
-  (apply #'beeminder-sort-by-field beeminder-current-sorting-setting))
+  (save-current-goal
+   (when (or get-goals
+	     (and
+	      (or (and
+		   (not (zerop beeminder-refresh-ask-for-download-interval))
+		   (>= (time-to-seconds (beeminder-current-time))
+		       (+ (time-to-seconds beeminder-last-goal-download-time)
+			  beeminder-refresh-ask-for-download-interval)))
+		  (and beeminder-refresh-ask-for-download-if-after-losedate
+		       (> (time-to-seconds (beeminder-current-time))
+			  (cdr (assoc 'losedate (car beeminder-goals))))))
+	      (y-or-n-p "Reload Beeminder goals from the server? ")))
+     (message "Beeminder goals downloading...")
+     (beeminder-get-goals)
+     (message "Beeminder goals downloading...  Done.")
+     (setf beeminder-last-goal-download-time (beeminder-current-time)))
+   (beeminder-recreate-ewoc)
+   (apply #'beeminder-sort-by-field beeminder-current-sorting-setting)))
 
 (define-key beeminder-mode-map "g" #'beeminder-refresh-goals-list)
 
