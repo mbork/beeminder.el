@@ -250,13 +250,13 @@ smaller than -2 to -2."
 (defun beeminder-goal-pp (goal)
   "A pretty printer for Beeminder goals.  Prints a (currently fixed)
 textual representation of a goal."
-  (insert (propertize (format "%-12.12s %4.2d/%s %s %-16.16s $%.2f %s"
+  (insert (propertize (format "%-12.12s %s %-16.16s %4.2d/%s $%.2f %s"
 			      (cdr (assoc 'slug goal))
-			      (cdr (assoc 'rate goal))
-			      (cdr (assoc 'runits goal))
 			      (beeminder-human-time (seconds-to-time
 						     (1+ (cdr (assoc 'losedate goal)))))
 			      (cdr (assoc 'limsum goal))
+			      (cdr (assoc 'rate goal))
+			      (cdr (assoc 'runits goal))
 			      (cdr (assoc 'pledge goal))
 			      (cdr (assoc 'title goal)))
 		      'face (plist-get beeminder-lanes-to-faces-plist
