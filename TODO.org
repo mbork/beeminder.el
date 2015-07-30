@@ -16,8 +16,7 @@ What to do?
 * DONE goals mode: a major mode displaying all goals
 * TODO beeminder-mode-map [8/12]
 - [X] C-k: delete goal (for display only)
-- [X] g: refresh
-- [X] C-u g: download goals and refresh
+- [X] g: reload
 - [X] l: sort by losedate
 - [X] m: sort by midnight
 - [X] d: filter by days
