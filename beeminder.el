@@ -283,15 +283,12 @@ textual representation of a goal."
 
 (defvar beeminder-goals-ewoc nil)
 
-(defvar beeminder-sort-criterion "losedate"
-  "Current goals sorting criterion.")
-
 (defun beeminder-ewoc-header ()
   "Generate header for the Beeminder EWOC"
   (concat (format "Beeminder goals for user %s\n"
 		  beeminder-username)
 	  (propertize (concat (format "sorting criterion: %s\n"
-				      beeminder-sort-criterion)
+				      (caddr beeminder-current-sorting-setting))
 			      (if beeminder-current-filters
 				  (format "filter%s:%s\n"
 					  (if (> (length beeminder-current-filters) 2) "s" "")
@@ -323,7 +320,7 @@ textual representation of a goal."
   (mapcar (lambda (goal)
 	    (ewoc-enter-last beeminder-goals-ewoc goal))
 	  beeminder-goals)
-  (setq beeminder-sort-criterion "losedate")
+  (apply #'beeminder-sort-by-field beeminder-current-sorting-setting)
   (setq beeminder-current-filters '())
   (setq beeminder-killed 0)
   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
@@ -351,7 +348,10 @@ textual representation of a goal."
 
 ;; Sorting
 
-(defvar beeminder-current-sorting-setting (list 'losedate #'< "losedate"))
+(defcustom beeminder-default-sorting-setting (list 'losedate #'< "losedate")
+  "Default sorting setting for Beeminder goals.")
+
+(defvar beeminder-current-sorting-setting beeminder-default-sorting-setting)
 
 (defmacro save-current-goal (&rest body)
   "Evaluate BODY and bring the point back to the current goal."
@@ -374,11 +374,9 @@ to compare them and displaying INFO."
 				     (funcall predicate
 					      (cdr (assoc field x))
 					      (cdr (assoc field y)))))
-   (setq beeminder-sort-criterion info)
    (ewoc-refresh beeminder-goals-ewoc)
-   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header)
-		"")
-   (setq beeminder-current-sorting-setting (list field predicate info))))
+   (setq beeminder-current-sorting-setting (list field predicate info))
+   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")))
 
 (defun beeminder-sort-by-losedate ()
   "Sort entries in `beeminder-goals' by losedate."
