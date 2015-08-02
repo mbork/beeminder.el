@@ -479,34 +479,45 @@ than this amount of days left to losedate will be filtered out.")
 (defcustom beeminder-default-filter-donetoday 100
   "Default percentage of donetoday used for filtering.")
 
-(defvar beeminder-filters `((days (lambda (goal days)
-				   (<= (- (beeminder-time-to-days (cdr-assoc 'losedate goal))
-					  (beeminder-time-to-days (beeminder-current-time)))
-				       days))
+(defun beeminder-days-p (goal days)
+  "Return nil if time to derailment of GOAL is greater than
+DAYS."
+  (<= (- (beeminder-time-to-days (cdr-assoc 'losedate goal))
+	 (beeminder-time-to-days (beeminder-current-time)))
+      days))
+
+(defun beeminder-donetoday-p (goal percentage)
+  "Return nil if donetoday for GOAL is higher than the PERCENTAGE
+of a day's amount."
+  (< (/ (* 100 (cdr-assoc 'donetoday goal))
+	(/ (cdr-assoc 'rate goal)
+	   (cl-case (intern (cdr-assoc 'runits goal))
+	     (y 365)
+	     (m (/ 365 12))
+	     (w 7)
+	     (d 1)
+	     (h (/ 1 24)))))
+     percentage))
+
+(defun beeminder-not-killed-p (goal kill-list)
+  "Return nil if GOAL is in the KILL-LIST."
+  (not (member (cdr-assoc 'slug goal) kill-list)))
+
+(defvar beeminder-filters `((days ,#'beeminder-days-p
 				 ,beeminder-default-filter-days
 				 "days to derailment (%d)"
 				 "d")
-			   (donetoday (lambda (goal percentage)
-					(< (/ (* 100 (cdr-assoc 'donetoday goal))
-					      (/ (cdr-assoc 'rate goal)
-						 (cl-case (intern (cdr-assoc 'runits goal))
-						   (y 365)
-						   (m (/ 365 12))
-						   (w 7)
-						   (d 1)
-						   (h (/ 1 24)))))
-					   percentage))
-				      ,beeminder-default-filter-donetoday
-				      "done today (%d%%)"
-				      "t")
-			   (killed (lambda (goal kill-list)
-				     (not (member (cdr-assoc 'slug goal) kill-list)))
-				   '()
-				   (lambda (kill-list) (format "%d goal%s killed"
-							       (length kill-list)
-							       (if (= 1 (length kill-list))
-								   "" "s")))
-				   ""))
+			    (donetoday ,#'beeminder-donetoday-p
+				       ,beeminder-default-filter-donetoday
+				       "done today (%d%%)"
+				       "t")
+			    (killed ,#'beeminder-not-killed-p
+				    '()
+				    (lambda (kill-list) (format "%d goal%s killed"
+								(length kill-list)
+								(if (= 1 (length kill-list))
+								    "" "s")))
+				    ""))
 
   "List of possible filters.  Each element is a list, consisting of:
 - symbol, denoting the filter,
