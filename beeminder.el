@@ -38,6 +38,31 @@ beeminder.com.")
 (define-derived-mode beeminder-mode special-mode "Beeminder"
   "A major mode for a buffer with Beeminder goal list.")
 
+(defun next-goal (count)
+  "Move COUNT goals forward in the Beeminder buffer."
+  (interactive "p")
+  (ewoc-goto-next beeminder-goals-ewoc
+		  (if (< (point) (ewoc-location (ewoc-nth beeminder-goals-ewoc 0)))
+		      (1- count)
+		    count)))
+
+(defun previous-goal (count)
+  "Move COUNT goals back in the Beeminder buffer.  If on the
+first goal, move to (point-min)."
+  ;; If point is before the place `previous-goal' would move it, move
+  ;; to (point-min).  This jumps to the beginning from any place
+  ;; before the first node, but won't work when point is on Nth goal
+  ;; and `count' is greater than N.  This doesn't seem a big deal, so
+  ;; let's just hope nobody notices that.
+  (interactive "p")
+  (when (<= (point)
+	    (progn (ewoc-goto-prev beeminder-goals-ewoc count)
+		   (point)))
+    (goto-char (point-min))))
+
+(define-key beeminder-mode-map (kbd "n") #'next-goal)
+(define-key beeminder-mode-map (kbd "p") #'previous-goal)
+
 
 ;; API interface
 
