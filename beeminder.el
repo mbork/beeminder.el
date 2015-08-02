@@ -319,16 +319,16 @@ textual representation of a goal."
 					  (if (> (length beeminder-current-filters) 2) "s" "")
 					  (let ((firstp t))
 					    (concat
-					     (awhen (plist-get beeminder-current-filters :days)
+					     (awhen (plist-get beeminder-current-filters 'days)
 					       (setq firstp nil)
 					       (format " days to derailment (%d)" it))
-					     (awhen (plist-get beeminder-current-filters :donetoday)
+					     (awhen (plist-get beeminder-current-filters 'donetoday)
 					       (prog1
 						   (format "%s done today (%d%%)"
 							   (if firstp "" ",")
 							   it)
 						 (setq firstp nil)))
-					     (awhen (plist-get beeminder-current-filters :killed)
+					     (awhen (plist-get beeminder-current-filters 'killed)
 					       (format "%s individual goals killed (%d)"
 						       (if firstp "" ",")
 						       (length it))))))))
@@ -340,14 +340,14 @@ textual representation of a goal."
 	       (beeminder-ewoc-header)""))
 
 (defun beeminder-recreate-ewoc ()
-  "Recreate Beeminder EWOC from the goal list."
+  "Recreate Beeminder EWOC from the goal list and reapply
+filtering and sorting settings."
   (ewoc-filter beeminder-goals-ewoc #'ignore)
   (mapcar (lambda (goal)
 	    (ewoc-enter-last beeminder-goals-ewoc goal))
 	  beeminder-goals)
+  (beeminder-apply-filters)
   (apply #'beeminder-sort-by-field beeminder-current-sorting-setting)
-  (setq beeminder-current-filters '())
-  (setq beeminder-killed 0)
   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
   (ewoc-refresh beeminder-goals-ewoc)
   (goto-char (point-min)))
@@ -452,15 +452,15 @@ SEC1, return t.  In all other cases, return nil."
    (message "Beeminder goals downloading...")
    (beeminder-get-goals)
    (message "Beeminder goals downloading...  Done.")
-   (beeminder-recreate-ewoc)
-   (apply #'beeminder-sort-by-field beeminder-current-sorting-setting)))
+   (beeminder-recreate-ewoc)))
 
 (define-key beeminder-mode-map "g" #'beeminder-reload-goals-list)
 
 
 ;; Filtering goals
 
-(defvar beeminder-current-filters '())
+(defvar beeminder-current-filters '()
+  "Plist of filters currently in effect.  This should really be an alist.")
 
 (defun beeminder-clear-filters ()
   "Clear all filters."
@@ -470,6 +470,50 @@ SEC1, return t.  In all other cases, return nil."
 
 (define-key beeminder-mode-map "c" #'beeminder-clear-filters)
 
+(defcustom beeminder-default-filter-days 3
+  "Defalt number of days used for filtering.  If the user doesn't
+specify the number of days for filtering, all goals with more
+than this amount of days left to losedate will be filtered out.")
+
+(defcustom beeminder-default-filter-donetoday 100
+  "Default percentage of donetoday used for filtering.")
+
+(defvar beeminder-filters `((days (lambda (goal days)
+				   (<= (- (beeminder-time-to-days (cdr-assoc 'losedate goal))
+					  (beeminder-time-to-days (beeminder-current-time)))
+				       days))
+				 ,beeminder-default-filter-days
+				 "days to derailment (%d)"
+				 "d")
+			   (donetoday (lambda (goal percentage)
+					(< (/ (* 100 (cdr-assoc 'donetoday goal))
+					      (/ (cdr-assoc 'rate goal)
+						 (cl-case (intern (cdr-assoc 'runits goal))
+						   (y 365)
+						   (m (/ 365 12))
+						   (w 7)
+						   (d 1)
+						   (h (/ 1 24)))))
+					   percentage))
+				      ,beeminder-default-filter-donetoday
+				      "done today (%d%%)"
+				      "t")
+			   (killed (lambda (goal kill-list)
+				     (not (member (cdr-assoc 'slug goal) kill-list)))
+				   '()
+				   (lambda (kill-list) (format "%d goal%s killed"
+							       (length kill-list)
+							       (if (= 1 (length kill-list))
+								   "" "s")))
+				   ""))
+
+  "List of possible filters.  Each element is a list, consisting of:
+- symbol, denoting the filter,
+- predicate (with two arguments - the goal and the parameter),
+- default value for the parameter,
+- formatting function (with one argument - the parameter) or a format string (with one placeholder)
+- key for enabling the filter (as a string, passed to `kbd').")
+
 (defun beeminder-kill-goal (goal)
   "Delete GOAL from `beeminder-goals-ewoc'."
   (interactive (list (ewoc-locate beeminder-goals-ewoc)))
@@ -478,8 +522,8 @@ SEC1, return t.  In all other cases, return nil."
 		       (ewoc-prev beeminder-goals-ewoc goal))))
     (ewoc-delete beeminder-goals-ewoc goal)
     (ewoc-refresh beeminder-goals-ewoc)
-    (let ((killed (plist-get beeminder-current-filters :killed)))
-      (setq beeminder-current-filters (plist-put beeminder-current-filters :killed
+    (let ((killed (plist-get beeminder-current-filters 'killed)))
+      (setq beeminder-current-filters (plist-put beeminder-current-filters 'killed
 						 (cons (cdr-assoc 'slug (ewoc-data goal))
 						       killed))))
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
@@ -489,61 +533,64 @@ SEC1, return t.  In all other cases, return nil."
 
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
 
-(defcustom beeminder-default-filter-days 3
-  "Defalt number of days used for filtering.  If the user doesn't
-specify the number of days for filtering, all goals with more
-than this amount of days left to losedate will be filtered out.")
+(defun beeminder-clear-kills ()
+  "Clear all individual kills."
+  (interactive)
+  (setq beeminder-current-filters
+	(plist-clear (plist-put beeminder-current-filters 'killed nil)))
+  (beeminder-recreate-ewoc))
 
-(defun beeminder-message-filter-loosening ()
-  "Display a suitable message when the user tries to loosen the
-filter, which is not supported."
-  (message "In order to loosen the filter, refresh the goal list first!"))
+(define-key beeminder-mode-map (kbd "C-w") #'beeminder-clear-kills)
 
-(defun beeminder-filter-by-days (days)
-  "Filter the goals by DAYS."
+(defun beeminder-apply-filter (filter parameter)
+  "Apply FILTER (which should be a symbol), parametrized by PARAMETER.
+This means deleting some goals from `beeminder-goals-ewoc'."
+  (save-current-goal
+    (ewoc-filter beeminder-goals-ewoc
+		 (lambda (goal)
+		   (funcall (cadr (assoc filter beeminder-filters))
+			    goal parameter)))))
+
+(defun plist-mapc (function plist)
+  "Iterate FUNCTION (a two-argument function) over PLIST."
+  (when plist
+    (funcall function (car plist) (cadr plist))
+    (plist-mapc function (cddr plist))))
+
+(defun plist-clear (plist)
+  "Return PLIST with all nil properties deleted."
+  (cond
+   ((null (cdr plist)) nil)
+   ((null (cadr plist)) (cddr plist))
+   (t (cons (car plist) (cons (cadr plist) (plist-clear (cddr plist)))))))
+
+(defun beeminder-apply-filters ()
+  "Apply filters from `beeminder-current-filters' in sequence."
+  (plist-mapc #'beeminder-apply-filter beeminder-current-filters))
+
+(defun beeminder-filter-command (parameter)
+  "Enable the filter from `beeminder-filters' which should be
+applied by the key pressed to run this very command.  PARAMETER,
+when given, overrides the default."
   (interactive "P")
-  (if days
-      (setq days (prefix-numeric-value days))
-    (setq days beeminder-default-filter-days))
-  (save-current-goal
-   (if (and (numberp (plist-get beeminder-current-filters :days))
-	    (< (plist-get beeminder-current-filters :days) days))
-       (beeminder-message-filter-loosening)
-     (ewoc-filter beeminder-goals-ewoc
-		  (lambda (goal)
-		    (<= (- (beeminder-time-to-days (cdr-assoc 'losedate goal))
-			   (beeminder-time-to-days (beeminder-current-time)))
-			days)))
-     (setq beeminder-current-filters
-	   (plist-put beeminder-current-filters :days days))
-     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
-     (ewoc-refresh beeminder-goals-ewoc))))
+  (let ((filter beeminder-filters))
+    (while (and filter (not (string= (char-to-string last-command-event) (nth 4 (car filter)))))
+      (setq filter (cdr filter)))
+    (if (not filter)
+	(error "This shouldn't happen -- beeminder-filter-command)")
+      (setq filter (car filter))
+      (setq beeminder-current-filters
+	    (plist-clear
+	     (plist-put beeminder-current-filters
+			(car filter)
+			(cond
+			 ((eq parameter '-) nil)
+			 ((null parameter) (caddr filter))
+			 (t (prefix-numeric-value parameter))))))
+      (beeminder-recreate-ewoc))))
 
-(defun beeminder-filter-by-donetoday (percentage)
-  "Filter the goals by PERCENTAGE of what should be done today."
-  (interactive "p")
-  (save-current-goal
-   (if (and (numberp (plist-get beeminder-current-filters :donetoday))
-	    (< (plist-get beeminder-current-filters :donetoday) percentage))
-       (beeminder-message-filter-loosening)
-     (ewoc-filter beeminder-goals-ewoc
-		  (lambda (goal)
-		    (< (/ (* 100 (cdr-assoc 'donetoday goal))
-			  (/ (cdr-assoc 'rate goal)
-			     (cl-case (intern (cdr-assoc 'runits goal))
-			       (y 365)
-			       (m (/ 365 12))
-			       (w 7)
-			       (d 1)
-			       (h (/ 1 24)))))
-		       percentage)))
-     (setq beeminder-current-filters
-	   (plist-put beeminder-current-filters :donetoday percentage))
-     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
-     (ewoc-refresh beeminder-goals-ewoc))))
-
-(define-key beeminder-mode-map (kbd "d") #'beeminder-filter-by-days)
-(define-key beeminder-mode-map (kbd "t") #'beeminder-filter-by-donetoday)
+(define-key beeminder-mode-map (kbd "d") #'beeminder-filter-command)
+(define-key beeminder-mode-map (kbd "t") #'beeminder-filter-command)
 
 (provide 'beeminder)
 
