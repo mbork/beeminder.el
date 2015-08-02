@@ -380,6 +380,7 @@ filtering and sorting settings."
 
 (defmacro save-current-goal (&rest body)
   "Evaluate BODY and bring the point back to the current goal."
+  (declare (indent 0) (debug t))
   `(let ((current-goal-slug (cdr-assoc 'slug (ewoc-data (ewoc-locate beeminder-goals-ewoc)))))
      ,@body
      (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0))
