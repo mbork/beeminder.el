@@ -42,7 +42,7 @@ beeminder.com.")
   "Move COUNT goals forward in the Beeminder buffer."
   (interactive "p")
   (ewoc-goto-next beeminder-goals-ewoc
-		  (if (< (point) (ewoc-location (ewoc-nth beeminder-goals-ewoc 0)))
+		  (if (beeminder-before-first-goal-p)
 		      (1- count)
 		    count)))
 
@@ -151,6 +151,12 @@ a list of sexps - each sexp describes one goal."
 
 
 ;; Submitting datapoints
+
+(defun beeminder-before-first-goal-p ()
+  "Return t is the point is before the first goal in the
+Beeminder buffer."
+  (< (point)
+     (ewoc-location (ewoc-nth beeminder-goals-ewoc 0))))
 
 (defun current-time-hmsz-string (&optional timestamp)
   "Return current time (or TIMESTAMP, given as Unix time) as
