@@ -35,3 +35,4 @@ completion).  Use it in beeminder-kill-goal and beeminder-submit-datapoint.
 * DONE convert lambdas in beeminder-filters to functions
 * TODO make beeminder-filter-command more lispy
 * TODO Convert plists (in filters) to alists
+* TODO Error handling
