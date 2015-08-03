@@ -2,7 +2,6 @@ What to do?
 
 * DONE Define macro save-current-goal, add it to refreshing routine
 * DONE Add "some goals killed" to the sorting/filtering info
-* TODO Add asking for goal slug (with completion) when submitting on header
 * TODO Customizable goal display
 * TODO Add a "dirty" flag after updating a goal, so that refreshing will download goals
 * TODO Add overstrike over dirty goals, preserve it if downloading doesn't change anything 
