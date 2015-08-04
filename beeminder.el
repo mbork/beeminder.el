@@ -361,6 +361,22 @@ positive, shorten the header; otherwise, do not."
 
 (define-key beeminder-mode-map (kbd "=") #'beeminder-toggle-short-header)
 
+(defun plist-mapcar (function plist)
+  "Apply FUNCTION (which must accept two arguments) to each pair
+in PLIST, and make a list of the results.  This function won't be
+needed when we scrap plists."
+  (let (result)
+    (while plist
+      (push (funcall function (car plist) (cadr plist))
+	    result)
+      (setq plist (cddr plist)))
+    (nreverse result)))
+
+(defun plist-to-alist (plist)
+  "This is a temporary function, needed only as long as
+`beeminder-current-filters' is a plist and not an alist."
+  (plist-mapcar #'cons plist))
+
 (defun beeminder-ewoc-header ()
   "Generate header for the Beeminder EWOC"
   (concat (format "Beeminder goals for user %s\n"
