@@ -344,6 +344,23 @@ textual representation of a goal."
 
 (defvar beeminder-goals-ewoc nil)
 
+(defvar beeminder-short-header nil
+  "If t, the default header is (extremely) shortened.")
+
+(defun beeminder-toggle-short-header (&optional arg)
+  "Toggle shortening the header for Beeminder goal list.  If ARG is
+positive, shorten the header; otherwise, do not."
+  (interactive "P")
+  (setq beeminder-short-header
+	(if (null arg)
+	    (not beeminder-short-header)
+	  (> (prefix-numeric-value arg) 0)))
+  (save-current-goal
+    (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
+    (ewoc-refresh beeminder-goals-ewoc)))
+
+(define-key beeminder-mode-map (kbd "=") #'beeminder-toggle-short-header)
+
 (defun beeminder-ewoc-header ()
   "Generate header for the Beeminder EWOC"
   (concat (format "Beeminder goals for user %s\n"
