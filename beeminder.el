@@ -158,6 +158,19 @@ Beeminder buffer."
   (< (point)
      (ewoc-location (ewoc-nth beeminder-goals-ewoc 0))))
 
+(defun beeminder-get-slug (goal)
+  "Return the slug of GOAL."
+  (cdr-assoc 'slug goal))
+
+(defun beeminder-slug-to-goal (slug)
+  "Return the goal node corresponding to SLUG."
+  (let ((goal-node (ewoc-nth beeminder-goals-ewoc 0)))
+    (while (and goal-node
+		(not
+		 (string= slug (cdr-assoc 'slug (ewoc-data goal-node)))))
+      (setq goal-node (ewoc-next beeminder-goals-ewoc goal-node)))
+    goal-node))
+
 (defun current-time-hmsz-string (&optional timestamp)
   "Return current time (or TIMESTAMP, given as Unix time) as
 a string, in the format hh:mm:ss tz."
