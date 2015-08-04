@@ -28,7 +28,7 @@ What to do?
 * DONE temporary removing of goals
 * DONE configurable midnight
 * DONE refresh should suggest reloading if past at least one deadline
-* TODO create a function which gets the goal the point is on,
+* DONE create a function which gets the goal the point is on,
 and if point is before any goals, ask for a goal slug (with
 completion).  Use it in beeminder-kill-goal and beeminder-submit-datapoint.
 * DONE convert lambdas in beeminder-filters to functions

@@ -205,8 +205,7 @@ a string, in the format hh:mm:ss tz."
 COMMENT and TIMESTAMP (as Unix time).  If PRINT-MESSAGE is
 non-nil, print suitable messages in the echo area."
   (interactive
-   (let* ((slug (cdr (assoc 'slug (ewoc-data (ewoc-locate
-					      beeminder-goals-ewoc)))))
+   (let* ((slug (cdr (assoc 'slug (ewoc-data (current-or-read-goal)))))
 	  (yesterdayp (eq current-prefix-arg '-))
 	  (amount (if (numberp current-prefix-arg)
 		      current-prefix-arg
@@ -565,7 +564,7 @@ of a day's amount."
 
 (defun beeminder-kill-goal (goal-node)
   "Delete GOAL-NODE from `beeminder-goals-ewoc'."
-  (interactive (list (ewoc-locate beeminder-goals-ewoc)))
+  (interactive (list (current-or-read-goal)))
   (let ((inhibit-read-only t)
 	(next-goal (or (ewoc-next beeminder-goals-ewoc goal-node)
 		       (ewoc-prev beeminder-goals-ewoc goal-node))))
