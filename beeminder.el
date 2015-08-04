@@ -377,30 +377,35 @@ needed when we scrap plists."
 `beeminder-current-filters' is a plist and not an alist."
   (plist-mapcar #'cons plist))
 
+(defun beeminder-print-filter (filter)
+  "Return a printed representation of FILTER, which should be an
+element of `beeminder-current-filters'."
+  (let ((filter-pp (nth (if beeminder-short-header 4 3)
+			(assoc (car filter) beeminder-filters))))
+    (cond
+     ((stringp filter-pp) (format filter-pp (cdr filter)))
+     ((functionp filter-pp) (funcall filter-pp (cdr filter)))
+     (t error "Wrong format of `beeminder-filters' for filter %s" (car filter)))))
+
 (defun beeminder-ewoc-header ()
   "Generate header for the Beeminder EWOC"
-  (concat (format "Beeminder goals for user %s\n"
+  (concat (format "Beeminder goals for user %s"
 		  beeminder-username)
-	  (propertize (concat (format "sorting criterion: %s\n"
+	  (propertize (concat (format (if beeminder-short-header
+					  "  sort:%s"
+					"\nsorting criterion: %s")
 				      (caddr beeminder-current-sorting-setting))
-			      (if beeminder-current-filters
-				  (format "filter%s:%s\n"
-					  (if (> (length beeminder-current-filters) 2) "s" "")
-					  (let ((firstp t))
-					    (concat
-					     (awhen (plist-get beeminder-current-filters 'days)
-					       (setq firstp nil)
-					       (format " days to derailment (%d)" it))
-					     (awhen (plist-get beeminder-current-filters 'donetoday)
-					       (prog1
-						   (format "%s done today (%d%%)"
-							   (if firstp "" ",")
-							   it)
-						 (setq firstp nil)))
-					     (awhen (plist-get beeminder-current-filters 'killed)
-					       (format "%s individual goals killed (%d)"
-						       (if firstp "" ",")
-						       (length it))))))))
+			      (format (if beeminder-short-header
+					  "  fil:%s"
+					(format "\nfilter%s: %%s\n"
+						(if (and (car beeminder-current-filters)
+							 (not (cddr beeminder-current-filters)))
+						    "" "s")))
+				      (if beeminder-current-filters
+					  (mapconcat #'beeminder-print-filter
+						     (plist-to-alist beeminder-current-filters)
+						     ", ")
+					"none")))
 		      'face 'shadow)))
 
 (defun beeminder-create-ewoc ()
@@ -573,12 +578,14 @@ of a day's amount."
   (not (member (cdr-assoc 'slug goal) kill-list)))
 
 (defvar beeminder-filters `((days ,#'beeminder-days-p
-				 ,beeminder-default-filter-days
-				 "days to derailment (%d)"
-				 "d")
+				  ,beeminder-default-filter-days
+				  "days to derailment (%d)"
+				  "d2d(%d)"
+				  "d")
 			    (donetoday ,#'beeminder-donetoday-p
 				       ,beeminder-default-filter-donetoday
 				       "done today (%d%%)"
+				       "dt(%d%%)"
 				       "t")
 			    (killed ,#'beeminder-not-killed-p
 				    '()
@@ -586,6 +593,7 @@ of a day's amount."
 								(length kill-list)
 								(if (= 1 (length kill-list))
 								    "" "s")))
+				    (lambda (kill-list) (format "%d gk" (length kill-list)))
 				    ""))
 
   "List of possible filters.  Each element is a list, consisting of:
@@ -593,6 +601,7 @@ of a day's amount."
 - predicate (with two arguments - the goal and the parameter),
 - default value for the parameter,
 - formatting function (with one argument - the parameter) or a format string (with one placeholder)
+- formatting function or a format string for the shortened version of header
 - key for enabling the filter (as a string, passed to `kbd').")
 
 (defun beeminder-kill-goal (goal-node)
@@ -655,7 +664,7 @@ applied by the key pressed to run this very command.  PARAMETER,
 when given, overrides the default."
   (interactive "P")
   (let ((filter beeminder-filters))
-    (while (and filter (not (string= (char-to-string last-command-event) (nth 4 (car filter)))))
+    (while (and filter (not (string= (char-to-string last-command-event) (nth 5 (car filter)))))
       (setq filter (cdr filter)))
     (if (not filter)
 	(error "This shouldn't happen -- beeminder-filter-command)")
