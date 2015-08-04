@@ -171,6 +171,24 @@ Beeminder buffer."
       (setq goal-node (ewoc-next beeminder-goals-ewoc goal-node)))
     goal-node))
 
+(defvar beeminder-minibuffer-history nil
+  "History of goal slugs entered through minibuffer.")
+
+(defun current-or-read-goal ()
+  "Return the goal node the point is on.  If the point is before
+the first goal, use `completing-read' to ask for the goal slug
+and return that goal node instead."
+  (if (beeminder-before-first-goal-p)
+      (beeminder-slug-to-goal
+       (completing-read "Goal slug: "
+			(mapcar #'beeminder-get-slug (ewoc-collect beeminder-goals-ewoc #'true))
+			nil
+			t
+			nil
+			'beeminder-minibuffer-history
+			(beeminder-get-slug (ewoc-data (ewoc-nth beeminder-goals-ewoc 0)))))
+    (ewoc-locate beeminder-goals-ewoc)))
+
 (defun current-time-hmsz-string (&optional timestamp)
   "Return current time (or TIMESTAMP, given as Unix time) as
 a string, in the format hh:mm:ss tz."
