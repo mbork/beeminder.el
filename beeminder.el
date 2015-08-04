@@ -532,17 +532,17 @@ of a day's amount."
 - formatting function (with one argument - the parameter) or a format string (with one placeholder)
 - key for enabling the filter (as a string, passed to `kbd').")
 
-(defun beeminder-kill-goal (goal)
-  "Delete GOAL from `beeminder-goals-ewoc'."
+(defun beeminder-kill-goal (goal-node)
+  "Delete GOAL-NODE from `beeminder-goals-ewoc'."
   (interactive (list (ewoc-locate beeminder-goals-ewoc)))
   (let ((inhibit-read-only t)
-	(next-goal (or (ewoc-next beeminder-goals-ewoc goal)
-		       (ewoc-prev beeminder-goals-ewoc goal))))
-    (ewoc-delete beeminder-goals-ewoc goal)
+	(next-goal (or (ewoc-next beeminder-goals-ewoc goal-node)
+		       (ewoc-prev beeminder-goals-ewoc goal-node))))
+    (ewoc-delete beeminder-goals-ewoc goal-node)
     (ewoc-refresh beeminder-goals-ewoc)
     (let ((killed (plist-get beeminder-current-filters 'killed)))
       (setq beeminder-current-filters (plist-put beeminder-current-filters 'killed
-						 (cons (cdr-assoc 'slug (ewoc-data goal))
+						 (cons (cdr-assoc 'slug (ewoc-data goal-node))
 						       killed))))
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
     (if next-goal
