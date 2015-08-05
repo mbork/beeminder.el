@@ -13,14 +13,14 @@ What to do?
 * DONE sort goals according to various criteria
 * DONE Display goals: make a (configurable) list of beeminder goals
 * DONE goals mode: a major mode displaying all goals
-* TODO beeminder-mode-map [8/12]
+* TODO beeminder-mode-map [8/11]
 - [X] C-k: delete goal (for display only)
 - [X] g: reload
 - [X] l: sort by losedate
 - [X] m: sort by midnight
 - [X] d: filter by days
 - [X] t: filter by donetoday
-- [ ] a: display all goals (i.e. undo filtering)
+- [X] c: display all goals (i.e. undo filtering)
 - [X] RET: submit data (ask for amount; by default - 1; with prefix arg - this much)
 - [ ] h: datapoints (h as in history)
 - [ ] : road dial
