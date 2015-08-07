@@ -143,7 +143,14 @@ a list of sexps - each sexp describes one goal."
 						  (cdr-assoc 'slug goal)
 						  today-values))
 					   goal))
-			   goals))))
+			   goals))
+    (mapc (lambda (goal)
+	    (let ((slugsym (intern (cdr-assoc 'slug goal))))
+	      (if (and (cdr-assoc slugsym beeminder-dirty-alist)
+		       (/= (cdr-assoc 'curval goal)
+			   (cdr-assoc slugsym beeminder-dirty-alist)))
+		  (setq beeminder-dirty-alist (assq-delete-all slugsym beeminder-dirty-alist)))))
+	  goals)))
 
 (defun beeminder-refresh-goal (slug)
   "Refresh autodata and graph."
@@ -200,6 +207,16 @@ a string, in the format hh:mm:ss tz."
 	    (car decoded-time)
 	    (cadr (current-time-zone (apply #'encode-time decoded-time))))))
 
+(defvar beeminder-dirty-alist '()
+  "Alist of goal slugs and their \"curval\" values that were
+changed through submitting a datapoint.  A goal is put here by
+`beeminder-submit-datapoint' and cleared from the list by
+`beeminder-get-goals'.")
+
+(defface beeminder-dirty '((t :slant italic :foreground "grey50"))
+  "Face for displaying \"dirty\" goals, i.e., goals for which
+a datapoint was submitted but had ot yet been reloaded.")
+
 (defun beeminder-submit-datapoint (slug amount &optional comment timestamp print-message)
   "Submit a datapoint to beeminder goal SLUG with data: AMOUNT,
 COMMENT and TIMESTAMP (as Unix time).  If PRINT-MESSAGE is
@@ -236,7 +253,11 @@ non-nil, print suitable messages in the echo area."
 					  amount
 					  (or comment default-comment)
 					  (or timestamp current-timestamp))))
-  (if print-message (message (format "Submitting datapoint of %d for goal %s...  Done." amount slug))))
+  (if print-message (message (format "Submitting datapoint of %d for goal %s...  Done." amount slug)))
+  (setf (alist-get (intern slug)
+		   beeminder-dirty-alist)
+	(cdr-assoc 'curval (ewoc-data (beeminder-slug-to-goal slug))))
+  (beeminder-recreate-ewoc))
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
 
@@ -320,9 +341,12 @@ textual representation of a goal."
 			      (cdr (assoc 'runits goal))
 			      (cdr (assoc 'pledge goal))
 			      (cdr (assoc 'title goal)))
-		      'face (plist-get beeminder-lanes-to-faces-plist
-				       (* (cdr (assoc 'yaw goal))
-					  (beeminder-normalize-lane (cdr (assoc 'lane goal))))))))
+		      'face
+		      (if (alist-get (intern (cdr-assoc 'slug goal)) beeminder-dirty-alist)
+			  'beeminder-dirty
+			(plist-get beeminder-lanes-to-faces-plist
+				   (* (cdr (assoc 'yaw goal))
+				      (beeminder-normalize-lane (cdr (assoc 'lane goal)))))))))
 
 
 ;; Faces for goals
