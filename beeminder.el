@@ -397,6 +397,14 @@ applied."
 	      'face
 	      (beeminder-goal-face goal)))
 
+(defun beeminder-display-first-goal ()
+  "Display the first goal (this should be the one with the
+nearest deadline) in the echo area.  You might want to bind this
+function globally so that you don't need to enter the Beeminder mode
+to see the nearest deadline."
+  (interactive)
+  (message (beeminder-goal-representation (car beeminder-goals))))
+
 
 ;; Faces for goals
 
