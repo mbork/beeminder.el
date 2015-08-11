@@ -233,7 +233,7 @@ non-nil, print suitable messages in the echo area."
 				       nil nil "1"))))
 	  (current-timestamp (time-to-seconds (current-time)))
 	  (default-comment (concat
-			    "via Emacs "
+			    "via Emacs at "
 			    (current-time-hmsz-string current-timestamp))))
      (list slug
 	   amount
