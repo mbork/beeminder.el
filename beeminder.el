@@ -247,12 +247,15 @@ non-nil, print suitable messages in the echo area."
 	       current-timestamp)
 	   t)))
   (if print-message (message (format "Submitting datapoint of %d for goal %s..." amount slug)))
-  (beeminder-request-post (format "/goals/%s/datapoints.json" slug)
-			  (concat (format "auth_token=%s&value=%f&comment=%s&timestamp=%d"
-					  beeminder-auth-token
-					  amount
-					  (or comment default-comment)
-					  (or timestamp current-timestamp))))
+  (unless (beeminder-request-post (format "/goals/%s/datapoints.json" slug)
+				  (concat (format "auth_token=%s&value=%f&comment=%s&timestamp=%d"
+						  beeminder-auth-token
+						  amount
+						  (or comment default-comment)
+						  (or timestamp
+						      current-timestamp))))
+    (sit-for beeminder-default-timeout)
+    (error "Submitting failed, check your internet connection"))
   (if print-message (message (format "Submitting datapoint of %d for goal %s...  Done." amount slug)))
   (setf (alist-get (intern slug)
 		   beeminder-dirty-alist)
