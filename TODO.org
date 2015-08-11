@@ -2,7 +2,7 @@ What to do?
 
 * DONE Define macro save-current-goal, add it to refreshing routine
 * DONE Add "some goals killed" to the sorting/filtering info
-* TODO Customizable goal display
+* DONE Customizable goal display
 * DONE Add a "dirty" flag after updating a goal
 * DONE Add a face for dirty goals, preserve it if downloading doesn't change anything
 * DONE Add filtering by safe days

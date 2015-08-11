@@ -329,24 +329,73 @@ Midnight is treated as belonging to the previous day, not the following one."
 smaller than -2 to -2."
   (min (max lane -2) 2))
 
-(defun beeminder-goal-pp (goal)
-  "A pretty printer for Beeminder goals.  Prints a (currently fixed)
-textual representation of a goal."
-  (insert (propertize (format "%-12.12s %s %-16.16s %4.2d/%s $%.2f %s"
-			      (cdr (assoc 'slug goal))
-			      (beeminder-human-time (seconds-to-time
-						     (1+ (cdr (assoc 'losedate goal)))))
-			      (cdr (assoc 'limsum goal))
-			      (cdr (assoc 'rate goal))
-			      (cdr (assoc 'runits goal))
-			      (cdr (assoc 'pledge goal))
-			      (cdr (assoc 'title goal)))
-		      'face
-		      (if (alist-get (intern (cdr-assoc 'slug goal)) beeminder-dirty-alist)
-			  'beeminder-dirty
-			(plist-get beeminder-lanes-to-faces-plist
-				   (* (cdr (assoc 'yaw goal))
-				      (beeminder-normalize-lane (cdr (assoc 'lane goal)))))))))
+(defun beeminder-display-string-field (goal field &optional width)
+  "Display GOAL's FIELD (which should be a symbol) as a string,
+optionally of length WIDTH \(padded from the right with spaces)."
+  (format (if width
+	      (format "%%-%d.%ds" width width)
+	    "%s")
+	  (cdr (assoc field goal))))
+
+(defun beeminder-display-losedate-human (goal)
+  "Return the losedate field of GOAL in human-friendly format."
+  (beeminder-human-time (seconds-to-time (1+ (cdr (assoc 'losedate goal))))))
+
+(defun beeminder-display-rate (goal)
+  "Return the rate of the GOAL (with units), as a string."
+  (let ((rate (cdr-assoc 'rate goal)))
+    (format (concat
+	     (if (>= rate 1)
+		 "%4d"
+	       "%4.2f")
+	     "/%s")
+	    (cdr-assoc 'rate goal)
+	    (cdr-assoc 'runits goal))))
+
+(defun beeminder-display-pledge (goal)
+  "Return the pledge of the GOAL, as a string."
+  (format "$%.2f" (cdr-assoc 'pledge goal)))
+
+(defcustom beeminder-goal-pp-format
+  '((beeminder-display-string-field slug 12)
+    " "
+    beeminder-display-losedate-human
+    " "
+    (beeminder-display-string-field limsum 16)
+    " "
+    beeminder-display-rate
+    " "
+    beeminder-display-pledge
+    " "
+    (beeminder-display-string-field title))
+  "The format for displaying a Beeminder goal.  It is a list
+whose elements are either strings, printed verbatim, either
+functions, which are then called with one argument
+\(the goal), or lists, in which case the car of the list is a function
+and the cdr the list of arguments it should get after the goal.")
+
+(defun beeminder-goal-face (goal)
+  "Return the face for displaying GOAL."
+  (if (alist-get (intern (cdr-assoc 'slug goal))
+		 beeminder-dirty-alist)
+      'beeminder-dirty
+    (plist-get beeminder-lanes-to-faces-plist
+	       (* (cdr (assoc 'yaw goal))
+		  (beeminder-normalize-lane (cdr (assoc 'lane goal)))))))
+
+(defun beeminder-goal-representation (goal)
+  "The string representation of GOAL, with the proper face
+applied."
+  (propertize (mapconcat (lambda (field-specifier)
+			   (cond
+			    ((functionp field-specifier) (funcall field-specifier goal))
+			    ((consp field-specifier) (apply (car field-specifier)
+							    goal
+							    (cdr field-specifier)))
+			    ((stringp field-specifier) field-specifier)))
+		      beeminder-goal-pp-format "")
+	      'face
+	      (beeminder-goal-face goal)))
 
 
 ;; Faces for goals
@@ -434,7 +483,7 @@ element of `beeminder-current-filters'."
 
 (defun beeminder-create-ewoc ()
   "Return a newly created EWOC for Beeminder goals."
-  (ewoc-create #'beeminder-goal-pp
+  (ewoc-create (lambda (goal) (insert (beeminder-goal-representation goal)))
 	       (beeminder-ewoc-header)""))
 
 (defun beeminder-recreate-ewoc ()
