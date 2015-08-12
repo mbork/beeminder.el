@@ -33,5 +33,5 @@ and if point is before any goals, ask for a goal slug (with
 completion).  Use it in beeminder-kill-goal and beeminder-submit-datapoint.
 * DONE convert lambdas in beeminder-filters to functions
 * TODO make beeminder-filter-command more lispy
-* TODO Convert plists (in filters) to alists
+* DONE Convert plists (in filters) to alists
 * TODO Error handling

@@ -439,22 +439,6 @@ positive, shorten the header; otherwise, do not."
 
 (define-key beeminder-mode-map (kbd "=") #'beeminder-toggle-short-header)
 
-(defun plist-mapcar (function plist)
-  "Apply FUNCTION (which must accept two arguments) to each pair
-in PLIST, and make a list of the results.  This function won't be
-needed when we scrap plists."
-  (let (result)
-    (while plist
-      (push (funcall function (car plist) (cadr plist))
-	    result)
-      (setq plist (cddr plist)))
-    (nreverse result)))
-
-(defun plist-to-alist (plist)
-  "This is a temporary function, needed only as long as
-`beeminder-current-filters' is a plist and not an alist."
-  (plist-mapcar #'cons plist))
-
 (defun beeminder-print-filter (filter)
   "Return a printed representation of FILTER, which should be an
 element of `beeminder-current-filters'."
@@ -477,11 +461,11 @@ element of `beeminder-current-filters'."
 					  "  fil:%s"
 					(format "\nfilter%s: %%s\n"
 						(if (and (car beeminder-current-filters)
-							 (not (cddr beeminder-current-filters)))
+							 (not (cdr beeminder-current-filters)))
 						    "" "s")))
 				      (if beeminder-current-filters
 					  (mapconcat #'beeminder-print-filter
-						     (plist-to-alist beeminder-current-filters)
+						     beeminder-current-filters
 						     ", ")
 					"none")))
 		      'face 'shadow)))
@@ -614,7 +598,7 @@ SEC1, return t.  In all other cases, return nil."
 ;; Filtering goals
 
 (defvar beeminder-current-filters '()
-  "Plist of filters currently in effect.  This should really be an alist.")
+  "Alist of filters currently in effect.")
 
 (defun beeminder-clear-filters ()
   "Clear all filters."
@@ -691,10 +675,8 @@ of a day's amount."
 		       (ewoc-prev beeminder-goals-ewoc goal-node))))
     (ewoc-delete beeminder-goals-ewoc goal-node)
     (ewoc-refresh beeminder-goals-ewoc)
-    (let ((killed (plist-get beeminder-current-filters 'killed)))
-      (setq beeminder-current-filters (plist-put beeminder-current-filters 'killed
-						 (cons (cdr (assoc 'slug (ewoc-data goal-node)))
-						       killed))))
+    (push (cdr (assoc 'slug (ewoc-data goal-node)))
+	  (alist-get 'killed beeminder-current-filters))
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
     (if next-goal
 	(ewoc-goto-node beeminder-goals-ewoc next-goal)
@@ -706,36 +688,24 @@ of a day's amount."
   "Clear all individual kills."
   (interactive)
   (setq beeminder-current-filters
-	(plist-clear (plist-put beeminder-current-filters 'killed nil)))
+	(assq-delete-all 'killed beeminder-current-filters))
   (beeminder-recreate-ewoc))
 
 (define-key beeminder-mode-map (kbd "C-w") #'beeminder-clear-kills)
 
-(defun beeminder-apply-filter (filter parameter)
-  "Apply FILTER (which should be a symbol), parametrized by PARAMETER.
-This means deleting some goals from `beeminder-goals-ewoc'."
+(defun beeminder-apply-filter (filter)
+  "Apply FILTER (which should be a dotted pair of symbol and
+parameter).  This means deleting some goals from
+`beeminder-goals-ewoc'."
   (save-current-goal
     (ewoc-filter beeminder-goals-ewoc
 		 (lambda (goal)
-		   (funcall (cadr (assoc filter beeminder-filters))
-			    goal parameter)))))
-
-(defun plist-mapc (function plist)
-  "Iterate FUNCTION (a two-argument function) over PLIST."
-  (when plist
-    (funcall function (car plist) (cadr plist))
-    (plist-mapc function (cddr plist))))
-
-(defun plist-clear (plist)
-  "Return PLIST with all nil properties deleted."
-  (cond
-   ((null (cdr plist)) nil)
-   ((null (cadr plist)) (cddr plist))
-   (t (cons (car plist) (cons (cadr plist) (plist-clear (cddr plist)))))))
+		   (funcall (cadr (assoc (car filter) beeminder-filters))
+			    goal (cdr filter))))))
 
 (defun beeminder-apply-filters ()
   "Apply filters from `beeminder-current-filters' in sequence."
-  (plist-mapc #'beeminder-apply-filter beeminder-current-filters))
+  (mapc #'beeminder-apply-filter beeminder-current-filters))
 
 (defun beeminder-filter-command (parameter)
   "Enable the filter from `beeminder-filters' which should be
@@ -748,14 +718,14 @@ when given, overrides the default."
     (if (not filter)
 	(error "This shouldn't happen -- beeminder-filter-command)")
       (setq filter (car filter))
-      (setq beeminder-current-filters
-	    (plist-clear
-	     (plist-put beeminder-current-filters
-			(car filter)
-			(cond
-			 ((eq parameter '-) nil)
-			 ((null parameter) (caddr filter))
-			 (t (prefix-numeric-value parameter))))))
+      (setf (alist-get (car filter) beeminder-current-filters)
+	    (cond
+	     ((eq parameter '-)
+	      nil)
+	     ((null parameter)
+	      (caddr filter))
+	     (t (prefix-numeric-value parameter))))
+      (setq beeminder-current-filters (rassq-delete-all nil beeminder-current-filters))
       (beeminder-recreate-ewoc))))
 
 (define-key beeminder-mode-map (kbd "d") #'beeminder-filter-command)
