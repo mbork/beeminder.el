@@ -520,7 +520,8 @@ filtering and sorting settings."
     (erase-buffer)
     (setq beeminder-goals-ewoc (beeminder-create-ewoc))
     (beeminder-recreate-ewoc))
-  (beeminder-mode))
+  (beeminder-mode)
+  (setq truncate-lines t))
 
 
 ;; Current time function
