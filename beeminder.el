@@ -317,9 +317,9 @@ Midnight is treated as belonging to the previous day, not the following one."
 				(format-time-string "%R" time)))
 	  (t (format-time-string "%Y-%m-%d" time)))))
 
-(defconst beeminder-lanes-to-faces-plist
-  '(-2 beeminder-red -1 beeminder-yellow 1 beeminder-blue 2 beeminder-green)
-  "Plist mapping the (normalized) value of lane to goal colors.")
+(defconst beeminder-lanes-to-faces-alist
+  '((-2 . beeminder-red) (-1 . beeminder-yellow) (1 . beeminder-blue) (2 . beeminder-green))
+  "Alist mapping the (normalized) value of lane to goal colors.")
 
 (defun beeminder-normalize-lane (lane)
   "Normalize LANE, i.e., change LANE larger than 2 to 2 and
@@ -376,9 +376,9 @@ and the cdr the list of arguments it should get after the goal.")
   (if (alist-get (intern (cdr (assoc 'slug goal)))
 		 beeminder-dirty-alist)
       'beeminder-dirty
-    (plist-get beeminder-lanes-to-faces-plist
-	       (* (cdr (assoc 'yaw goal))
-		  (beeminder-normalize-lane (cdr (assoc 'lane goal)))))))
+    (cdr (assoc (* (cdr (assoc 'yaw goal))
+		   (beeminder-normalize-lane (cdr (assoc 'lane goal))))
+		beeminder-lanes-to-faces-alist))))
 
 (defun beeminder-goal-representation (goal)
   "The string representation of GOAL, with the proper face
