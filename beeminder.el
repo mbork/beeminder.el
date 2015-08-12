@@ -7,12 +7,6 @@
 (require 'seq)
 
 
-;; Utilities
-(defun cdr-assoc (key list)
-  "Composition of `cdr' and `assoc' of KEY and LIST."
-  (cdr (assoc key list)))
-
-
 ;; Settings
 (defcustom beeminder-username ""
   "User name for the Beeminder account.")
@@ -121,34 +115,34 @@ a list of sexps - each sexp describes one goal."
 	(today-values
 	 (mapcar
 	  (lambda (goal)
-	    (let ((last-midnight (last-midnight (cdr-assoc 'deadline goal)
+	    (let ((last-midnight (last-midnight (cdr (assoc 'deadline goal))
 						(beeminder-current-time))))
-	      (cons (cdr-assoc 'slug goal)
+	      (cons (cdr (assoc 'slug goal))
 		    (cl-reduce #'+
 			       (mapcar (lambda (datapoint)
-					 (if (> (cdr-assoc 'timestamp datapoint)
+					 (if (> (cdr (assoc 'timestamp datapoint))
 						last-midnight)
-					     (cdr-assoc 'value datapoint)
+					     (cdr (assoc 'value datapoint))
 					   0))
-				       (cdr-assoc 'datapoints goal))))))
-	  (cdr-assoc 'goals (beeminder-request-get
+				       (cdr (assoc 'datapoints goal)))))))
+	  (cdr (assoc 'goals (beeminder-request-get
 			     (format ".json?diff_since=%d"
 				     (- (time-to-seconds
 					 (current-time))
-					(* 24 60 60))))))))
+					(* 24 60 60)))))))))
     (setq beeminder-goals (mapcar
 			   (lambda (goal) (cons
 					   (cons 'donetoday
-						 (cdr-assoc
-						  (cdr-assoc 'slug goal)
-						  today-values))
+						 (cdr (assoc
+						  (cdr (assoc 'slug goal))
+						  today-values)))
 					   goal))
 			   goals))
     (mapc (lambda (goal)
-	    (let ((slugsym (intern (cdr-assoc 'slug goal))))
-	      (if (and (cdr-assoc slugsym beeminder-dirty-alist)
-		       (/= (cdr-assoc 'curval goal)
-			   (cdr-assoc slugsym beeminder-dirty-alist)))
+	    (let ((slugsym (intern (cdr (assoc 'slug goal)))))
+	      (if (and (cdr (assoc slugsym beeminder-dirty-alist))
+		       (/= (cdr (assoc 'curval goal))
+			   (cdr (assoc slugsym beeminder-dirty-alist))))
 		  (setq beeminder-dirty-alist (assq-delete-all slugsym beeminder-dirty-alist)))))
 	  goals)))
 
@@ -167,14 +161,14 @@ Beeminder buffer."
 
 (defun beeminder-get-slug (goal)
   "Return the slug of GOAL."
-  (cdr-assoc 'slug goal))
+  (cdr (assoc 'slug goal)))
 
 (defun beeminder-slug-to-goal (slug)
   "Return the goal node corresponding to SLUG."
   (let ((goal-node (ewoc-nth beeminder-goals-ewoc 0)))
     (while (and goal-node
 		(not
-		 (string= slug (cdr-assoc 'slug (ewoc-data goal-node)))))
+		 (string= slug (cdr (assoc 'slug (ewoc-data goal-node))))))
       (setq goal-node (ewoc-next beeminder-goals-ewoc goal-node)))
     goal-node))
 
@@ -259,7 +253,7 @@ non-nil, print suitable messages in the echo area."
   (if print-message (message (format "Submitting datapoint of %d for goal %s...  Done." amount slug)))
   (setf (alist-get (intern slug)
 		   beeminder-dirty-alist)
-	(cdr-assoc 'curval (ewoc-data (beeminder-slug-to-goal slug))))
+	(cdr (assoc 'curval (ewoc-data (beeminder-slug-to-goal slug)))))
   (beeminder-recreate-ewoc))
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
@@ -346,18 +340,18 @@ optionally of length WIDTH \(padded from the right with spaces)."
 
 (defun beeminder-display-rate (goal)
   "Return the rate of the GOAL (with units), as a string."
-  (let ((rate (cdr-assoc 'rate goal)))
+  (let ((rate (cdr (assoc 'rate goal))))
     (format (concat
 	     (if (>= rate 1)
 		 "%4d"
 	       "%4.2f")
 	     "/%s")
-	    (cdr-assoc 'rate goal)
-	    (cdr-assoc 'runits goal))))
+	    (cdr (assoc 'rate goal))
+	    (cdr (assoc 'runits goal)))))
 
 (defun beeminder-display-pledge (goal)
   "Return the pledge of the GOAL, as a string."
-  (format "$%.2f" (cdr-assoc 'pledge goal)))
+  (format "$%.2f" (cdr (assoc 'pledge goal))))
 
 (defcustom beeminder-goal-pp-format
   '((beeminder-display-string-field slug 12)
@@ -379,7 +373,7 @@ and the cdr the list of arguments it should get after the goal.")
 
 (defun beeminder-goal-face (goal)
   "Return the face for displaying GOAL."
-  (if (alist-get (intern (cdr-assoc 'slug goal))
+  (if (alist-get (intern (cdr (assoc 'slug goal)))
 		 beeminder-dirty-alist)
       'beeminder-dirty
     (plist-get beeminder-lanes-to-faces-plist
@@ -540,7 +534,7 @@ filtering and sorting settings."
 (defmacro save-current-goal (&rest body)
   "Evaluate BODY and bring the point back to the current goal."
   (declare (indent 0) (debug t))
-  `(let ((current-goal-slug (cdr-assoc 'slug (ewoc-data (ewoc-locate beeminder-goals-ewoc)))))
+  `(let ((current-goal-slug (cdr (assoc 'slug (ewoc-data (ewoc-locate beeminder-goals-ewoc))))))
      ,@body
      (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0))
      (let ((current-node (ewoc-nth beeminder-goals-ewoc 0)))
@@ -641,16 +635,16 @@ than this amount of days left to losedate will be filtered out.")
 (defun beeminder-days-p (goal days)
   "Return nil if time to derailment of GOAL is greater than
 DAYS."
-  (<= (- (beeminder-time-to-days (cdr-assoc 'losedate goal))
+  (<= (- (beeminder-time-to-days (cdr (assoc 'losedate goal)))
 	 (beeminder-time-to-days (beeminder-current-time)))
       days))
 
 (defun beeminder-donetoday-p (goal percentage)
   "Return nil if donetoday for GOAL is higher than the PERCENTAGE
 of a day's amount."
-  (< (/ (* 100 (cdr-assoc 'donetoday goal))
-	(/ (cdr-assoc 'rate goal)
-	   (cl-case (intern (cdr-assoc 'runits goal))
+  (< (/ (* 100 (cdr (assoc 'donetoday goal)))
+	(/ (cdr (assoc 'rate goal))
+	   (cl-case (intern (cdr (assoc 'runits goal)))
 	     (y 365)
 	     (m (/ 365 12))
 	     (w 7)
@@ -660,7 +654,7 @@ of a day's amount."
 
 (defun beeminder-not-killed-p (goal kill-list)
   "Return nil if GOAL is in the KILL-LIST."
-  (not (member (cdr-assoc 'slug goal) kill-list)))
+  (not (member (cdr (assoc 'slug goal)) kill-list)))
 
 (defvar beeminder-filters `((days ,#'beeminder-days-p
 				  ,beeminder-default-filter-days
@@ -699,7 +693,7 @@ of a day's amount."
     (ewoc-refresh beeminder-goals-ewoc)
     (let ((killed (plist-get beeminder-current-filters 'killed)))
       (setq beeminder-current-filters (plist-put beeminder-current-filters 'killed
-						 (cons (cdr-assoc 'slug (ewoc-data goal-node))
+						 (cons (cdr (assoc 'slug (ewoc-data goal-node)))
 						       killed))))
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
     (if next-goal
