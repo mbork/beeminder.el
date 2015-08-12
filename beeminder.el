@@ -762,13 +762,3 @@ when given, overrides the default."
 (define-key beeminder-mode-map (kbd "t") #'beeminder-filter-command)
 
 (provide 'beeminder)
-
-
-;; slug: string (12)
-;; title: string (12)
-;; rate: float (4)
-;; losedate: timestamp (10)
-;; pledge: float (6)
-;; runits: string (one character) (1)
-;; limsum: string (what remains to do) (16)
-
