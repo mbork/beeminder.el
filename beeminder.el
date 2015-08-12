@@ -2,7 +2,7 @@
 
 (require 'json)
 (require 'request)
-(require 'cl)
+(require 'cl-lib)
 (require 'ewoc)
 (require 'seq)
 
