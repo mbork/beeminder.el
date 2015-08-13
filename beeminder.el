@@ -1,7 +1,32 @@
 ;;; beeminder.el --- Emacs client for Beeminder
 
+;; Copyright (C) 2015 Marcin 'mbork' Borkowski
+
+;; Author: Marcin Borkowski <mbork@mbork.pl>
+;; Keywords: calendar
+;; Package-Requires: ((request "0.2.0"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; beeminder.el is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; beeminder.el is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with beeminder.el.
+;; If not, see <http://www.gnu.org/licenses/>.
+
 ;;; Commentary:
-;; 
+;; beeminder.el is an Emacs client for the Beeminder service.
+;; Beeminder (taglined "a reminder with a sting") is
+;; a motivation/quantified self tool based on behavioral economics
+;; principles.
 
 (require 'json)
 (require 'request)
@@ -18,19 +43,19 @@
   "User name for the Beeminder account.")
 
 (defcustom beeminder-auth-token ""
-  "Authentication token, taken from
-https://www.beeminder.com/api/v1/auth_token.json.")
+  "Authentication token for Beeminder.
+You can retrieve it from the URL
+`https://www.beeminder.com/api/v1/auth_token.json'.")
 
 (defcustom beeminder-api-url "https://www.beeminder.com/api/v1/users/"
   "The URL for making API calls.")
 
 (defvar beeminder-goals nil
-  "The vector of sexps representing goals.  Updated by
-  BEEMINDER-GET-GOALS.")
+  "The vector of sexps representing goals.
+Updated by `beeminder-get-goals'.")
 
 (defcustom beeminder-default-timeout 4
-  "Default timeout for HTTP requests sent over to
-beeminder.com.")
+  "Default timeout for HTTP requests sent to beeminder.com.")
 
 
 ;; Beeminder mode
@@ -47,8 +72,8 @@ beeminder.com.")
 		    count)))
 
 (defun previous-goal (count)
-  "Move COUNT goals back in the Beeminder buffer.  If on the
-first goal, move to (point-min)."
+  "Move COUNT goals back in the Beeminder buffer.
+If on the first goal, move to (point-min)."
   ;; If point is before the place `previous-goal' would move it, move
   ;; to (point-min).  This jumps to the beginning from any place
   ;; before the first node, but won't work when point is on Nth goal
@@ -67,27 +92,28 @@ first goal, move to (point-min)."
 ;; API interface
 
 (defun beeminder-create-api-url (string)
-  "Prepend the Beeminder site address and the username to the
-given STRING.  STRING should begin with a slash."
+  "Prepend Beeminder site address and the username to STRING.
+STRING should begin with a slash."
   (concat beeminder-api-url beeminder-username string))
 
-(defun beeminder-request-get (req &optional timeout)
-  "Send a GET request to beeminder.com, adding the necessary
-details (including the username and the auth token)."
+(defun beeminder-request-get (request &optional timeout)
+  "Send a GET REQUEST to beeminder.com, with TIMEOUT.
+Add the necessary details (including the username and the auth
+token)."
   (request-response-data
-   (request (concat (beeminder-create-api-url req)
-		    (if (string-match "\\?" req) "&" "?") ; this is hackish...
+   (request (concat (beeminder-create-api-url request)
+		    (if (string-match "\\?" request) "&" "?") ; this is hackish...
 		    "auth_token="
 		    beeminder-auth-token)
 	    :parser #'json-read
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
 
-(defun beeminder-request-post (req data &optional timeout)
-  "Send a POST request to beeminder.com, adding the username and
-the auth token."
+(defun beeminder-request-post (request data &optional timeout)
+  "Send a POST REQUEST with given DATA and TIMEOUT to beeminder.com.
+Add the username and the auth token."
   (request-response-data
-   (request (beeminder-create-api-url req)
+   (request (beeminder-create-api-url request)
 	    :type "POST"
 	    :data data
 	    :parser #'json-read
@@ -98,9 +124,9 @@ the auth token."
 ;; API calls (currently synchronous only)
 
 (defun last-midnight (goal-deadline now)
-  "Return a Unix timestamp of the last \"midnight\" for the given
-GOAL-DEADLINE (as an offset from real midnight in seconds), assuming
-that the current time is NOW."
+  "Return the last \"midnight\" for GOAL-DEADLINE, counting from NOW.
+GOAL-DEADLINE is an offset from real midnight in seconds, NOW is
+a time value."
   (let* ((now-decoded (decode-time now))
 	 (last-real-midnight (encode-time 0 0 0
 					  (cadddr now-decoded)
@@ -115,8 +141,8 @@ that the current time is NOW."
       last-midnight)))
 
 (defun beeminder-get-goals ()
-  "Get all the user's Beeminder goals.  The request returns
-a list of sexps - each sexp describes one goal."
+  "Get all the user's Beeminder goals.
+Return a vector of sexps, each describing one goal."
   (let ((goals (beeminder-request-get "/goals.json"))
 	(today-values
 	 (mapcar
@@ -153,15 +179,14 @@ a list of sexps - each sexp describes one goal."
 	  goals)))
 
 (defun beeminder-refresh-goal (slug)
-  "Refresh autodata and graph."
+  "Refresh autodata and graph of the goal named SLUG."
   (beeminder-request-get (concat "/goals/" slug "/refresh_graph.json")))
 
 
 ;; Submitting datapoints
 
 (defun beeminder-before-first-goal-p ()
-  "Return t is the point is before the first goal in the
-Beeminder buffer."
+  "Return t if the point is before the first goal."
   (< (point)
      (ewoc-location (ewoc-nth beeminder-goals-ewoc 0))))
 
@@ -182,9 +207,9 @@ Beeminder buffer."
   "History of goal slugs entered through minibuffer.")
 
 (defun current-or-read-goal ()
-  "Return the goal node the point is on.  If the point is before
-the first goal, use `completing-read' to ask for the goal slug
-and return that goal node instead."
+  "Return the goal node the point is on.
+If the point is before the first goal, use `completing-read' to
+ask for the goal slug and return that goal node instead."
   (if (beeminder-before-first-goal-p)
       (beeminder-slug-to-goal
        (completing-read "Goal slug: "
@@ -197,8 +222,8 @@ and return that goal node instead."
     (ewoc-locate beeminder-goals-ewoc)))
 
 (defun current-time-hmsz-string (&optional timestamp)
-  "Return current time (or TIMESTAMP, given as Unix time) as
-a string, in the format hh:mm:ss tz."
+  "Return TIMESTAMP (Unix time) as a string.
+Use current time by default.  Format is hh:mm:ss tz."
   (let ((decoded-time (decode-time (or (seconds-to-time timestamp)
 				       (current-time)))))
     (format "%02d:%02d:%02d %s"
@@ -208,19 +233,21 @@ a string, in the format hh:mm:ss tz."
 	    (cadr (current-time-zone (apply #'encode-time decoded-time))))))
 
 (defvar beeminder-dirty-alist '()
-  "Alist of goal slugs and their \"curval\" values that were
-changed through submitting a datapoint.  A goal is put here by
-`beeminder-submit-datapoint' and cleared from the list by
-`beeminder-get-goals'.")
+  "Alist of slugs and \"curval\" values of changed goals.
+A goal is put here by `beeminder-submit-datapoint' and cleared
+from the list by `beeminder-get-goals' (if the retrieved data are
+actually updated, which can take from a few seconds to even a few
+minutes).")
 
 (defface beeminder-dirty '((t :slant italic :foreground "grey50"))
   "Face for displaying \"dirty\" goals, i.e., goals for which
 a datapoint was submitted but had ot yet been reloaded.")
 
 (defun beeminder-submit-datapoint (slug amount &optional comment timestamp print-message)
-  "Submit a datapoint to beeminder goal SLUG with data: AMOUNT,
-COMMENT and TIMESTAMP (as Unix time).  If PRINT-MESSAGE is
-non-nil, print suitable messages in the echo area."
+  "Submit a datapoint to Beeminder goal SLUG with AMOUNT.
+Additional data are COMMENT and TIMESTAMP (as Unix time).  If
+PRINT-MESSAGE is non-nil, print suitable messages in the echo
+area."
   (interactive
    (let* ((slug (cdr (assoc 'slug (ewoc-data (current-or-read-goal)))))
 	  (yesterdayp (eq current-prefix-arg '-))
@@ -268,14 +295,14 @@ non-nil, print suitable messages in the echo area."
 ;; Sorting EWOC
 
 (defun true (&rest args)
-  "Always return t."
+  "Always return t (irrespective of ARGS)."
   t)
 
 (defun ewoc-sort (ewoc pred)
-  "Sort EWOC, comparing its nodes using PRED.  Since the author of
-EWOC didn't really care for sorting, and neither do I, we first
-collect the nodes into a list, sort it using Elisp's sort, and then
-recreate the EWOC."
+  "Sort EWOC, comparing its nodes using PRED.
+Since the author of EWOC didn't really care for sorting, and
+neither do I, we just first collect the nodes into a list, sort
+it using Elisp's sort, and then recreate the EWOC."
   (let ((ewoc-list (ewoc-collect ewoc #'true)))
     (ewoc-filter ewoc #'ignore)
     (mapcar (lambda (node) (ewoc-enter-last ewoc node))
@@ -285,8 +312,8 @@ recreate the EWOC."
 ;; Displaying goals
 
 (defvar beeminder-human-time-use-weekday t
-  "Whether BEEMINDER-HUMAN-TIME uses weekdays or number of days from
-today for times within a week from now.")
+  "Non-nil means that `beeminder-human-time' uses weekday names.
+Otherwise, use number of days from today.")
 
 (defvar beeminder-tomorrow-code "tom"
   "The abbreviation for \"tomorrow\".")
@@ -297,19 +324,19 @@ Times up to this time will be considered to belong to the
 previous day.")
 
 (defun beeminder-time-to-days (time)
-  "Like time-to-days, but taking `beeminder-when-the-day-ends'
-into account."
+  "Compute the number of days from 0001-12-31 BC until TIME.
+Take into consideration `beeminder-when-the-day-ends'."
   (time-to-days (time-add time (- beeminder-when-the-day-ends))))
 
 (defun beeminder-human-time (time)
-  "Convert TIME (which is set in the future) to a human-friendly
-format:
-- for today, the time;
-- for tomorrow, the string \"tom\" (by default) and the time;
-- for times within a week, abbreviation of the weekday or a plus and
-  a number of days (depending on BEEMINDER-HUMAN-TIME-USE-WEEKDAY) and
-  the time;
-- for later times, iso date without time.
+  "Convert (future) TIME to a human-friendly format.
+- For today, the time.
+- For tomorrow, the string `beeminder-tomorrow-code' (by default) and
+  the time.
+- For times within a week, abbreviation of the weekday or a plus and
+  a number of days (depending on `beeminder-human-time-use-weekday')
+  and the time.
+- For later times, iso date without time.
 Midnight is treated as belonging to the previous day, not the following one."
   (let ((delta (- (beeminder-time-to-days time)
 		  (beeminder-time-to-days (beeminder-current-time)))))
