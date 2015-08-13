@@ -256,7 +256,7 @@ non-nil, print suitable messages in the echo area."
 						      current-timestamp))))
     (sit-for beeminder-default-timeout)
     (error "Submitting failed, check your internet connection"))
-  (if print-message (message (format "Submitting datapoint of %d for goal %s...  Done." amount slug)))
+  (if print-message (message (format "Submitting datapoint of %d for goal %s...Done." amount slug)))
   (setf (alist-get (intern slug)
 		   beeminder-dirty-alist)
 	(cdr (assoc 'curval (ewoc-data (beeminder-slug-to-goal slug)))))
@@ -595,7 +595,7 @@ SEC1, return t.  In all other cases, return nil."
   (save-current-goal
    (message "Beeminder goals downloading...")
    (beeminder-get-goals)
-   (message "Beeminder goals downloading...  Done.")
+   (message "Beeminder goals downloading...Done.")
    (beeminder-recreate-ewoc)))
 
 (define-key beeminder-mode-map "g" #'beeminder-reload-goals-list)
