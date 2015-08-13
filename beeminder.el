@@ -344,11 +344,14 @@ Midnight is treated as belonging to the previous day, not the following one."
 	  ((= 1 delta) (concat " " beeminder-tomorrow-code
 			       (format-time-string " %R" time)))
 	  ((<= delta 7) (concat (if beeminder-human-time-use-weekday
-				    (format-time-string " %a" time)
+				    (format-time-string " %a"
+							(time-add time
+								  (- beeminder-when-the-day-ends)))
 				  (format "  +%d" delta))
 				" "
 				(format-time-string "%R" time)))
-	  (t (format-time-string "%Y-%m-%d" time)))))
+	  (t (format-time-string "%Y-%m-%d" (time-add time
+						      (- beeminder-when-the-day-ends)))))))
 
 (defconst beeminder-lanes-to-faces-alist
   '((-2 . beeminder-red) (-1 . beeminder-yellow) (1 . beeminder-blue) (2 . beeminder-green))
