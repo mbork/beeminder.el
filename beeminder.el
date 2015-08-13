@@ -1,4 +1,7 @@
-;; This will hopefully become an Emacs client for Beeminder some day
+;;; beeminder.el --- Emacs client for Beeminder
+
+;;; Commentary:
+;; 
 
 (require 'json)
 (require 'request)
@@ -6,8 +9,11 @@
 (require 'ewoc)
 (require 'seq)
 
+;;; Code:
+
 
 ;; Settings
+
 (defcustom beeminder-username ""
   "User name for the Beeminder account.")
 
@@ -732,3 +738,5 @@ when given, overrides the default."
 (define-key beeminder-mode-map (kbd "t") #'beeminder-filter-command)
 
 (provide 'beeminder)
+
+;;; beeminder.el ends here
