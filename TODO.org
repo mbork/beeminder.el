@@ -34,6 +34,7 @@ completion).  Use it in beeminder-kill-goal and beeminder-submit-datapoint.
 * DONE convert lambdas in beeminder-filters to functions
 * TODO make beeminder-filter-command more lispy
 * DONE Convert plists (in filters) to alists
-* TODO Error handling
+* TODO Better error handling
 * TODO Rewrite beeminder-submit-datapoint and beeminder-filter-command
 so that as little as possible is computed in the `interactive' clause
+* TODO Fix computing of donetoday
