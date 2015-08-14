@@ -357,14 +357,15 @@ Midnight is treated as belonging to the previous day, not the following one."
   '((-2 . beeminder-red) (-1 . beeminder-yellow) (1 . beeminder-blue) (2 . beeminder-green))
   "Alist mapping the (normalized) value of lane to goal colors.")
 
-(defun beeminder-normalize-lane (lane)
-  "Normalize LANE, i.e., change LANE larger than 2 to 2 and
-smaller than -2 to -2."
-  (min (max lane -2) 2))
+(defun beeminder-normalize-lane (lane-number)
+  "Normalize LANE-NUMBER into the interval -2 .. 2.
+This means to return 2 for LANE-NUMBER greater than 2 and -2 for
+LANE-NUMBER less than -2."
+  (min (max lane-number -2) 2))
 
 (defun beeminder-display-string-field (goal field &optional width)
-  "Display GOAL's FIELD (which should be a symbol) as a string,
-optionally of length WIDTH \(padded from the right with spaces)."
+  "Display GOAL's FIELD (which should be a symbol) as a string.
+Optionally use length WIDTH (padded from the right with spaces)."
   (format (if width
 	      (format "%%-%d.%ds" width width)
 	    "%s")
@@ -401,10 +402,10 @@ optionally of length WIDTH \(padded from the right with spaces)."
     beeminder-display-pledge
     " "
     (beeminder-display-string-field title))
-  "The format for displaying a Beeminder goal.  It is a list
-whose elements are either strings, printed verbatim, either
-functions, which are then called with one argument
-\(the goal), or lists, in which case the car of the list is a function
+  "The format for displaying a Beeminder goal.
+It is a list whose elements are either strings, printed verbatim,
+either functions, which are then called with one argument (the
+goal), or lists, in which case the car of the list is a function
 and the cdr the list of arguments it should get after the goal.")
 
 (defun beeminder-goal-face (goal)
@@ -417,8 +418,7 @@ and the cdr the list of arguments it should get after the goal.")
 		beeminder-lanes-to-faces-alist))))
 
 (defun beeminder-goal-representation (goal)
-  "The string representation of GOAL, with the proper face
-applied."
+  "The string representation of GOAL, with the face applied."
   (propertize (mapconcat (lambda (field-specifier)
 			   (cond
 			    ((functionp field-specifier) (funcall field-specifier goal))
@@ -431,10 +431,13 @@ applied."
 	      (beeminder-goal-face goal)))
 
 (defun beeminder-display-first-goal ()
-  "Display the first goal (this should be the one with the
-nearest deadline) in the echo area.  You might want to bind this
-function globally so that you don't need to enter the Beeminder mode
-to see the nearest deadline."
+  "Display the first goal in the echo area.
+Normally, this should be one of the goals with the nearest
+deadline.  Caution: if more than one goal has the same deadline,
+it is not obvious which one is returned as the first from the
+server!  You might want to bind this function globally so that
+you don't need to enter the Beeminder mode to see the nearest
+deadline."
   (interactive)
   (message (beeminder-goal-representation (car beeminder-goals))))
 
@@ -462,8 +465,8 @@ to see the nearest deadline."
   "If t, the default header is (extremely) shortened.")
 
 (defun beeminder-toggle-short-header (&optional arg)
-  "Toggle shortening the header for Beeminder goal list.  If ARG is
-positive, shorten the header; otherwise, do not."
+  "Toggle shortening the header for Beeminder goal list.
+If ARG is positive, shorten the header; otherwise, do not."
   (interactive "P")
   (setq beeminder-short-header
 	(if (null arg)
@@ -476,8 +479,8 @@ positive, shorten the header; otherwise, do not."
 (define-key beeminder-mode-map (kbd "=") #'beeminder-toggle-short-header)
 
 (defun beeminder-print-filter (filter)
-  "Return a printed representation of FILTER, which should be an
-element of `beeminder-current-filters'."
+  "Return a printed representation of FILTER.
+It should be an element of `beeminder-current-filters'."
   (let ((filter-pp (nth (if beeminder-short-header 4 3)
 			(assoc (car filter) beeminder-filters))))
     (cond
@@ -486,7 +489,7 @@ element of `beeminder-current-filters'."
      (t error "Wrong format of `beeminder-filters' for filter %s" (car filter)))))
 
 (defun beeminder-ewoc-header ()
-  "Generate header for the Beeminder EWOC"
+  "Generate header for the Beeminder EWOC."
   (concat (format "Beeminder goals for user %s"
 		  beeminder-username)
 	  (propertize (concat (format (if beeminder-short-header
@@ -512,8 +515,11 @@ element of `beeminder-current-filters'."
 	       (beeminder-ewoc-header)""))
 
 (defun beeminder-recreate-ewoc ()
-  "Recreate Beeminder EWOC from the goal list and reapply
-filtering and sorting settings."
+  "Recreate Beeminder EWOC from the goal list.
+In particular, reapply filtering and sorting settings.  Note: since
+only the last sorting criterion is remembered, and sorting is stable,
+this might actually change the ordering of goals, which may have been
+sorted by another criterion previously."
   (ewoc-filter beeminder-goals-ewoc #'ignore)
   (mapcar (lambda (goal)
 	    (ewoc-enter-last beeminder-goals-ewoc goal))
@@ -566,16 +572,16 @@ filtering and sorting settings."
        (unless current-node (goto-char (point-min))))))
 
 (defun beeminder-sort-by-field (field predicate info)
-  "Sort entries in beeminder-goals-ewoc by FIELD, using PREDICATE
-to compare them and displaying INFO."
+  "Sort entries in `beeminder-goals-ewoc' by FIELD, using PREDICATE.
+INFO is the printed representation of the sorting criterion."
   (save-current-goal
-   (ewoc-sort beeminder-goals-ewoc (lambda (x y)
-				     (funcall predicate
-					      (cdr (assoc field x))
-					      (cdr (assoc field y)))))
-   (ewoc-refresh beeminder-goals-ewoc)
-   (setq beeminder-current-sorting-setting (list field predicate info))
-   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")))
+    (ewoc-sort beeminder-goals-ewoc (lambda (x y)
+				      (funcall predicate
+					       (cdr (assoc field x))
+					       (cdr (assoc field y)))))
+    (ewoc-refresh beeminder-goals-ewoc)
+    (setq beeminder-current-sorting-setting (list field predicate info))
+    (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")))
 
 (defun beeminder-sort-by-losedate ()
   "Sort entries in `beeminder-goals' by losedate."
@@ -583,8 +589,10 @@ to compare them and displaying INFO."
   (beeminder-sort-by-field 'losedate #'< "losedate"))
 
 (defun beeminder-seconds-to-from-midnight (time)
-  "Convert TIME to seconds from midnight.  If after 6:00, convert to
-seconds to midnight (with a minus sign)."
+  "Convert TIME to seconds from midnight.
+If after 6:00, convert to seconds to midnight (with a minus
+sign).  The magic time constant 6:00 is the result of Beeminder's way
+of dealing with the \"midnight\" setting."
   (let* ((decoded-time (decode-time time))
 	 (seconds (+ (car decoded-time)
 		     (* 60 (cadr decoded-time))
@@ -594,11 +602,14 @@ seconds to midnight (with a minus sign)."
       seconds)))
 
 (defun beeminder-earlier-midnight (sec1 sec2 time)
-  "Compare SEC1 and SEC2, as midnight times, taking into account
-the TIME (expressed as the result of calling
-`beeminder-seconds-to-from-midnight'.  If SEC1 < SEC2 < TIME,
-return t.  If TIME < SEC1 < SEC2, return t.  If SEC2 < TIME <
-SEC1, return t.  In all other cases, return nil."
+  "Compare SEC1 and SEC2, taking into account the TIME.
+All three parameters are expressed as seconds from midnight, like
+the result of calling `beeminder-seconds-to-from-midnight'.  If
+SEC1 < SEC2 < TIME, return t.  If TIME < SEC1 < SEC2, return t.
+If SEC2 < TIME < SEC1, return t.  In all other cases, return nil.
+This function is useful for sorting goals by their \"midnight\"
+setting, with the goals which are after their \"midnight\" at the
+end."
   (or (< sec1 sec2 time)
       (< time sec1 sec2)
       (< sec2 time sec1)))
@@ -619,7 +630,7 @@ SEC1, return t.  In all other cases, return nil."
 
 
 ;; Reloading goals
-(defun beeminder-reload-goals-list (&optional get-goals)
+(defun beeminder-reload-goals-list ()
   "Reload the goals from the server."
   (interactive "P")
   (save-current-goal
@@ -645,23 +656,22 @@ SEC1, return t.  In all other cases, return nil."
 (define-key beeminder-mode-map "c" #'beeminder-clear-filters)
 
 (defcustom beeminder-default-filter-days 3
-  "Defalt number of days used for filtering.  If the user doesn't
-specify the number of days for filtering, all goals with more
-than this amount of days left to losedate will be filtered out.")
+  "Defalt number of days used for filtering by losedate.
+If the user doesn't specify the number of days for filtering, all
+goals with more than this amount of days left to losedate will be
+filtered out.")
 
 (defcustom beeminder-default-filter-donetoday 100
   "Default percentage of donetoday used for filtering.")
 
 (defun beeminder-days-p (goal days)
-  "Return nil if time to derailment of GOAL is greater than
-DAYS."
+  "Return nil if time to derailment of GOAL > DAYS."
   (<= (- (beeminder-time-to-days (cdr (assoc 'losedate goal)))
 	 (beeminder-time-to-days (beeminder-current-time)))
       days))
 
 (defun beeminder-donetoday-p (goal percentage)
-  "Return nil if donetoday for GOAL is higher than the PERCENTAGE
-of a day's amount."
+  "Return nil if donetoday for GOAL > PERCENTAGE * day's amount."
   (< (/ (* 100 (cdr (assoc 'donetoday goal)))
 	(/ (cdr (assoc 'rate goal))
 	   (cl-case (intern (cdr (assoc 'runits goal)))
@@ -699,7 +709,8 @@ of a day's amount."
 - symbol, denoting the filter,
 - predicate (with two arguments - the goal and the parameter),
 - default value for the parameter,
-- formatting function (with one argument - the parameter) or a format string (with one placeholder)
+- formatting function (with one argument - the parameter) or a format
+  string (with one placeholder)
 - formatting function or a format string for the shortened version of header
 - key for enabling the filter (as a string, passed to `kbd').")
 
@@ -721,7 +732,7 @@ of a day's amount."
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
 
 (defun beeminder-clear-kills ()
-  "Clear all individual kills."
+  "Unkill all killed goals."
   (interactive)
   (setq beeminder-current-filters
 	(assq-delete-all 'killed beeminder-current-filters))
@@ -730,9 +741,8 @@ of a day's amount."
 (define-key beeminder-mode-map (kbd "C-w") #'beeminder-clear-kills)
 
 (defun beeminder-apply-filter (filter)
-  "Apply FILTER (which should be a dotted pair of symbol and
-parameter).  This means deleting some goals from
-`beeminder-goals-ewoc'."
+  "Apply FILTER (a dotted pair of symbol and parameter).
+This means deleting some goals from `beeminder-goals-ewoc'."
   (save-current-goal
     (ewoc-filter beeminder-goals-ewoc
 		 (lambda (goal)
@@ -743,10 +753,13 @@ parameter).  This means deleting some goals from
   "Apply filters from `beeminder-current-filters' in sequence."
   (mapc #'beeminder-apply-filter beeminder-current-filters))
 
+;; Rethink how this command is invoked - the `last-command-event'
+;; trick is fishy.  Also, PARAMETER should probably be optional.
 (defun beeminder-filter-command (parameter)
-  "Enable the filter from `beeminder-filters' which should be
-applied by the key pressed to run this very command.  PARAMETER,
-when given, overrides the default."
+  "Enable the selected filter with PARAMETER.
+The filter is selected from `beeminder-filters' using
+`last-command-event', i.e., the key which invoked this command.
+PARAMETER, when given, overrides the default."
   (interactive "P")
   (let ((filter beeminder-filters))
     (while (and filter (not (string= (char-to-string last-command-event) (nth 5 (car filter)))))
