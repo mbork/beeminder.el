@@ -35,3 +35,5 @@ completion).  Use it in beeminder-kill-goal and beeminder-submit-datapoint.
 * TODO make beeminder-filter-command more lispy
 * DONE Convert plists (in filters) to alists
 * TODO Error handling
+* TODO Rewrite beeminder-submit-datapoint and beeminder-filter-command
+so that as little as possible is computed in the `interactive' clause
