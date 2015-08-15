@@ -39,23 +39,32 @@
 
 ;; Settings
 
+(defgroup beeminder nil
+  "An Emacs client for Beeminder."
+  :tag "Beeminder"
+  :group 'applications)
+
 (defcustom beeminder-username ""
-  "User name for the Beeminder account.")
+  "User name for the Beeminder account."
+  :type 'string)
 
 (defcustom beeminder-auth-token ""
   "Authentication token for Beeminder.
 You can retrieve it from the URL
-`https://www.beeminder.com/api/v1/auth_token.json'.")
+`https://www.beeminder.com/api/v1/auth_token.json'."
+  :type 'string)
 
 (defcustom beeminder-api-url "https://www.beeminder.com/api/v1/users/"
-  "The URL for making API calls.")
+  "The URL for making API calls."
+  :type 'string)
 
 (defvar beeminder-goals nil
   "The vector of sexps representing goals.
 Updated by `beeminder-get-goals'.")
 
 (defcustom beeminder-default-timeout 4
-  "Default timeout for HTTP requests sent to beeminder.com.")
+  "Default timeout for HTTP requests sent to beeminder, in seconds."
+  :type 'number)
 
 
 ;; Beeminder mode
@@ -321,7 +330,8 @@ Otherwise, use number of days from today.")
 (defcustom beeminder-when-the-day-ends (* 6 60 60)
   "Number of seconds from midnight when the day is assumed to end.
 Times up to this time will be considered to belong to the
-previous day.")
+previous day."
+  :type 'integer)
 
 (defun beeminder-time-to-days (time)
   "Compute the number of days from 0001-12-31 BC until TIME.
@@ -406,7 +416,8 @@ Optionally use length WIDTH (padded from the right with spaces)."
 It is a list whose elements are either strings, printed verbatim,
 either functions, which are then called with one argument (the
 goal), or lists, in which case the car of the list is a function
-and the cdr the list of arguments it should get after the goal.")
+and the cdr the list of arguments it should get after the goal."
+  :type 'sexp)
 
 (defun beeminder-goal-face (goal)
   "Return the face for displaying GOAL."
@@ -553,7 +564,11 @@ sorted by another criterion previously."
 ;; Sorting
 
 (defcustom beeminder-default-sorting-setting (list 'losedate #'< "losedate")
-  "Default sorting setting for Beeminder goals.")
+  "Default sorting setting for Beeminder goals.
+This is a list whose first element is the field according to
+which the sorting should be done, then the predicate, and then
+the printed representation of this sorting method (as a string)."
+  :type 'sexp)
 
 (defvar beeminder-current-sorting-setting beeminder-default-sorting-setting)
 
@@ -659,10 +674,12 @@ end."
   "Defalt number of days used for filtering by losedate.
 If the user doesn't specify the number of days for filtering, all
 goals with more than this amount of days left to losedate will be
-filtered out.")
+filtered out."
+  :type 'integer)
 
 (defcustom beeminder-default-filter-donetoday 100
-  "Default percentage of donetoday used for filtering.")
+  "Default percentage of donetoday used for filtering."
+  :type 'integer)
 
 (defun beeminder-days-p (goal days)
   "Return nil if time to derailment of GOAL > DAYS."
