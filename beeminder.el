@@ -41,22 +41,24 @@
 
 (defgroup beeminder nil
   "An Emacs client for Beeminder."
-  :tag "Beeminder"
   :group 'applications)
 
 (defcustom beeminder-username ""
   "User name for the Beeminder account."
-  :type 'string)
+  :type 'string
+  :group 'beeminder)
 
 (defcustom beeminder-auth-token ""
   "Authentication token for Beeminder.
 You can retrieve it from the URL
 `https://www.beeminder.com/api/v1/auth_token.json'."
-  :type 'string)
+  :type 'string
+  :group 'beeminder)
 
 (defcustom beeminder-api-url "https://www.beeminder.com/api/v1/users/"
   "The URL for making API calls."
-  :type 'string)
+  :type 'string
+  :group 'beeminder)
 
 (defvar beeminder-goals nil
   "The vector of sexps representing goals.
@@ -64,7 +66,8 @@ Updated by `beeminder-get-goals'.")
 
 (defcustom beeminder-default-timeout 4
   "Default timeout for HTTP requests sent to beeminder, in seconds."
-  :type 'number)
+  :type 'number
+  :group 'beeminder)
 
 
 ;; Beeminder mode
@@ -249,9 +252,14 @@ from the list by `beeminder-get-goals' (if the retrieved data are
 actually updated, which can take from a few seconds to even a few
 minutes).")
 
+(defgroup beeminder-faces nil
+  "Faces used be the Beeminder client."
+  :group 'beeminder)
+
 (defface beeminder-dirty '((t :slant italic :foreground "grey50"))
   "Face for displaying \"dirty\" goals, i.e., goals for which
-a datapoint was submitted but had ot yet been reloaded.")
+a datapoint was submitted but had ot yet been reloaded."
+  :group 'beeminder-faces)
 
 (defun beeminder-submit-datapoint (slug amount &optional comment timestamp print-message)
   "Submit a datapoint to Beeminder goal SLUG with AMOUNT.
@@ -332,7 +340,8 @@ Otherwise, use number of days from today.")
   "Number of seconds from midnight when the day is assumed to end.
 Times up to this time will be considered to belong to the
 previous day."
-  :type 'integer)
+  :type 'integer
+  :group 'beeminder)
 
 (defun beeminder-time-to-days (time)
   "Compute the number of days from 0001-12-31 BC until TIME.
@@ -418,7 +427,8 @@ It is a list whose elements are either strings, printed verbatim,
 either functions, which are then called with one argument (the
 goal), or lists, in which case the car of the list is a function
 and the cdr the list of arguments it should get after the goal."
-  :type 'sexp)
+  :type 'sexp
+  :group 'beeminder)
 
 (defun beeminder-goal-face (goal)
   "Return the face for displaying GOAL."
@@ -457,16 +467,20 @@ deadline."
 ;; Faces for goals
 
 (defface beeminder-green '((t :foreground "#080"))
-  "Face for displaying Beeminder goals in green.")
+  "Face for displaying Beeminder goals in green."
+  :group 'beeminder-faces)
 
 (defface beeminder-blue '((t :foreground "#008"))
-  "Face for displaying Beeminder goals in blue.")
+  "Face for displaying Beeminder goals in blue."
+  :group 'beeminder-faces)
 
 (defface beeminder-yellow '((t :foreground "#880"))
-  "Face for displaying Beeminder goals in green.")
+  "Face for displaying Beeminder goals in green."
+  :group 'beeminder-faces)
 
 (defface beeminder-red '((t :foreground "#800"))
-  "Face for displaying Beeminder goals in red.")
+  "Face for displaying Beeminder goals in red."
+  :group 'beeminder-faces)
 
 
 ;; Beeminder EWOC
@@ -569,7 +583,8 @@ sorted by another criterion previously."
 This is a list whose first element is the field according to
 which the sorting should be done, then the predicate, and then
 the printed representation of this sorting method (as a string)."
-  :type 'sexp)
+  :type 'sexp
+  :group 'beeminder)
 
 (defvar beeminder-current-sorting-setting beeminder-default-sorting-setting)
 
@@ -676,11 +691,13 @@ end."
 If the user doesn't specify the number of days for filtering, all
 goals with more than this amount of days left to losedate will be
 filtered out."
-  :type 'integer)
+  :type 'integer
+  :group 'beeminder)
 
 (defcustom beeminder-default-filter-donetoday 100
   "Default percentage of donetoday used for filtering."
-  :type 'integer)
+  :type 'integer
+  :group 'beeminder)
 
 (defun beeminder-days-p (goal days)
   "Return nil if time to derailment of GOAL > DAYS."
