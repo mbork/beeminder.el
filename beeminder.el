@@ -143,6 +143,7 @@ a time value."
 					  (nth 5 now-decoded)
 					  (nth 8 now-decoded)))
 	 (last-midnight (+ goal-deadline
+			   (if (< goal-deadline 0) (* 24 60 60) 0)
 			   (time-to-seconds last-real-midnight))))
     (if (> last-midnight
 	   (time-to-seconds now))
