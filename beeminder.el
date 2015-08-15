@@ -647,7 +647,7 @@ end."
 ;; Reloading goals
 (defun beeminder-reload-goals-list ()
   "Reload the goals from the server."
-  (interactive "P")
+  (interactive)
   (save-current-goal
    (message "Beeminder goals downloading...")
    (beeminder-get-goals)
