@@ -579,7 +579,10 @@ sorted by another criterion previously."
   (interactive)
   (switch-to-buffer "*Beeminder goals*")
   (buffer-disable-undo)
-  (unless beeminder-goals (beeminder-get-goals))
+  (unless beeminder-goals
+    (message "Beeminder goals downloading...")
+    (beeminder-get-goals)
+    (message "Beeminder goals downloading...Done."))
   (let ((inhibit-read-only t))
     (erase-buffer)
     (setq beeminder-goals-ewoc (beeminder-create-ewoc))
@@ -683,9 +686,9 @@ end."
   "Reload the goals from the server."
   (interactive)
   (save-current-goal
-   (message "Beeminder goals downloading...")
+   (message "Beeminder goals reloading...")
    (beeminder-get-goals)
-   (message "Beeminder goals downloading...Done.")
+   (message "Beeminder goals reloading...Done.")
    (beeminder-recreate-ewoc)))
 
 (define-key beeminder-mode-map "g" #'beeminder-reload-goals-list)
