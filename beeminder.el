@@ -135,7 +135,7 @@ Add the username and the auth token."
 
 ;; API calls (currently synchronous only)
 
-(defun last-midnight (goal-deadline now)
+(defun last-goal-midnight (goal-deadline now)
   "Return the last \"midnight\" for GOAL-DEADLINE, counting from NOW.
 GOAL-DEADLINE is an offset from real midnight in seconds, NOW is
 a time value."
@@ -153,6 +153,21 @@ a time value."
 	(- last-midnight (* 24 60 60))
       last-midnight)))
 
+(defun last-user-midnight (now)
+  "Return the last \"midnight\" counting from NOW, as Unix timestamp.
+Take `beeminder-when-the-day-ends' into consideration."
+  (let* ((now-decoded (decode-time now))
+	 (last-real-midnight (encode-time 0 0 0
+					  (cadddr now-decoded)
+					  (nth 4 now-decoded)
+					  (nth 5 now-decoded)
+					  (nth 8 now-decoded)))
+	 (last-midnight (+ (time-to-seconds last-real-midnight)
+			   beeminder-when-the-day-ends)))
+    (if (> last-midnight (time-to-seconds now))
+	(- last-midnight (* 24 60 60))
+      last-midnight)))
+
 (defun beeminder-get-goals ()
   "Get all the user's Beeminder goals.
 Return a vector of sexps, each describing one goal."
@@ -160,8 +175,10 @@ Return a vector of sexps, each describing one goal."
 	(today-values
 	 (mapcar
 	  (lambda (goal)
-	    (let ((last-midnight (last-midnight (cdr (assoc 'deadline goal))
-						(beeminder-current-time))))
+	    (let ((last-midnight (if beeminder-use-goal-midnight-today-values
+				     (last-goal-midnight (cdr (assoc 'deadline goal))
+						    (beeminder-current-time))
+				   (last-user-midnight (beeminder-current-time)))))
 	      (cons (cdr (assoc 'slug goal))
 		    (cl-reduce #'+
 			       (mapcar (lambda (datapoint)
@@ -339,7 +356,8 @@ Otherwise, use number of days from today.")
 (defcustom beeminder-when-the-day-ends (* 6 60 60)
   "Number of seconds from midnight when the day is assumed to end.
 Times up to this time will be considered to belong to the
-previous day."
+previous day.  Note: this should be positive, or weird things
+might happen."
   :type 'integer
   :group 'beeminder)
 
@@ -692,6 +710,13 @@ If the user doesn't specify the number of days for filtering, all
 goals with more than this amount of days left to losedate will be
 filtered out."
   :type 'integer
+  :group 'beeminder)
+
+(defcustom beeminder-use-goal-midnight-today-values nil
+  "If non-nil, compute the goal's midnight with today's values.
+If nil, use the midnight defined by
+`beeminder-when-the-day-ends'."
+  :type 'boolean
   :group 'beeminder)
 
 (defcustom beeminder-default-filter-donetoday 100
