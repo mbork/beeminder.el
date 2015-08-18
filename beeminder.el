@@ -168,37 +168,58 @@ Take `beeminder-when-the-day-ends' into consideration."
 	(- last-midnight (* 24 60 60))
       last-midnight)))
 
+(defcustom beeminder-history-length 7
+  "Number of days from which to load datapoints.")
+
 (defun beeminder-get-goals ()
   "Get all the user's Beeminder goals.
 Return a vector of sexps, each describing one goal."
-  (let ((goals (beeminder-request-get "/goals.json"))
-	(today-values
-	 (mapcar
-	  (lambda (goal)
-	    (let ((last-midnight (if beeminder-use-goal-midnight-today-values
-				     (last-goal-midnight (cdr (assoc 'deadline goal))
-						    (beeminder-current-time))
-				   (last-user-midnight (beeminder-current-time)))))
-	      (cons (cdr (assoc 'slug goal))
-		    (cl-reduce #'+
-			       (mapcar (lambda (datapoint)
-					 (if (> (cdr (assoc 'timestamp datapoint))
-						last-midnight)
-					     (cdr (assoc 'value datapoint))
-					   0))
-				       (cdr (assoc 'datapoints goal)))))))
-	  (cdr (assoc 'goals (beeminder-request-get
-			     (format ".json?diff_since=%d"
-				     (- (time-to-seconds
-					 (current-time))
-					(* 24 60 60)))))))))
+  (let* ((goals (beeminder-request-get "/goals.json")) ; goal data
+	 (datapoints-data (cdr (assoc 'goals ; datapoints data
+				      (beeminder-request-get
+				       (format ".json?diff_since=%d"
+					       (- (time-to-seconds
+						   (current-time))
+						  (* beeminder-history-length 24 60 60)))))))
+	 (datapoints			; datapoints alone
+	  (mapcar
+	   (lambda (goal)
+	     (cons (cdr (assoc 'slug goal))
+		   (append (cdr (assoc 'datapoints goal)) nil)))
+	   datapoints-data))
+	 (deadlines			; deadlines alone
+	  (mapcar
+	   (lambda (goal)
+	     (cons (cdr (assoc 'slug goal))
+		   (cdr (assoc 'deadline goal))))
+	   goals))
+	 (today-values
+	  (mapcar
+	   (lambda (goal)
+	     (let ((last-midnight (if beeminder-use-goal-midnight-today-values
+				      (last-goal-midnight (cdr (assoc (car goal) deadlines))
+							  (beeminder-current-time))
+				    (last-user-midnight (beeminder-current-time)))))
+	       (cons (car goal)
+		     (cl-reduce #'+
+				(mapcar (lambda (datapoint)
+					  (if (> (cdr (assoc 'timestamp datapoint))
+						 last-midnight)
+					      (cdr (assoc 'value datapoint))
+					    0))
+					(cdr goal))))))
+	   datapoints)))
     (setq beeminder-goals (mapcar
-			   (lambda (goal) (cons
-					   (cons 'donetoday
-						 (cdr (assoc
+			   (lambda (goal)
+			     (let ((slug (cdr (assoc 'slug goal))))
+			       (cons (cons 'datapoints
+					   (cdr (assoc slug datapoints)))
+				     (cons
+				      (cons 'donetoday
+					    (cdr (assoc
 						  (cdr (assoc 'slug goal))
 						  today-values)))
-					   goal))
+				      goal))))
 			   goals))
     (mapc (lambda (goal)
 	    (let ((slugsym (intern (cdr (assoc 'slug goal)))))
