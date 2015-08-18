@@ -500,7 +500,11 @@ server!  You might want to bind this function globally so that
 you don't need to enter the Beeminder mode to see the nearest
 deadline."
   (interactive)
-  (message (beeminder-goal-representation (car beeminder-goals))))
+  (message "%s (%d minutes left)"
+	   (replace-regexp-in-string " \\{2,\\}" "  " (beeminder-goal-representation (car beeminder-goals)))
+	   (/ (- (cdr (assoc 'losedate (car beeminder-goals)))
+		 (time-to-seconds (beeminder-current-time)))
+	      60)))
 
 
 ;; Faces for goals
