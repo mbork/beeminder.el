@@ -737,8 +737,8 @@ filtered out."
   :group 'beeminder)
 
 (defcustom beeminder-use-goal-midnight-today-values nil
-  "If non-nil, compute the goal's midnight with today's values.
-If nil, use the midnight defined by
+  "If non-nil, compute today's values using the goal's midnight.
+If nil, use the global midnight defined by
 `beeminder-when-the-day-ends'."
   :type 'boolean
   :group 'beeminder)
