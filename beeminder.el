@@ -504,11 +504,20 @@ server!  You might want to bind this function globally so that
 you don't need to enter the Beeminder mode to see the nearest
 deadline."
   (interactive)
-  (message "%s (%d minutes left)"
-	   (replace-regexp-in-string " \\{2,\\}" "  " (beeminder-goal-representation (car beeminder-goals)))
-	   (/ (- (cdr (assoc 'losedate (car beeminder-goals)))
-		 (time-to-seconds (beeminder-current-time)))
-	      60)))
+  (let* ((goal (car beeminder-goals))
+	 (minutes (/ (- (cdr (assoc 'losedate goal))
+			(time-to-seconds (beeminder-current-time)))
+		     60)))
+    (message "%s (%d minute%s left, %s to do)"
+	     (replace-regexp-in-string
+	      " \\{2,\\}"
+	      "  "
+	      (beeminder-goal-representation goal))
+	     minutes
+	     (beeminder-plural-ending minutes)
+	     (let ((limsum (cdr (assoc 'limsum goal))))
+	       (string-match "[[:digit:]]+\\(\\.[[:digit:]]*\\)?" limsum)
+	       (match-string 0 limsum)))))
 
 
 ;; Faces for goals
