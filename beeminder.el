@@ -179,7 +179,7 @@ Return a vector of sexps, each describing one goal."
 				      (beeminder-request-get
 				       (format ".json?diff_since=%d"
 					       (- (time-to-seconds
-						   (current-time))
+						   (beeminder-current-time))
 						  (* beeminder-history-length 24 60 60)))))))
 	 (datapoints			; datapoints alone
 	  (mapcar
@@ -276,7 +276,7 @@ ask for the goal slug and return that goal node instead."
   "Return TIMESTAMP (Unix time) as a string.
 Use current time by default.  Format is hh:mm:ss tz."
   (let ((decoded-time (decode-time (or (seconds-to-time timestamp)
-				       (current-time)))))
+				       (beeminder-current-time)))))
     (format "%02d:%02d:%02d %s"
 	    (caddr decoded-time)
 	    (cadr decoded-time)
@@ -314,7 +314,7 @@ area."
 					       slug
 					       (if yesterdayp " (yesterday)" ""))
 				       nil nil "1"))))
-	  (current-timestamp (time-to-seconds (current-time)))
+	  (current-timestamp (time-to-seconds (beeminder-current-time)))
 	  (default-comment (concat
 			    "via Emacs at "
 			    (current-time-hmsz-string current-timestamp))))
