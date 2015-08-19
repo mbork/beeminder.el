@@ -382,6 +382,10 @@ might happen."
   :type 'integer
   :group 'beeminder)
 
+(defun beeminder-plural-ending (number)
+  "Return \"s\" if NUMBER not equal to one, and \"\" otherwise."
+  (if (= number 1) "" "s"))
+
 (defun beeminder-time-to-days (time)
   "Compute the number of days from 0001-12-31 BC until TIME.
 Take into consideration `beeminder-when-the-day-ends'."
@@ -786,11 +790,12 @@ If nil, use the global midnight defined by
 				       "t")
 			    (killed ,#'beeminder-not-killed-p
 				    '()
-				    (lambda (kill-list) (format "%d goal%s killed"
-								(length kill-list)
-								(if (= 1 (length kill-list))
-								    "" "s")))
-				    (lambda (kill-list) (format "%d gk" (length kill-list)))
+				    (lambda (kill-list)
+				      (format "%d goal%s killed"
+					      (length kill-list)
+					      (beeminder-plural-ending (length kill-list))))
+				    (lambda (kill-list)
+				      (format "%d gk" (length kill-list)))
 				    ""))
 
   "List of possible filters.  Each element is a list, consisting of:
