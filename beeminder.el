@@ -299,6 +299,21 @@ minutes).")
 a datapoint was submitted but had ot yet been reloaded."
   :group 'beeminder-faces)
 
+(defun ask-for-timestamp ()
+  "Ask the user for the timestamp, and return it as Unix time.
+If `org-read-date' is present, use that; if not, fall back to
+`safe-date-to-time' and augment the result with current time."
+  (time-to-seconds
+   (if (fboundp 'org-read-date)
+       (org-read-date nil t)
+     (let ((time))
+       (while
+	   (progn (setq time (safe-date-to-time (read-string "Date+time: ")))
+		  (not
+		   (y-or-n-p
+		    (format-time-string "Time entered: %c. Confirm? " time)))))
+       time))))
+
 (defun beeminder-submit-datapoint (slug amount &optional comment timestamp print-message)
   "Submit a datapoint to Beeminder goal SLUG with AMOUNT.
 Additional data are COMMENT and TIMESTAMP (as Unix time).  If
