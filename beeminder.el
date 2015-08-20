@@ -833,6 +833,14 @@ If nil, use the global midnight defined by
 
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
 
+(defun beeminder-show-kills ()
+  "Show all killed goals."
+  (interactive)
+  (message "Killed goals: %s."
+	   (aif (alist-get 'killed beeminder-current-filters)
+	       (mapconcat #'identity it ", ")
+	     "none")))
+
 (defun beeminder-clear-kills ()
   "Unkill all killed goals."
   (interactive)
@@ -840,7 +848,15 @@ If nil, use the global midnight defined by
 	(assq-delete-all 'killed beeminder-current-filters))
   (beeminder-recreate-ewoc))
 
-(define-key beeminder-mode-map (kbd "C-w") #'beeminder-clear-kills)
+(defun beeminder-clear-or-show-kills (arg)
+  "Unkill all killed goals if ARG is nil.
+With prefix argument, show the list of killed goals."
+  (interactive "P")
+  (if arg
+      (beeminder-show-kills)
+    (beeminder-clear-kills)))
+
+(define-key beeminder-mode-map (kbd "C-y") #'beeminder-clear-or-show-kills)
 
 (defun beeminder-apply-filter (filter)
   "Apply FILTER (a dotted pair of symbol and parameter).
