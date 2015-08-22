@@ -38,3 +38,8 @@ completion).  Use it in beeminder-kill-goal and beeminder-submit-datapoint.
 * TODO Rewrite beeminder-submit-datapoint and beeminder-filter-command
 so that as little as possible is computed in the `interactive' clause
 * DONE Fix computing of donetoday
+* TODO Org-mode integration
+* TODO Rewrite beeminder-filter-command
+so that it does not depend on =last-command-event=
+* TODO Show previous datapoints
+* TODO Datapoint editing
