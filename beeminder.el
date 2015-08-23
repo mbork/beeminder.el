@@ -801,16 +801,14 @@ If nil, use the global midnight defined by
   "Return nil if GOAL is in the KILL-LIST."
   (not (member (cdr (assoc 'slug goal)) kill-list)))
 
-(defvar beeminder-filters `((days ,#'beeminder-days-p
+(defvar beeminder-filters `((losedate ,#'beeminder-days-p
 				  ,beeminder-default-filter-days
 				  "days to derailment (%d)"
-				  "d2d(%d)"
-				  "d")
+				  "d2d(%d)")
 			    (donetoday ,#'beeminder-donetoday-p
 				       ,beeminder-default-filter-donetoday
 				       "done today (%d%%)"
-				       "dt(%d%%)"
-				       "t")
+				       "dt(%d%%)")
 			    (killed ,#'beeminder-not-killed-p
 				    '()
 				    (lambda (kill-list)
@@ -818,8 +816,7 @@ If nil, use the global midnight defined by
 					      (length kill-list)
 					      (beeminder-plural-ending (length kill-list))))
 				    (lambda (kill-list)
-				      (format "%d gk" (length kill-list)))
-				    ""))
+				      (format "%d gk" (length kill-list)))))
 
   "List of possible filters.  Each element is a list, consisting of:
 - symbol, denoting the filter,
@@ -827,8 +824,8 @@ If nil, use the global midnight defined by
 - default value for the parameter,
 - formatting function (with one argument - the parameter) or a format
   string (with one placeholder)
-- formatting function or a format string for the shortened version of header
-- key for enabling the filter (as a string, passed to `kbd').")
+- formatting function or a format string for the shortened version of
+  header.")
 
 (defun beeminder-kill-goal (goal-node)
   "Delete GOAL-NODE from `beeminder-goals-ewoc'."
@@ -885,32 +882,36 @@ This means deleting some goals from `beeminder-goals-ewoc'."
   "Apply filters from `beeminder-current-filters' in sequence."
   (mapc #'beeminder-apply-filter beeminder-current-filters))
 
-;; Rethink how this command is invoked - the `last-command-event'
-;; trick is fishy.  Also, PARAMETER should probably be optional.
-(defun beeminder-filter-command (parameter)
-  "Enable the selected filter with PARAMETER.
-The filter is selected from `beeminder-filters' using
-`last-command-event', i.e., the key which invoked this command.
-PARAMETER, when given, overrides the default."
-  (interactive "P")
-  (let ((filter beeminder-filters))
-    (while (and filter (not (string= (char-to-string last-command-event) (nth 5 (car filter)))))
-      (setq filter (cdr filter)))
-    (if (not filter)
-	(error "This shouldn't happen -- beeminder-filter-command)")
-      (setq filter (car filter))
-      (setf (alist-get (car filter) beeminder-current-filters)
-	    (cond
-	     ((eq parameter '-)
-	      nil)
-	     ((null parameter)
-	      (caddr filter))
-	     (t (prefix-numeric-value parameter))))
-      (setq beeminder-current-filters (rassq-delete-all nil beeminder-current-filters))
-      (beeminder-recreate-ewoc))))
+(defun beeminder-enable-filter (filter parameter)
+  "Enable FILTER (symbol) with PARAMETER (number).
+Disable FILTER if PARAMETER is nil."
+  (setf (alist-get filter beeminder-current-filters)
+	parameter)
+  (setq beeminder-current-filters (rassq-delete-all nil beeminder-current-filters))
+  (beeminder-recreate-ewoc))
 
-(define-key beeminder-mode-map (kbd "d") #'beeminder-filter-command)
-(define-key beeminder-mode-map (kbd "t") #'beeminder-filter-command)
+(defun beeminder-filter-parameter (raw-prefix default)
+  "Return filter parameter based on RAW-PREFIX and DEFAULT."
+  (cond ((eq raw-prefix '-) nil)
+	((null raw-prefix) default)
+	(t (prefix-numeric-value raw-prefix))))
+
+(defun beeminder-filter-by-losedate (&optional days)
+  "Filter out goals with time to losedate greater than DAYS."
+  (interactive "P")
+  (beeminder-enable-filter 'losedate
+			   (beeminder-filter-parameter days
+						       beeminder-default-filter-days)))
+
+(defun beeminder-filter-by-donetoday (&optional percentage)
+  "Filter out goals with donetoday greater than PERCENTAGE."
+  (interactive "P")
+  (beeminder-enable-filter 'donetoday
+			   (beeminder-filter-parameter percentage
+						       beeminder-default-filter-donetoday)))
+
+(define-key beeminder-mode-map (kbd "d") #'beeminder-filter-by-losedate)
+(define-key beeminder-mode-map (kbd "t") #'beeminder-filter-by-donetoday)
 
 (provide 'beeminder)
 
