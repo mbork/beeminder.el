@@ -596,9 +596,8 @@ It should be an element of `beeminder-current-filters'."
 			      (format (if beeminder-short-header
 					  "  fil:%s"
 					(format "\nfilter%s: %%s\n"
-						(if (and (car beeminder-current-filters)
-							 (not (cdr beeminder-current-filters)))
-						    "" "s")))
+						(beeminder-plural-ending
+						 (length beeminder-current-filters))))
 				      (if beeminder-current-filters
 					  (mapconcat #'beeminder-print-filter
 						     beeminder-current-filters
