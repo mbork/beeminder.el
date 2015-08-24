@@ -236,6 +236,17 @@ Return a vector of sexps, each describing one goal."
 
 ;; Submitting datapoints
 
+(defun beeminder-read-string (prompt &optional initial-input history default-value inherit-input-method)
+  "Replacement for `read-string', showing the default."
+  (read-string (if default-value
+		   (format "%s (default %s): "
+			   (if (string-match "^\\(.+\\)\\(: \\)$" prompt)
+			       (match-string 1 prompt)
+			       prompt)
+			   default-value)
+		 prompt)
+	       initial-input history default-value inherit-input-method))
+
 (defun beeminder-before-first-goal-p ()
   "Return t if the point is before the first goal."
   (< (point)
@@ -308,7 +319,7 @@ If `org-read-date' is present, use that; if not, fall back to
        (org-read-date nil t)
      (let ((time))
        (while
-	   (progn (setq time (safe-date-to-time (read-string "Date+time: ")))
+	   (progn (setq time (safe-date-to-time (beeminder-read-string "Date+time: ")))
 		  (not
 		   (y-or-n-p
 		    (format-time-string "Time entered: %c. Confirm? " time)))))
@@ -324,7 +335,7 @@ area."
 	  (yesterdayp (eq current-prefix-arg '-))
 	  (amount (if (numberp current-prefix-arg)
 		      current-prefix-arg
-		    (string-to-number (read-string
+		    (string-to-number (beeminder-read-string
 				       (format "Datapoint value for %s%s: "
 					       slug
 					       (if yesterdayp " (yesterday)" ""))
@@ -335,7 +346,7 @@ area."
 			    (current-time-hmsz-string current-timestamp))))
      (list slug
 	   amount
-	   (read-string
+	   (beeminder-read-string
 	    (format "Comment for amount %d for goal %s: " amount slug)
 	    nil nil default-comment)
 	   (or (if yesterdayp
