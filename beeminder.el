@@ -270,17 +270,23 @@ Return a vector of sexps, each describing one goal."
 
 (defun current-or-read-goal ()
   "Return the goal node the point is on.
-If the point is before the first goal, use `completing-read' to
-ask for the goal slug and return that goal node instead."
-  (if (beeminder-before-first-goal-p)
-      (beeminder-slug-to-goal
-       (completing-read "Goal slug: "
-			(mapcar #'beeminder-get-slug (ewoc-collect beeminder-goals-ewoc #'true))
-			nil
-			t
-			nil
-			'beeminder-minibuffer-history
-			(beeminder-get-slug (ewoc-data (ewoc-nth beeminder-goals-ewoc 0)))))
+If the point is before the first goal or in a buffer whose mode
+is not `beeminder-mode', use `completing-read' to ask for the
+goal slug and return that goal node instead."
+  (if (or (not (eq major-mode 'beeminder-mode))
+	  (beeminder-before-first-goal-p))
+      (let ((default (aif (ewoc-nth beeminder-goals-ewoc 0)
+			 (beeminder-get-slug (ewoc-data it)))))
+	(beeminder-slug-to-goal
+	 (completing-read (if default
+			      (format "Goal slug (default %s): " default)
+			    "Goal slug: ")
+			  (mapcar #'beeminder-get-slug (append beeminder-goals nil))
+			  nil
+			  t
+			  nil
+			  'beeminder-minibuffer-history
+			  default)))
     (ewoc-locate beeminder-goals-ewoc)))
 
 (defun current-time-hmsz-string (&optional timestamp)
@@ -328,8 +334,8 @@ If `org-read-date' is present, use that; if not, fall back to
 (defun beeminder-submit-datapoint (slug amount &optional comment timestamp print-message)
   "Submit a datapoint to Beeminder goal SLUG with AMOUNT.
 Additional data are COMMENT and TIMESTAMP (as Unix time).  If
-PRINT-MESSAGE is non-nil, print suitable messages in the echo
-area."
+PRINT-MESSAGE is non-nil (this is the default in interactive
+use), print suitable messages in the echo area."
   (interactive
    (let* ((slug (cdr (assoc 'slug (ewoc-data (current-or-read-goal)))))
 	  (yesterdayp (eq current-prefix-arg '-))
@@ -635,7 +641,8 @@ sorted by another criterion previously."
   (apply #'beeminder-sort-by-field beeminder-current-sorting-setting)
   (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
   (ewoc-refresh beeminder-goals-ewoc)
-  (goto-char (point-min)))
+  (with-current-buffer (ewoc-buffer beeminder-goals-ewoc)
+    (goto-char (point-min))))
 
 (defun beeminder-list-goals ()
   "Switch to a buffer containing the list of Beeminder goals."
