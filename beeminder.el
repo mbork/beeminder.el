@@ -272,25 +272,32 @@ Return a vector of sexps, each describing one goal."
 (defvar beeminder-minibuffer-history nil
   "History of goal slug-strs entered through minibuffer.")
 
+(defun beeminder-read-slug (&optional default)
+  "Return a slug read from minibuffer or DEFAULT.
+DEFAULT should be a symbol."
+  (intern (completing-read (if default
+			       (format "Goal slug (default %s): " default)
+			     "Goal slug: ")
+			   (mapcar (lambda (goal)
+				     (symbol-name (beeminder-get-slug goal)))
+				   beeminder-goals)
+			   nil
+			   t
+			   nil
+			   'beeminder-minibuffer-history
+			   (if default (symbol-name default)))))
+
 (defun current-or-read-gnode ()
   "Return the goal node the point is on.
 If the point is before the first goal or in a buffer whose mode
-is not `beeminder-mode', use `completing-read' to ask for the
+is not `beeminder-mode', use `beeminder-read-slug' to ask for the
 goal slug and return that goal node instead."
   (if (or (not (eq major-mode 'beeminder-mode))
 	  (beeminder-before-first-goal-p))
       (let ((default (aif (ewoc-nth beeminder-goals-ewoc 0)
 			 (beeminder-get-slug (ewoc-data it)))))
 	(beeminder-slug-to-gnode
-	 (completing-read (if default
-			      (format "Goal slug (default %s): " default)
-			    "Goal slug: ")
-			  (mapcar #'beeminder-get-slug (append beeminder-goals nil))
-			  nil
-			  t
-			  nil
-			  'beeminder-minibuffer-history
-			  default)))
+	 (beeminder-read-slug default)))
     (ewoc-locate beeminder-goals-ewoc)))
 
 (defun current-time-hmsz-string (&optional timestamp)
