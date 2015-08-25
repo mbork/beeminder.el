@@ -211,9 +211,9 @@ Return a vector of sexps, each describing one goal."
 	   datapoints)))
     (setq beeminder-goals (mapcar
 			   (lambda (goal)
-			     (let ((slug (cdr (assoc 'slug goal))))
+			     (let ((slug-str (cdr (assoc 'slug goal))))
 			       (cons (cons 'datapoints
-					   (cdr (assoc slug datapoints)))
+					   (cdr (assoc slug-str datapoints)))
 				     (cons
 				      (cons 'donetoday
 					    (cdr (assoc
@@ -222,16 +222,16 @@ Return a vector of sexps, each describing one goal."
 				      goal))))
 			   goals))
     (mapc (lambda (goal)
-	    (let ((slugsym (intern (cdr (assoc 'slug goal)))))
-	      (if (and (cdr (assoc slugsym beeminder-dirty-alist))
+	    (let ((slug (intern (cdr (assoc 'slug goal)))))
+	      (if (and (cdr (assoc slug beeminder-dirty-alist))
 		       (/= (cdr (assoc 'curval goal))
-			   (cdr (assoc slugsym beeminder-dirty-alist))))
-		  (setq beeminder-dirty-alist (assq-delete-all slugsym beeminder-dirty-alist)))))
+			   (cdr (assoc slug beeminder-dirty-alist))))
+		  (setq beeminder-dirty-alist (assq-delete-all slug beeminder-dirty-alist)))))
 	  goals)))
 
-(defun beeminder-refresh-goal (slug)
-  "Refresh autodata and graph of the goal named SLUG."
-  (beeminder-request-get (concat "/goals/" slug "/refresh_graph.json")))
+(defun beeminder-refresh-goal (slug-str)
+  "Refresh autodata and graph of the goal named SLUG-STR."
+  (beeminder-request-get (concat "/goals/" slug-str "/refresh_graph.json")))
 
 
 ;; Submitting datapoints
@@ -254,19 +254,23 @@ Return a vector of sexps, each describing one goal."
 
 (defun beeminder-get-slug (goal)
   "Return the slug of GOAL."
-  (cdr (assoc 'slug goal)))
+  (intern (cdr (assoc 'slug goal))))
+
+(defun beeminder-slug-to-goal (slug)
+  "Return the goal corresponding to SLUG."
+  (cl-find slug beeminder-goals :key #'beeminder-get-slug))
 
 (defun beeminder-slug-to-gnode (slug)
   "Return the goal node corresponding to SLUG."
   (let ((gnode (ewoc-nth beeminder-goals-ewoc 0)))
     (while (and gnode
 		(not
-		 (string= slug (cdr (assoc 'slug (ewoc-data gnode))))))
+		 (eq slug (beeminder-get-slug (ewoc-data gnode)))))
       (setq gnode (ewoc-next beeminder-goals-ewoc gnode)))
     gnode))
 
 (defvar beeminder-minibuffer-history nil
-  "History of goal slugs entered through minibuffer.")
+  "History of goal slug-strs entered through minibuffer.")
 
 (defun current-or-read-gnode ()
   "Return the goal node the point is on.
@@ -331,29 +335,29 @@ If `org-read-date' is present, use that; if not, fall back to
 		    (format-time-string "Time entered: %c. Confirm? " time)))))
        time))))
 
-(defun beeminder-submit-datapoint (slug amount &optional comment timestamp print-message)
-  "Submit a datapoint to Beeminder goal SLUG with AMOUNT.
+(defun beeminder-submit-datapoint (slug-str amount &optional comment timestamp print-message)
+  "Submit a datapoint to Beeminder goal SLUG-STR with AMOUNT.
 Additional data are COMMENT and TIMESTAMP (as Unix time).  If
 PRINT-MESSAGE is non-nil (this is the default in interactive
 use), print suitable messages in the echo area."
   (interactive
-   (let* ((slug (cdr (assoc 'slug (ewoc-data (current-or-read-gnode)))))
+   (let* ((slug-str (cdr (assoc 'slug (ewoc-data (current-or-read-gnode)))))
 	  (yesterdayp (eq current-prefix-arg '-))
 	  (amount (if (numberp current-prefix-arg)
 		      current-prefix-arg
 		    (string-to-number (beeminder-read-string
 				       (format "Datapoint value for %s%s: "
-					       slug
+					       slug-str
 					       (if yesterdayp " (yesterday)" ""))
 				       nil nil "1"))))
 	  (current-timestamp (time-to-seconds (beeminder-current-time)))
 	  (default-comment (concat
 			    "via Emacs at "
 			    (current-time-hmsz-string current-timestamp))))
-     (list slug
+     (list slug-str
 	   amount
 	   (beeminder-read-string
-	    (format "Comment for amount %d for goal %s: " amount slug)
+	    (format "Comment for amount %d for goal %s: " amount slug-str)
 	    nil nil default-comment)
 	   (or (if yesterdayp
 		   (- current-timestamp (* 24 60 60)))
@@ -361,8 +365,8 @@ use), print suitable messages in the echo area."
 		   (ask-for-timestamp))
 	       current-timestamp)
 	   t)))
-  (if print-message (message (format "Submitting datapoint of %d for goal %s..." amount slug)))
-  (unless (beeminder-request-post (format "/goals/%s/datapoints.json" slug)
+  (if print-message (message (format "Submitting datapoint of %d for goal %s..." amount slug-str)))
+  (unless (beeminder-request-post (format "/goals/%s/datapoints.json" slug-str)
 				  (concat (format "auth_token=%s&value=%f&comment=%s&timestamp=%d"
 						  beeminder-auth-token
 						  amount
@@ -371,10 +375,11 @@ use), print suitable messages in the echo area."
 						      current-timestamp))))
     (sit-for beeminder-default-timeout)
     (error "Submitting failed, check your internet connection"))
-  (if print-message (message (format "Submitting datapoint of %d for goal %s...Done." amount slug)))
-  (setf (alist-get (intern slug)
-		   beeminder-dirty-alist)
-	(cdr (assoc 'curval (ewoc-data (beeminder-slug-to-gnode slug)))))
+  (if print-message (message (format "Submitting datapoint of %d for goal %s...Done." amount slug-str)))
+  (let ((slug (intern slug-str)))
+    (setf (alist-get slug
+		     beeminder-dirty-alist)
+	  (cdr (assoc 'curval (ewoc-data (beeminder-slug-to-gnode slug))))))
   (beeminder-recreate-ewoc))
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
