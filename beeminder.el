@@ -61,7 +61,7 @@ You can retrieve it from the URL
   :group 'beeminder)
 
 (defvar beeminder-goals nil
-  "The vector of sexps representing goals.
+  "The list of sexps representing goals.
 Updated by `beeminder-get-goals'.")
 
 (defcustom beeminder-default-timeout 4
