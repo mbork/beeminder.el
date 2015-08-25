@@ -256,19 +256,19 @@ Return a vector of sexps, each describing one goal."
   "Return the slug of GOAL."
   (cdr (assoc 'slug goal)))
 
-(defun beeminder-slug-to-goal (slug)
+(defun beeminder-slug-to-gnode (slug)
   "Return the goal node corresponding to SLUG."
-  (let ((goal-node (ewoc-nth beeminder-goals-ewoc 0)))
-    (while (and goal-node
+  (let ((gnode (ewoc-nth beeminder-goals-ewoc 0)))
+    (while (and gnode
 		(not
-		 (string= slug (cdr (assoc 'slug (ewoc-data goal-node))))))
-      (setq goal-node (ewoc-next beeminder-goals-ewoc goal-node)))
-    goal-node))
+		 (string= slug (cdr (assoc 'slug (ewoc-data gnode))))))
+      (setq gnode (ewoc-next beeminder-goals-ewoc gnode)))
+    gnode))
 
 (defvar beeminder-minibuffer-history nil
   "History of goal slugs entered through minibuffer.")
 
-(defun current-or-read-goal ()
+(defun current-or-read-gnode ()
   "Return the goal node the point is on.
 If the point is before the first goal or in a buffer whose mode
 is not `beeminder-mode', use `completing-read' to ask for the
@@ -277,7 +277,7 @@ goal slug and return that goal node instead."
 	  (beeminder-before-first-goal-p))
       (let ((default (aif (ewoc-nth beeminder-goals-ewoc 0)
 			 (beeminder-get-slug (ewoc-data it)))))
-	(beeminder-slug-to-goal
+	(beeminder-slug-to-gnode
 	 (completing-read (if default
 			      (format "Goal slug (default %s): " default)
 			    "Goal slug: ")
@@ -337,7 +337,7 @@ Additional data are COMMENT and TIMESTAMP (as Unix time).  If
 PRINT-MESSAGE is non-nil (this is the default in interactive
 use), print suitable messages in the echo area."
   (interactive
-   (let* ((slug (cdr (assoc 'slug (ewoc-data (current-or-read-goal)))))
+   (let* ((slug (cdr (assoc 'slug (ewoc-data (current-or-read-gnode)))))
 	  (yesterdayp (eq current-prefix-arg '-))
 	  (amount (if (numberp current-prefix-arg)
 		      current-prefix-arg
@@ -374,7 +374,7 @@ use), print suitable messages in the echo area."
   (if print-message (message (format "Submitting datapoint of %d for goal %s...Done." amount slug)))
   (setf (alist-get (intern slug)
 		   beeminder-dirty-alist)
-	(cdr (assoc 'curval (ewoc-data (beeminder-slug-to-goal slug)))))
+	(cdr (assoc 'curval (ewoc-data (beeminder-slug-to-gnode slug)))))
   (beeminder-recreate-ewoc))
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
@@ -845,15 +845,15 @@ If nil, use the global midnight defined by
 - formatting function or a format string for the shortened version of
   header.")
 
-(defun beeminder-kill-goal (goal-node)
-  "Delete GOAL-NODE from `beeminder-goals-ewoc'."
-  (interactive (list (current-or-read-goal)))
+(defun beeminder-kill-goal (gnode)
+  "Delete GNODE from `beeminder-goals-ewoc'."
+  (interactive (list (current-or-read-gnode)))
   (let ((inhibit-read-only t)
-	(next-goal (or (ewoc-next beeminder-goals-ewoc goal-node)
-		       (ewoc-prev beeminder-goals-ewoc goal-node))))
-    (ewoc-delete beeminder-goals-ewoc goal-node)
+	(next-goal (or (ewoc-next beeminder-goals-ewoc gnode)
+		       (ewoc-prev beeminder-goals-ewoc gnode))))
+    (ewoc-delete beeminder-goals-ewoc gnode)
     (ewoc-refresh beeminder-goals-ewoc)
-    (push (cdr (assoc 'slug (ewoc-data goal-node)))
+    (push (cdr (assoc 'slug (ewoc-data gnode)))
 	  (alist-get 'killed beeminder-current-filters))
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
     (if next-goal
