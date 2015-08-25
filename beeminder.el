@@ -174,7 +174,7 @@ Take `beeminder-when-the-day-ends' into consideration."
 (defun beeminder-get-goals ()
   "Get all the user's Beeminder goals.
 Return a vector of sexps, each describing one goal."
-  (let* ((goals (beeminder-request-get "/goals.json")) ; goal data
+  (let* ((goals (append (beeminder-request-get "/goals.json") nil)) ; goal data
 	 (datapoints-data (cdr (assoc 'goals ; datapoints data
 				      (beeminder-request-get
 				       (format ".json?diff_since=%d"
