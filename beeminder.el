@@ -362,7 +362,7 @@ to submit data to Beeminder (especially that the question
 includes the goal slug and amount), so disabling of this option
 is discouraged.")
 
-(defun beeminder-submit-datapoint (slug-str amount comment timestamp &optional print-message)
+(defun beeminder-submit-datapoint (slug-str amount comment &optional timestamp print-message)
   "Submit a datapoint to Beeminder goal SLUG-STR with AMOUNT.
 Additional data are COMMENT and TIMESTAMP (as Unix time).  If
 COMMENT is nil, then ask the user for the comment.  If
@@ -399,14 +399,16 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
 	   t)))
   (if print-message (message (format "Submitting datapoint of %d for goal %s..." amount slug-str)))
   (unless (beeminder-request-post (format "/goals/%s/datapoints.json" slug-str)
-				  (concat (format "auth_token=%s&value=%f&comment=%s&timestamp=%d"
-						  beeminder-auth-token
-						  amount
-						  (or comment (beeminder-ask-for-comment
-							       slug-str
-							       amount
-							       (beeminder-default-comment timestamp)))
-						  timestamp)))
+				  (concat
+				   (format "auth_token=%s&value=%f&comment=%s&timestamp=%d"
+					   beeminder-auth-token
+					   amount
+					   (or comment (beeminder-ask-for-comment
+					   		slug-str
+					   		amount
+					   		(beeminder-default-comment timestamp)))
+					   (or timestamp
+					       (time-to-seconds (beeminder-current-time))))))
     (sit-for beeminder-default-timeout)
     (error "Submitting failed, check your internet connection"))
   (if print-message (message (format "Submitting datapoint of %d for goal %s...Done." amount slug-str)))
