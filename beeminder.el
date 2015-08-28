@@ -300,7 +300,7 @@ goal slug and return that goal node instead."
 	 (beeminder-read-slug default)))
     (ewoc-locate beeminder-goals-ewoc)))
 
-(defun current-time-hmsz-string (&optional timestamp)
+(defun beeminder-current-time-hmsz-string (&optional timestamp)
   "Return TIMESTAMP (Unix time) as a string.
 Use current time by default.  Format is hh:mm:ss tz."
   (let ((decoded-time (decode-time (or (seconds-to-time timestamp)
@@ -342,11 +342,40 @@ If `org-read-date' is present, use that; if not, fall back to
 		    (format-time-string "Time entered: %c. Confirm? " time)))))
        time))))
 
-(defun beeminder-submit-datapoint (slug-str amount &optional comment timestamp print-message)
+(defun beeminder-default-comment (&optional timestamp)
+  "Generate the default comment for the given TIMESTAMP."
+  (concat
+   "via Emacs at "
+   (beeminder-current-time-hmsz-string timestamp)))
+
+(defun beeminder-ask-for-comment (slug-str amount &optional default-comment)
+  "Ask the user for the comment for the goal named SLUG-STR.
+Include AMOUNT in the question, and default to DEFAULT-COMMENT."
+  (beeminder-read-string
+   (format "Comment for amount %d for goal %s: " amount slug-str)
+   nil nil default-comment))
+
+(defcustom beeminder-ask-for-comment t
+  "Non-nil means ask for comment when a goal is submitted.
+This also serves as a confirmation that the user actually wants
+to submit data to Beeminder (especially that the question
+includes the goal slug and amount), so disabling of this option
+is discouraged.")
+
+(defun beeminder-submit-datapoint (slug-str amount comment timestamp &optional print-message)
   "Submit a datapoint to Beeminder goal SLUG-STR with AMOUNT.
 Additional data are COMMENT and TIMESTAMP (as Unix time).  If
-PRINT-MESSAGE is non-nil (this is the default in interactive
-use), print suitable messages in the echo area."
+COMMENT is nil, then ask the user for the comment.  If
+PRINT-MESSAGE is non-nil, print suitable messages in the echo
+area.
+
+If called interactively, ask for SLUG-STR (with completion) unless the
+point is on a goal node.  Then, ask for AMOUNT unless the user
+provided a numeric argument, in which case take the argument.  Then,
+ask for COMMENT, proposing a reasonable default, unless the option
+`beeminder-ask-for-comment' is nil.  If called with a prefix argument
+of \\[universal-argument], ask also for TIMESTAMP.  If called with
+a prefix argument of `-', use previous day as the TIMESTAMP."
   (interactive
    (let* ((slug-str (cdr (assoc 'slug (ewoc-data (current-or-read-gnode)))))
 	  (yesterdayp (eq current-prefix-arg '-))
@@ -357,19 +386,15 @@ use), print suitable messages in the echo area."
 					       slug-str
 					       (if yesterdayp " (yesterday)" ""))
 				       nil nil "1"))))
-	  (current-timestamp (time-to-seconds (beeminder-current-time)))
-	  (default-comment (concat
-			    "via Emacs at "
-			    (current-time-hmsz-string current-timestamp))))
+	  (current-timestamp (time-to-seconds (beeminder-current-time))))
      (list slug-str
 	   amount
-	   (beeminder-read-string
-	    (format "Comment for amount %d for goal %s: " amount slug-str)
-	    nil nil default-comment)
-	   (or (if yesterdayp
-		   (- current-timestamp (* 24 60 60)))
-	       (if (consp current-prefix-arg)
-		   (ask-for-timestamp))
+	   (unless beeminder-ask-for-comment
+	     (beeminder-default-comment current-timestamp))
+	   (or (when yesterdayp
+		 (- current-timestamp (* 24 60 60)))
+	       (when (consp current-prefix-arg)
+		 (ask-for-timestamp))
 	       current-timestamp)
 	   t)))
   (if print-message (message (format "Submitting datapoint of %d for goal %s..." amount slug-str)))
@@ -377,9 +402,11 @@ use), print suitable messages in the echo area."
 				  (concat (format "auth_token=%s&value=%f&comment=%s&timestamp=%d"
 						  beeminder-auth-token
 						  amount
-						  (or comment default-comment)
-						  (or timestamp
-						      current-timestamp))))
+						  (or comment (beeminder-ask-for-comment
+							       slug-str
+							       amount
+							       (beeminder-default-comment timestamp)))
+						  timestamp)))
     (sit-for beeminder-default-timeout)
     (error "Submitting failed, check your internet connection"))
   (if print-message (message (format "Submitting datapoint of %d for goal %s...Done." amount slug-str)))
