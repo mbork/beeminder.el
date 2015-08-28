@@ -972,6 +972,54 @@ Disable FILTER if PARAMETER is nil."
 (define-key beeminder-mode-map (kbd "d") #'beeminder-filter-by-losedate)
 (define-key beeminder-mode-map (kbd "t") #'beeminder-filter-by-donetoday)
 
+
+;; Org-mode integration
+
+(defcustom beeminder-org-inherit-beeminder-properties nil
+  "Make beeminder.el use property inheritance.")
+
+(defun beeminder-org-submit-on-done (state-change)
+  "Submit 1 when STATE-CHANGE involved marking an item as DONE."
+  (let ((position (plist-get state-change :position)))
+    (if (and (string= (downcase (or (org-entry-get position
+						   "beeminder"
+						   beeminder-org-inherit-beeminder-properties)
+				    ""))
+		      "done")
+	     (eq (plist-get state-change :type) 'todo-state-change)
+	     (member (plist-get state-change :to) org-done-keywords))
+	(let* ((slug-str (org-entry-get position
+					"slug"
+					beeminder-org-inherit-beeminder-properties))
+	       (amount (aif (org-entry-get position
+					   "amount"
+					   beeminder-org-inherit-beeminder-properties)
+			   (string-to-number it)
+			 1))
+	       (comment (unless (org-entry-get position
+					       "ask-comment"
+					       beeminder-org-inherit-beeminder-properties)
+			  (concat "via Org-mode at " (beeminder-current-time-hmsz-string)))))
+	  (beeminder-submit-datapoint slug-str amount comment nil t)))))
+
+(defun add-or-remove-hook (arg hook function &optional local message)
+  "Call `add-hook' if ARG is positive, `remove-hook' otherwise.
+Print MESSAGE and \"on\" or \"off\" if non-nil."
+  (funcall (if (> arg 0) #'add-hook #'remove-hook) hook function local)
+  (if message (message "%s %s" message (if (> arg 0) "on" "off"))))
+
+(defun beeminder-org-done-submitting (arg)
+  "Turn submitting on marking as DONE on.
+With negative argument ARG, turn it off."
+  (interactive "p")
+  (add-or-remove-hook arg
+		      'org-trigger-hook
+		      #'beeminder-org-submit-on-done
+		      nil
+		      "Submitting goals on DONE"))
+
+
 (provide 'beeminder)
 
+
 ;;; beeminder.el ends here
