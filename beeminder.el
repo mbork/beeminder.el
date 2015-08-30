@@ -992,7 +992,8 @@ to the slug of the goal), the \"amount\" property (defaults to 1), the
 				    ""))
 		      "done")
 	     (eq (plist-get state-change :type) 'todo-state-change)
-	     (member (plist-get state-change :to) org-done-keywords))
+	     (member (plist-get state-change :to) org-done-keywords)
+	     (org-entry-get position "slug" beeminder-org-inherit-beeminder-properties))
 	(let* ((slug-str (org-entry-get position
 					"slug"
 					beeminder-org-inherit-beeminder-properties))
