@@ -362,12 +362,12 @@ to submit data to Beeminder (especially that the question
 includes the goal slug and amount), so disabling of this option
 is discouraged.")
 
-(defun beeminder-submit-datapoint (slug-str amount comment &optional timestamp print-message)
+(defun beeminder-submit-datapoint (slug-str amount &optional comment timestamp print-message)
   "Submit a datapoint to Beeminder goal SLUG-STR with AMOUNT.
 Additional data are COMMENT and TIMESTAMP (as Unix time).  If
-COMMENT is nil, then ask the user for the comment.  If
-PRINT-MESSAGE is non-nil, print suitable messages in the echo
-area.
+COMMENT is nil, then ask the user for the comment.  If TIMESTAMP
+is nil, assume now.  If PRINT-MESSAGE is non-nil, print suitable
+messages in the echo area.
 
 If called interactively, ask for SLUG-STR (with completion) unless the
 point is on a goal node.  Then, ask for AMOUNT unless the user
@@ -398,19 +398,19 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
 	       current-timestamp)
 	   t)))
   (if print-message (message (format "Submitting datapoint of %d for goal %s..." amount slug-str)))
-  (unless (beeminder-request-post (format "/goals/%s/datapoints.json" slug-str)
-				  (concat
-				   (format "auth_token=%s&value=%f&comment=%s&timestamp=%d"
-					   beeminder-auth-token
-					   amount
-					   (or comment (beeminder-ask-for-comment
-					   		slug-str
-					   		amount
-					   		(beeminder-default-comment timestamp)))
-					   (or timestamp
-					       (time-to-seconds (beeminder-current-time))))))
-    (sit-for beeminder-default-timeout)
-    (error "Submitting failed, check your internet connection"))
+  (let ((timestamp (or timestamp (time-to-seconds (beeminder-current-time)))))
+    (unless (beeminder-request-post (format "/goals/%s/datapoints.json" slug-str)
+				    (concat
+				     (format "auth_token=%s&value=%f&comment=%s&timestamp=%d"
+					     beeminder-auth-token
+					     amount
+					     (or comment (beeminder-ask-for-comment
+							  slug-str
+							  amount
+							  (beeminder-default-comment timestamp)))
+					     timestamp)))
+      (sit-for beeminder-default-timeout)
+      (error "Submitting failed, check your internet connection")))
   (if print-message (message (format "Submitting datapoint of %d for goal %s...Done." amount slug-str)))
   (let ((slug (intern slug-str)))
     (setf (alist-get slug
