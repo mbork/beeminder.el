@@ -845,16 +845,18 @@ If nil, use the global midnight defined by
       days))
 
 (defun beeminder-donetoday-p (goal percentage)
-  "Return nil if donetoday for GOAL > PERCENTAGE * day's amount."
-  (< (/ (* 100 (cdr (assoc 'donetoday goal)))
-	(/ (cdr (assoc 'rate goal))
-	   (cl-case (intern (cdr (assoc 'runits goal)))
-	     (y 365)
-	     (m (/ 365 12))
-	     (w 7)
-	     (d 1)
-	     (h (/ 1 24)))))
-     percentage))
+  "Return nil if donetoday for GOAL >= PERCENTAGE * day's amount."
+  (let* ((rate (cdr (assoc 'rate goal)))
+	 (daily-rate (/ rate
+			(cl-case (intern (cdr (assoc 'runits goal)))
+			  (y 365)
+			  (m (/ 365.0 12))
+			  (w 7)
+			  (d 1)
+			  (h (/ 1 24.0))))))
+    (when (> rate 0)
+      (< (* 100 (cdr (assoc 'donetoday goal)))
+	 (* percentage daily-rate)))))
 
 (defun beeminder-not-killed-p (goal kill-list)
   "Return nil if GOAL is in the KILL-LIST."
