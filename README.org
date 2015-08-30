@@ -77,6 +77,51 @@ goal list (by pressing =g=) to “clean” them (it might require from
 a few seconds to a few minutes to work, probably because of
 Beeminder’s server overload).
 
+* Org-mode integration
+=beeminder.el= supports two kinds of Org-mode integration: submitting
+data on marking items as DONE or on clocking out.  Both use Org
+properties to set various things up.  In order to turn them on for
+some item, you have to first evaluate one of the functions
+=beeminder-org-done-submitting= or
+=beeminder-org-clock-out-submitting=.  You may also use them in your
+=init.el=; you must then supply a numeric argument, which turns the
+relevant feature on if positive and off otherwise.
+
+Then, for each item you want to link to a Beeminder goal, set its
+=beeminder= property to =done= or =clock=, and its =slug= property to
+the goal slug.  You might also want to set the
+=beeminder-org-inherit-beeminder-properties= option to =t= to turn
+property inheritance on for Beeminder-related stuff.  (This is
+probably most useful for clocking subtasks.)
+
+If for some reason you want to confirm the submitting each time, you
+may set the =ask-comment= property to anything non-nil (basically,
+this means that it is enough for it to be /present/, since its value
+is the empty string then).
+
+** Marking items as DONE
+Marking an Org heading as DONE can automatically submit a Beeminder
+datapoint.  For that, set the property =beeminder= to =done= and put
+the goal slug in the =slug= property.  The amount of the datapoint will
+be 1, though this can be overriden by setting the property =amount= to
+a number.
+
+This feature probably makes the most sense for items scheduled with
+a repeater.
+
+** Submitting time for clocked items
+Another way of leveraging Org-mode's features is submitting time of
+clocked items for “do X for at least Y minutes”-type goals.  For that,
+set the =beeminder= property to =clock= and the =slug= property to the
+goal slug.  Each time this particular item is clocked out, the number
+of minutes is submitted as a Beeminder datapoint.  Alternatively, you
+may set the =unit= property to =hours= so that the value is divided by
+60.
+
+** Property inheritance
+By default, inheritance is not used for beeminer-related properties.
+However, you can set the
+
 * Planned features
 - Better error handling (currently it is almost non-existent)
 - Org-mode integration
