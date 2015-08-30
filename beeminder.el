@@ -1008,6 +1008,43 @@ to the slug of the goal), the \"amount\" property (defaults to 1), the
 			  (concat "via Org-mode at " (beeminder-current-time-hmsz-string)))))
 	  (beeminder-submit-datapoint slug-str amount comment nil t)))))
 
+(defun beeminder-org-submit-on-clock-out ()
+  "Submit the time clocked for this item.
+This function should be placed in `org-clock-out-hook'.  It looks
+up the following properties of the headline: the \"beeminder\"
+property (which should be set to \"clock\", the \"slug\"
+property (which should be set to the slug of the goal), the
+\"unit\" property (which may be \"minutes\", which is the
+default, or \"hours\", etc.\"), the \"ask-comment\"
+property (asks for the comment if it is present)."
+  (when (and (string= (downcase (or (org-entry-get (point)
+						   "beeminder"
+						   beeminder-org-inherit-beeminder-properties)
+				    ""))
+		      "clock")
+	     (not (string-match " LINE REMOVED$" (or (current-message) ""))) ; this is really hackish
+	     (org-entry-get
+	      (point) "slug" beeminder-org-inherit-beeminder-properties))
+    (let ((duration (org-element-property :duration (org-element-at-point))))
+      (when (string-match "\\([[:digit:]]+\\):\\([[:digit:]]\\{2\\}\\)" duration)
+	(let ((minutes (+ (* 60 (string-to-number (match-string 1 duration)))
+			  (string-to-number (match-string 2 duration))))
+	      (slug-str (org-entry-get (point)
+				       "slug"
+				       beeminder-org-inherit-beeminder-properties))
+	      (comment (unless (org-entry-get (point)
+					      "ask-comment"
+					      beeminder-org-inherit-beeminder-properties)
+			 (concat "via Org-mode at " (beeminder-current-time-hmsz-string))))
+	      (multiplier (cl-case (intern (or (org-entry-get (point)
+							      "unit"
+							      beeminder-org-inherit-beeminder-properties)
+					       ""))
+			    ((hour hours) (/ 1 60.0))
+			    ((hail-Mary hail-Marys) 3) ; 1 hail-Mary ≈ 20 seconds
+			    (t 1))))
+	  (beeminder-submit-datapoint slug-str (* minutes multiplier) comment nil t))))))
+
 (defun add-or-remove-hook (arg hook function &optional local message)
   "Call `add-hook' if ARG is positive, `remove-hook' otherwise.
 Print MESSAGE and \"on\" or \"off\" if non-nil."
@@ -1023,6 +1060,16 @@ With negative argument ARG, turn it off."
 		      #'beeminder-org-submit-on-done
 		      nil
 		      "Submitting goals on DONE"))
+
+(defun beeminder-org-clocking-out-submitting (arg)
+  "Turn submitting on clocking out on.
+With negative argument ARG, turn it off."
+  (interactive "p")
+  (add-or-remove-hook arg
+		      'org-clock-out-hook
+		      #'beeminder-org-submit-on-clock-out
+		      nil
+		      "Submitting goals on clocking out"))
 
 
 (provide 'beeminder)
