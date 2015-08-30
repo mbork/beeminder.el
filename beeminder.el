@@ -979,7 +979,12 @@ Disable FILTER if PARAMETER is nil."
   "Make beeminder.el use property inheritance.")
 
 (defun beeminder-org-submit-on-done (state-change)
-  "Submit 1 when STATE-CHANGE involved marking an item as DONE."
+  "Submit a datapoint when marking an item as DONE.
+This function should be placed in `org-trigger-hook'.  It looks up the
+following properties of the headline: the \"beeminder\" property (which
+should be set to \"done\", the \"slug\" property (which should be set
+to the slug of the goal), the \"amount\" property (defaults to 1), the
+\"ask-comment\" property (asks for the comment if it is present)."
   (let ((position (plist-get state-change :position)))
     (if (and (string= (downcase (or (org-entry-get position
 						   "beeminder"
