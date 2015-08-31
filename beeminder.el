@@ -663,7 +663,7 @@ It should be an element of `beeminder-current-filters'."
 					"none")))
 		      'face 'shadow)))
 
-(defun beeminder-create-ewoc ()
+(defun beeminder-create-goals-ewoc ()
   "Return a newly created EWOC for Beeminder goals."
   (ewoc-create (lambda (goal) (insert (beeminder-goal-representation goal)))
 	       (beeminder-ewoc-header)""))
@@ -696,7 +696,7 @@ sorted by another criterion previously."
     (message "Beeminder goals downloading...Done."))
   (let ((inhibit-read-only t))
     (erase-buffer)
-    (setq beeminder-goals-ewoc (beeminder-create-ewoc))
+    (setq beeminder-goals-ewoc (beeminder-create-goals-ewoc))
     (beeminder-recreate-ewoc))
   (beeminder-mode)
   (setq truncate-lines t))
