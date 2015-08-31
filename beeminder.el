@@ -1045,7 +1045,8 @@ property (asks for the comment if it is present)."
 			    ((hour hours) (/ 1 60.0))
 			    ((hail-Mary hail-Marys) 3) ; 1 hail-Mary ≈ 20 seconds
 			    (t 1))))
-	  (beeminder-submit-datapoint slug-str (* minutes multiplier) comment nil t))))))
+	  (save-excursion
+	    (beeminder-submit-datapoint slug-str (* minutes multiplier) comment nil t)))))))
 
 (defun add-or-remove-hook (arg hook function &optional local message)
   "Call `add-hook' if ARG is positive, `remove-hook' otherwise.
