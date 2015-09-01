@@ -986,19 +986,22 @@ Disable FILTER if PARAMETER is nil."
 
 (defun beeminder-org-submit-on-done (state-change)
   "Submit a datapoint when marking an item as DONE.
-This function should be placed in `org-trigger-hook'.  It looks up the
-following properties of the headline: the \"beeminder\" property (which
-should be set to \"done\", the \"slug\" property (which should be set
-to the slug of the goal), the \"amount\" property (defaults to 1), the
-\"ask-comment\" property (asks for the comment if it is present)."
+This function should be placed in `org-trigger-hook'.  It looks
+up the following properties of the headline: the \"beeminder\"
+property (which should be set to \"done\", the \"slug\"
+property (which should be set to the slug of the goal), the
+\"amount\" property (defaults to 1), the \"ask-comment\"
+property (asks for the comment if it is present)."
   (let ((position (plist-get state-change :position)))
     (if (and (string= (downcase (or (org-entry-get position
 						   "beeminder"
 						   beeminder-org-inherit-beeminder-properties)
 				    ""))
 		      "done")
-	     (eq (plist-get state-change :type) 'todo-state-change)
-	     (member (plist-get state-change :to) org-done-keywords)
+	     (eq (plist-get state-change :type)
+		 'todo-state-change)
+	     (member (plist-get state-change :to)
+		     org-done-keywords)
 	     (org-entry-get position "slug" beeminder-org-inherit-beeminder-properties))
 	(let* ((slug-str (org-entry-get position
 					"slug"
