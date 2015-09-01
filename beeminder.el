@@ -511,15 +511,19 @@ Optionally use length WIDTH (padded from the right with spaces)."
   "Return the losedate field of GOAL in human-friendly format."
   (beeminder-human-time (seconds-to-time (1+ (cdr (assoc 'losedate goal))))))
 
+(defun beeminder-get-rate (goal)
+  "Return the rate of GOAL."
+  (elt (cdr (assoc 'mathishard goal)) 2))
+
 (defun beeminder-display-rate (goal)
   "Return the rate of the GOAL (with units), as a string."
-  (let ((rate (cdr (assoc 'rate goal))))
+  (let ((rate (beeminder-get-rate goal)))
     (format (concat
 	     (if (>= rate 1)
 		 "%4d"
 	       "%4.2f")
 	     "/%s")
-	    (cdr (assoc 'rate goal))
+	    rate
 	    (cdr (assoc 'runits goal)))))
 
 (defun beeminder-display-pledge (goal)
@@ -846,7 +850,7 @@ If nil, use the global midnight defined by
 
 (defun beeminder-donetoday-p (goal percentage)
   "Return nil if donetoday for GOAL >= PERCENTAGE * day's amount."
-  (let* ((rate (cdr (assoc 'rate goal)))
+  (let* ((rate (beeminder-get-rate goal))
 	 (daily-rate (/ rate
 			(cl-case (intern (cdr (assoc 'runits goal)))
 			  (y 365)
