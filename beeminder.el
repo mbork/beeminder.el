@@ -412,7 +412,9 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
       (sit-for beeminder-default-timeout)
       (error "Submitting failed, check your internet connection")))
   (if print-message (message (format "Submitting datapoint of %d for goal %s...Done." amount slug-str)))
-  (let ((slug (intern slug-str)))
+  (let* ((slug (intern slug-str))
+	 (goal (beeminder-slug-to-goal slug)))
+    (cl-incf (alist-get 'donetoday goal) amount)
     (setf (alist-get slug
 		     beeminder-dirty-alist)
 	  (cdr (assoc 'curval (ewoc-data (beeminder-slug-to-gnode slug))))))
