@@ -287,18 +287,18 @@ DEFAULT should be a symbol."
 			   'beeminder-minibuffer-history
 			   (if default (symbol-name default)))))
 
-(defun current-or-read-gnode ()
-  "Return the goal node the point is on.
+(defun current-or-read-goal ()
+  "Return the goal the point is on.
 If the point is before the first goal or in a buffer whose mode
 is not `beeminder-mode', use `beeminder-read-slug' to ask for the
-goal slug and return that goal node instead."
+goal slug and return that goal instead."
   (if (or (not (eq major-mode 'beeminder-mode))
 	  (beeminder-before-first-goal-p))
       (let ((default (aif (ewoc-nth beeminder-goals-ewoc 0)
 			 (beeminder-get-slug (ewoc-data it)))))
-	(beeminder-slug-to-gnode
+	(beeminder-slug-to-goal
 	 (beeminder-read-slug default)))
-    (ewoc-locate beeminder-goals-ewoc)))
+    (ewoc-data (ewoc-locate beeminder-goals-ewoc))))
 
 (defun beeminder-current-time-hmsz-string (&optional timestamp)
   "Return TIMESTAMP (Unix time) as a string.
@@ -377,7 +377,7 @@ ask for COMMENT, proposing a reasonable default, unless the option
 of \\[universal-argument], ask also for TIMESTAMP.  If called with
 a prefix argument of `-', use previous day as the TIMESTAMP."
   (interactive
-   (let* ((slug-str (cdr (assoc 'slug (ewoc-data (current-or-read-gnode)))))
+   (let* ((slug-str (cdr (assoc 'slug (current-or-read-goal))))
 	  (yesterdayp (eq current-prefix-arg '-))
 	  (amount (if (numberp current-prefix-arg)
 		      current-prefix-arg
@@ -896,7 +896,7 @@ If nil, use the global midnight defined by
 
 (defun beeminder-kill-goal (gnode)
   "Delete GNODE from `beeminder-goals-ewoc'."
-  (interactive (list (current-or-read-gnode)))
+  (interactive (list (beeminder-slug-to-gnode (intern (cdr (assoc 'slug (current-or-read-goal)))))))
   (let ((inhibit-read-only t)
 	(next-goal (or (ewoc-next beeminder-goals-ewoc gnode)
 		       (ewoc-prev beeminder-goals-ewoc gnode))))
@@ -1108,12 +1108,13 @@ See the docstring of the function
 `beeminder-insert-goal-template-with-expansion' for the list of
 available keywords.")
 
-(defun beeminder-display-goal-details (gnode)
+(defun beeminder-display-goal-details (goal)
   "Display details about GOAL in a temporary buffer."
-  (interactive (list (current-or-read-gnode)))
+  ;; Currently, this function depends on dynamical binding.  It should
+  ;; be (somehow) converted to lexical binding.
+  (interactive (list (current-or-read-goal)))
   (pop-to-buffer "*Beeminder goal details*")
   (beeminder-goal-mode)
-  (setq-local goal (ewoc-data gnode))
   (let ((inhibit-read-only t))
     (erase-buffer)
     (beeminder-insert-goal-template-with-expansion
