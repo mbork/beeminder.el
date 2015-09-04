@@ -1101,8 +1101,9 @@ goal target: #target on #goaldate at rate #rate per #runit (currently at #curval
 goal type: #goaltype#autodatap
 safe until #losedate (current pledge: #pledge, left to do: #limsum, midnight setting: #midnight)
 
-Recent datapoints:
-#datapoints"
+Recent datapoints (#(symbol-value 'beeminder-history-length) days):
+#datapoints
+"
   "The default template for displaying goal details.
 See the docstring of the function
 `beeminder-insert-goal-template-with-expansion' for the list of
