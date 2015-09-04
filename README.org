@@ -77,6 +77,27 @@ goal list (by pressing =g=) to “clean” them (it might require from
 a few seconds to a few minutes to work, probably because of
 Beeminder’s server overload).
 
+* Viewing goal details
+You can press <tab> with point on a goal to display more detailed
+information about a goal in a separate window.  This information
+includes (by default) most data available in the API, plus a set of
+recent datapoints.  The user option =beeminder-goal-template= holds
+the template for displaying that; it is a string with embedded
+keywords (or s-expressions) starting with the =#= sign.  The list of
+supported keywords together with the way they should be interpreted is
+kept in =beeminder-goal-template-fields-alist=; any keyword not
+present there is assumed to be a property of the =goal= datastructure
+(see https://www.beeminder.com/api#goal for details).  You may also
+embed arbitrary s-exps in the template (preceding them also with #).
+
+The option =beeminder-history-length= determines how many datapoints
+are downloaded from the server.  Its default value is 7, which means
+a week's worth of them.
+
+Currently, the only thing you can actually /do/ in the =*Beeminder
+goal details*= buffer is to quit it by pressing =q=.  It is planned to
+be able to edit or delete datapoints from here.
+
 * Org-mode integration
 =beeminder.el= supports two kinds of Org-mode integration: submitting
 data on marking items as DONE or on clocking out.  Both use Org

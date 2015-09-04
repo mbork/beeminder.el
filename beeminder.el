@@ -981,6 +981,149 @@ Disable FILTER if PARAMETER is nil."
 (define-key beeminder-mode-map (kbd "t") #'beeminder-filter-by-donetoday)
 
 
+;; Displaying goal details
+
+(defcustom beeminder-goal-template-fields-alist
+  '((backburnerp . (if (string= (cdr (assoc 'burner goal)) "backburner") "(backburner)" ""))
+    (username . beeminder-username)
+    (dirtyp . (if (assoc (beeminder-get-slug goal) beeminder-dirty-alist)
+		  (propertize " (goal dirty!)" 'face 'beeminder-dirty) ""))
+    (target . (highlight-subtly (number-to-string (elt (cdr (assoc 'mathishard goal)) 1))))
+    (goaldate . (highlight-subtly (format-time-string "%x" (seconds-to-time (elt (cdr (assoc 'mathishard goal)) 0)))))
+    (rate . (highlight-subtly (number-to-human-string (beeminder-get-rate goal))))
+    (runit . (highlight-subtly
+	      (cl-case (intern (cdr (assoc 'runits goal)))
+		(d "day")
+		(w "week")
+		(m "month")
+		(h "hour")
+		(y "year"))))
+    (curval . (highlight-subtly (number-to-human-string (cdr (assoc 'curval goal)))))
+    (autodatap . (aif (cdr (assoc 'autodata goal))
+		     (concat ", autodata source: "
+			     (highlight-subtly it))
+		   ""))
+    (goaltype . (highlight-subtly (beeminder-display-goal-type (cdr (assoc 'goal_type goal)))))
+    (losedate . (highlight-subtly (trim-leading-whitespace
+				   (beeminder-display-losedate-human goal))))
+    (pledge . (highlight-subtly (beeminder-display-pledge goal)))
+    (midnight . (highlight-subtly (beeminder-display-midnight-setting (cdr (assoc 'deadline goal)))))
+    (datapoints . (propertize (beeminder-format-datapoints goal) 'face 'shadow)))
+  "Alist of symbols and corresponding pieces of code to evaluate
+and insert the result in the goal details info.")
+
+(defun beeminder-format-datapoints (goal)
+  "Return the printed representation of GOAL's datapoints."
+  (mapconcat (lambda (datapoint)
+	       (cdr (assoc 'canonical datapoint)))
+	     (reverse (cdr (assoc 'datapoints goal)))
+	     "\n"))
+
+(defun beeminder-insert-goal-template-with-expansion (template goal)
+  "Insert TEMPLATE with information about GOAL.
+If a substring of the form \"#SYMBOL\" is found, and SYMBOL is
+a key in the `beeminder-goal-template-fields-alist' variable,
+\"#SYMBOL\" is replaced with result of evaluating the associated
+value.  If there is no such entry, the SYMBOL is looked up in the
+alist representing the current goal, and \"#SYMBOL\" is replaced
+with its printed representation (using `format''s \"%s\"
+specifier).  In the latter case, the result is colorized with the
+`subtle-highlight-face'; in the former case, code in
+`beeminder-goal-template-fields-alist' should take care of
+colorization if needed.
+
+If a substring of the form \"#SEXP\" is found, and SEXP is not
+a symbol, \"#SEXP\" is replaced with the result of evaluating SEXP.
+Within SEXP, the variable `goal' is bound to the alist holding the
+current's goal properties.
+
+Should someone want to insert a literal \"#\" character, the form
+\"#(identity \"#\")\" can be used.
+
+Warning: this function uses `eval', so evil code in TEMPLATE or
+`beeminder-goal-template-fields-alist' can do real harm!"
+  (save-excursion (insert template))
+  (while (search-forward "#" nil t)
+    (let ((begin (1- (point)))
+	  (sexp (read (current-buffer))))
+      (delete-region begin (point))
+      (insert (format "%s"
+		      (cond ((symbolp sexp)
+			     (aif (assoc sexp beeminder-goal-template-fields-alist)
+				 (eval (cdr it))
+			       (highlight-subtly (cdr (assoc sexp goal)))))
+			    (t (eval sexp))))))))
+
+(define-derived-mode beeminder-goal-mode special-mode "Beeminder goal"
+  "A major mode for a buffer displaying details of a Beeminder goal,
+in particular the history of datapoints.")
+
+(defface subtle-highlight '((t :foreground "#006600"))
+  "Face for subtly highlighting things.")
+
+(defun highlight-subtly (string)
+  "Make STRING italic."
+  (propertize string 'face 'subtle-highlight))
+
+(defun number-to-human-string (number)
+  "Convert NUMBER to a human-friendly notation.
+If NUMBER is an integer, convert it without the decimal point.
+Otherwise, if NUMBER is greater than 10, use one decimal place.
+Otherwise, use two."
+  (format (cond
+	   ((= (floor number) number) "%d")
+	   ((> number 10) "%.1f")
+	   (t "%.2f"))
+	  number))
+
+(defun beeminder-display-midnight-setting (seconds)
+  "Convert SECONDS to or from midnight to a time string."
+  (when (< seconds 0) (setq seconds (+ seconds (* 24 60 60))))
+  (let* ((hours (/ seconds 60 60))
+	 (minutes (/ (- seconds (* hours 60 60)) 60)))
+    (format "%d:%02d" hours minutes)))
+
+(defun beeminder-display-goal-type (goaltype)
+  "Convert GOALTYPE to a printed representation."
+  (cl-case (intern (cdr (assoc 'goal_type goal)))
+    (hustler "do more")
+    (biker "odometer")
+    (fatloser "weight loss")
+    (gainer "gain weight")
+    (inboxer "inbox fewer")
+    (drinker "do less")
+    (custom "custom")))
+
+(defcustom beeminder-goal-template
+  "Details for Beeminder goal #slug for user #username#backburnerp
+#title#dirtyp
+goal target: #target on #goaldate at rate #rate per #runit (currently at #curval)
+goal type: #goaltype#autodatap
+safe until #losedate (current pledge: #pledge, left to do: #limsum, midnight setting: #midnight)
+
+Recent datapoints:
+#datapoints"
+  "The default template for displaying goal details.
+See the docstring of the function
+`beeminder-insert-goal-template-with-expansion' for the list of
+available keywords.")
+
+(defun beeminder-display-goal-details (gnode)
+  "Display details about GOAL in a temporary buffer."
+  (interactive (list (current-or-read-gnode)))
+  (pop-to-buffer "*Beeminder goal details*")
+  (beeminder-goal-mode)
+  (setq-local goal (ewoc-data gnode))
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (beeminder-insert-goal-template-with-expansion
+     beeminder-goal-template
+     goal))
+  (goto-char (point-min)))
+
+(define-key beeminder-mode-map (kbd "TAB") #'beeminder-display-goal-details)
+
+
 ;; Org-mode integration
 
 (defcustom beeminder-org-inherit-beeminder-properties nil
