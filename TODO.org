@@ -46,3 +46,4 @@ so that it does not depend on =last-command-event=
 * TODO Refactor beeminder-submit-datapoint
 - fix a bug when both comment and timestamp are nil
 - split into the interactive/non-interactive functions
+* TODO Convert beeminder-display-goal-details to lexical binding
