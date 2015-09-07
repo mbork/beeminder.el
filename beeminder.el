@@ -1087,6 +1087,8 @@ Warning: this function uses `eval', so evil code in TEMPLATE or
   "A major mode for a buffer displaying details of a Beeminder goal,
 in particular the history of datapoints.")
 
+(define-key beeminder-goal-mode-map (kbd "TAB") #'quit-window)
+
 (defface subtle-highlight '((t :foreground "#006600"))
   "Face for subtly highlighting things.")
 
