@@ -501,13 +501,17 @@ This means to return 2 for LANE-NUMBER greater than 2 and -2 for
 LANE-NUMBER less than -2."
   (min (max lane-number -2) 2))
 
-(defun beeminder-display-string-field (goal field &optional width)
-  "Display GOAL's FIELD (which should be a symbol) as a string.
-Optionally use length WIDTH (padded from the right with spaces)."
-  (format (if width
-	      (format "%%-%d.%ds" width width)
-	    "%s")
-	  (cdr (assoc field goal))))
+(defun beeminder-display-string-field (goal field &optional width invisible)
+  "Return GOAL's FIELD (which should be a symbol) as a string.
+Optionally use length WIDTH (padded from the right with spaces).
+Make it invisible if INVISIBLE is non-nil."
+  (let ((text (format (if width
+			  (format "%%-%d.%ds" width width)
+			"%s")
+		      (cdr (assoc field goal)))))
+    (if invisible
+	(propertize text 'invisible invisible)
+      text)))
 
 (defun beeminder-display-losedate-human (goal)
   "Return the losedate field of GOAL in human-friendly format."
@@ -1012,10 +1016,35 @@ Disable FILTER if PARAMETER is nil."
   "Alist of symbols and corresponding pieces of code to evaluate
 and insert the result in the goal details info.")
 
+(defun beeminder-display-time-field (alist field)
+  "Return ALIST's (unix-time) FIELD formatted."
+  (format-time-string "%x %X" (time-to-seconds (cdr (assoc field alist)))))
+
+(defcustom beeminder-datapoint-format
+  '((beeminder-display-string-field id 25 t)
+    (beeminder-display-time-field timestamp)
+    "  "
+    (beeminder-display-string-field value 4)
+    "  "
+    (beeminder-display-string-field comment))
+  "The format for displaying a goal's datapoint.
+The format is identical to that of `beeminder-goal-pp-format'.")
+
+(defun beeminder-datapoint-representation (datapoint)
+  "The string representation of DATAPOINT."
+  ;; TODO: factor out common code of this and `beeminder-goal-pp-format'.
+  (mapconcat (lambda (field-specifier)
+	       (cond
+		((functionp field-specifier) (funcall field-specifier datapoint))
+		((consp field-specifier) (apply (car field-specifier)
+						datapoint
+						(cdr field-specifier)))
+		((stringp field-specifier) field-specifier)))
+	     beeminder-datapoint-format ""))
+
 (defun beeminder-format-datapoints (goal)
   "Return the printed representation of GOAL's datapoints."
-  (mapconcat (lambda (datapoint)
-	       (cdr (assoc 'canonical datapoint)))
+  (mapconcat #'beeminder-datapoint-representation
 	     (reverse (cdr (assoc 'datapoints goal)))
 	     "\n"))
 

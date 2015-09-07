@@ -47,3 +47,4 @@ so that it does not depend on =last-command-event=
 - fix a bug when both comment and timestamp are nil
 - split into the interactive/non-interactive functions
 * TODO Convert beeminder-display-goal-details to lexical binding
+* TODO Make beeminder-human-time work with the past
