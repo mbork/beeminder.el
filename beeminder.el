@@ -848,6 +848,12 @@ If nil, use the global midnight defined by
   :type 'integer
   :group 'beeminder)
 
+(defcustom beeminder-show-dirty-donetoday t
+  "If non-nil, show dirty goals even if they would be normally
+  filtered out by the \"donetoday\" filter."
+  :type 'boolean
+  :group 'beeminder)
+
 (defun beeminder-days-p (goal days)
   "Return nil if time to derailment of GOAL > DAYS."
   (<= (- (beeminder-time-to-days (cdr (assoc 'losedate goal)))
@@ -855,18 +861,22 @@ If nil, use the global midnight defined by
       days))
 
 (defun beeminder-donetoday-p (goal percentage)
-  "Return nil if donetoday for GOAL >= PERCENTAGE * day's amount."
-  (let* ((rate (beeminder-get-rate goal))
-	 (daily-rate (/ rate
-			(cl-case (intern (cdr (assoc 'runits goal)))
-			  (y 365)
-			  (m (/ 365.0 12))
-			  (w 7)
-			  (d 1)
-			  (h (/ 1 24.0))))))
-    (when (> rate 0)
-      (< (* 100 (cdr (assoc 'donetoday goal)))
-	 (* percentage daily-rate)))))
+  "Return nil if donetoday for GOAL >= PERCENTAGE * day's amount.
+Take the variable `beeminder-show-dirty-donetoday' into account."
+  (if (and beeminder-show-dirty-donetoday
+	   (alist-get (beeminder-get-slug goal) beeminder-dirty-alist))
+      t
+    (let* ((rate (beeminder-get-rate goal))
+	   (daily-rate (/ rate
+			  (cl-case (intern (cdr (assoc 'runits goal)))
+			    (y 365)
+			    (m (/ 365.0 12))
+			    (w 7)
+			    (d 1)
+			    (h (/ 1 24.0))))))
+      (when (> rate 0)
+	(< (* 100 (cdr (assoc 'donetoday goal)))
+	   (* percentage daily-rate))))))
 
 (defun beeminder-not-killed-p (goal kill-list)
   "Return nil if GOAL is in the KILL-LIST."
