@@ -132,6 +132,19 @@ Add the username and the auth token."
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
 
+(defun beeminder-request-delete (request &optional timeout)
+  "Send a DELETE request to beeminder.com, with TIMEOUT.
+Add the necessary details (username and the auth token)."
+  (request-response-data
+   (request (concat (beeminder-create-api-url request)
+		    (if (string-match "\\?" request) "&" "?") ; this is hackish...
+		    "auth_token="
+		    beeminder-auth-token)
+	    :type "DELETE"
+	    :parser #'json-read
+	    :sync t
+	    :timeout (or timeout beeminder-default-timeout))))
+
 
 ;; API calls (currently synchronous only)
 
@@ -1157,6 +1170,7 @@ available keywords.")
   (interactive (list (current-or-read-goal)))
   (pop-to-buffer "*Beeminder goal details*")
   (beeminder-goal-mode)
+  (setq-local beeminder-detailed-goal goal)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (beeminder-insert-goal-template-with-expansion
@@ -1165,6 +1179,32 @@ available keywords.")
   (goto-char (point-min)))
 
 (define-key beeminder-mode-map (kbd "TAB") #'beeminder-display-goal-details)
+
+(defcustom beeminder-confirm-deletion #'y-or-n-p
+  "How to ask for confirmation of datapoint deletion.
+If nil, don't ask."
+  :type '(choice (const :tag "Ask with yes-or-no-p" yes-or-no-p)
+		 (const :tag "Ask with y-or-n-p" y-or-n-p)
+		 (const :tag "Don't ask at all" nil)
+		 (funtion :tag "Predicate function"))
+  :group 'beeminder)
+
+(defun beeminder-delete-datapoint (id)
+  "Delete datapoint with id ID.
+If called interactive, take the id from the beginning of the
+line."
+  (interactive (list (save-excursion
+		       (beginning-of-line)
+		       (if (looking-at "[0-9a-f]\\{24\\}")
+			   (match-string-no-properties 0)
+			 (error "Not at a datapoint -- beeminder-delete-datapoint")))))
+  (if (and beeminder-confirm-deletion
+	   (funcall beeminder-confirm-deletion "Are you sure you want to delete this datapoint?"))
+      (beeminder-request-delete
+       (concat "/goals/" (cdr (assoc 'slug beeminder-detailed-goal)) "/datapoints/" id ".json"))))
+;; TODO: add messages here ^^^, dirty flag behaves weirdly
+
+(define-key beeminder-goal-mode-map (kbd "d") #'beeminder-delete-datapoint)
 
 
 ;; Org-mode integration
