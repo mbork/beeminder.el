@@ -127,7 +127,9 @@ Add the username and the auth token."
   (request-response-data
    (request (beeminder-create-api-url request)
 	    :type "POST"
-	    :data data
+	    :data (concat
+		   (format "auth_token=%s&" beeminder-auth-token)
+		   data)
 	    :parser #'json-read
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
@@ -414,8 +416,7 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
   (let ((timestamp (or timestamp (time-to-seconds (beeminder-current-time)))))
     (unless (beeminder-request-post (format "/goals/%s/datapoints.json" slug-str)
 				    (concat
-				     (format "auth_token=%s&value=%f&comment=%s&timestamp=%d"
-					     beeminder-auth-token
+				     (format "value=%f&comment=%s&timestamp=%d"
 					     amount
 					     (or comment (beeminder-ask-for-comment
 							  slug-str
