@@ -1111,6 +1111,8 @@ Warning: this function uses `eval', so evil code in TEMPLATE or
 in particular the history of datapoints.")
 
 (define-key beeminder-goal-mode-map (kbd "TAB") #'quit-window)
+(define-key beeminder-goal-mode-map (kbd "n") #'next-line)
+(define-key beeminder-goal-mode-map (kbd "p") #'previous-line)
 
 (defface subtle-highlight '((t :foreground "#006600"))
   "Face for subtly highlighting things.")
