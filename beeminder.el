@@ -417,7 +417,7 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
     (cl-incf (alist-get 'donetoday goal) amount)
     (setf (alist-get slug
 		     beeminder-dirty-alist)
-	  (cdr (assoc 'curval (ewoc-data (beeminder-slug-to-gnode slug))))))
+	  (cdr (assoc 'curval (beeminder-slug-to-goal slug)))))
   (beeminder-recreate-ewoc))
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
