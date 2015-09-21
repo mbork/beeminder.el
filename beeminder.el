@@ -1139,7 +1139,7 @@ Otherwise, use two."
 
 (defun beeminder-display-goal-type (goaltype)
   "Convert GOALTYPE to a printed representation."
-  (cl-case (intern (cdr (assoc 'goal_type goal)))
+  (cl-case (intern goaltype)
     (hustler "do more")
     (biker "odometer")
     (fatloser "weight loss")
