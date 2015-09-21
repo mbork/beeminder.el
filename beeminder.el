@@ -1118,7 +1118,7 @@ in particular the history of datapoints.")
   "Face for subtly highlighting things.")
 
 (defun highlight-subtly (string)
-  "Make STRING italic."
+  "Make STRING stand out, but only a little."
   (propertize string 'face 'subtle-highlight))
 
 (defun number-to-human-string (number)
