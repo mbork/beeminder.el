@@ -751,13 +751,13 @@ the printed representation of this sorting method (as a string)."
 (defmacro save-current-goal (&rest body)
   "Evaluate BODY and bring the point back to the current goal."
   (declare (indent 0) (debug t))
-  `(let ((current-goal-slug (cdr (assoc 'slug (ewoc-data (ewoc-locate beeminder-goals-ewoc))))))
+  `(let ((current-goal-slug (beeminder-get-slug (ewoc-data (ewoc-locate beeminder-goals-ewoc)))))
      ,@body
      (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0))
      (let ((current-node (ewoc-nth beeminder-goals-ewoc 0)))
        (while (and current-node
-		   (not (string= (cdr (assoc 'slug (ewoc-data current-node)))
-				 current-goal-slug)))
+		   (not (eq (beeminder-get-slug (ewoc-data current-node))
+			    current-goal-slug)))
 	 (ewoc-goto-next beeminder-goals-ewoc 1)
 	 (setq current-node (ewoc-next beeminder-goals-ewoc current-node)))
        (unless current-node (goto-char (point-min))))))
