@@ -377,6 +377,13 @@ to submit data to Beeminder (especially that the question
 includes the goal slug and amount), so disabling of this option
 is discouraged.")
 
+(defun beeminder-make-goal-dirty (slug)
+  "Make the goal with SLUG dirty."
+  (setf (alist-get slug beeminder-dirty-alist)
+	(cdr (assoc 'curval (beeminder-slug-to-goal slug))))
+  (aif (beeminder-slug-to-gnode slug)
+      (ewoc-invalidate beeminder-goals-ewoc it)))
+
 (defun beeminder-submit-datapoint (slug-str amount &optional comment timestamp print-message)
   "Submit a datapoint to Beeminder goal SLUG-STR with AMOUNT.
 Additional data are COMMENT and TIMESTAMP (as Unix time).  If
@@ -429,10 +436,7 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
   (let* ((slug (intern slug-str))
 	 (goal (beeminder-slug-to-goal slug)))
     (cl-incf (alist-get 'donetoday goal) amount)
-    (setf (alist-get slug
-		     beeminder-dirty-alist)
-	  (cdr (assoc 'curval (beeminder-slug-to-goal slug)))))
-  (beeminder-recreate-ewoc))
+    (beeminder-make-goal-dirty slug)))
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
 
