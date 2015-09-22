@@ -842,7 +842,7 @@ end."
   "Clear all filters."
   (interactive)
   (setq beeminder-current-filters '())
-  (beeminder-recreate-ewoc))
+  (save-current-goal (beeminder-recreate-ewoc)))
 
 (define-key beeminder-mode-map "c" #'beeminder-clear-filters)
 
@@ -987,7 +987,7 @@ Disable FILTER if PARAMETER is nil."
   (setf (alist-get filter beeminder-current-filters)
 	parameter)
   (setq beeminder-current-filters (rassq-delete-all nil beeminder-current-filters))
-  (beeminder-recreate-ewoc))
+  (save-current-goal (beeminder-recreate-ewoc)))
 
 (defun beeminder-filter-parameter (raw-prefix default)
   "Return filter parameter based on RAW-PREFIX and DEFAULT."
