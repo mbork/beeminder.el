@@ -1207,9 +1207,18 @@ line."
 			 (error "Not at a datapoint -- beeminder-delete-datapoint")))))
   (if (and beeminder-confirm-deletion
 	   (funcall beeminder-confirm-deletion "Are you sure you want to delete this datapoint?"))
-      (beeminder-request-delete
-       (concat "/goals/" (cdr (assoc 'slug beeminder-detailed-goal)) "/datapoints/" id ".json"))))
-;; TODO: add messages here ^^^, dirty flag behaves weirdly
+      (cond ((beeminder-request-delete
+	      (concat "/goals/" (cdr (assoc 'slug beeminder-detailed-goal)) "/datapoints/" id ".json"))
+	     (cl-decf (alist-get 'donetoday beeminder-detailed-goal)
+		      (cdr (assoc 'value (cl-find id (cdr (assoc 'datapoints beeminder-detailed-goal))
+						  :key (lambda (dp)
+							 (cdr (assoc 'id dp)))
+						  :test #'string=))))
+	     (beeminder-make-goal-dirty (beeminder-get-slug beeminder-detailed-goal))
+	     (message "Datapoint succesfully deleted."))
+	    (t
+	     (sit-for beeminder-default-timeout)
+	     (error "I had a problem deleting the datapoint.")))))
 
 (define-key beeminder-goal-mode-map (kbd "d") #'beeminder-delete-datapoint)
 
