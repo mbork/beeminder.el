@@ -543,11 +543,8 @@ Make it invisible if INVISIBLE is non-nil."
   "Return the rate of the GOAL (with units), as a string."
   (let ((rate (beeminder-get-rate goal)))
     (format (concat
-	     (if (>= rate 1)
-		 "%4d"
-	       "%4.2f")
+	     (number-to-human-string rate 4)
 	     "/%s")
-	    rate
 	    (cdr (assoc 'runits goal)))))
 
 (defun beeminder-display-pledge (goal)
@@ -1131,16 +1128,18 @@ in particular the history of datapoints.")
   "Make STRING stand out, but only a little."
   (propertize string 'face 'subtle-highlight))
 
-(defun number-to-human-string (number)
-  "Convert NUMBER to a human-friendly notation.
-If NUMBER is an integer, convert it without the decimal point.
-Otherwise, if NUMBER is greater than 10, use one decimal place.
-Otherwise, use two."
-  (format (cond
-	   ((= (floor number) number) "%d")
-	   ((> number 10) "%.1f")
-	   (t "%.2f"))
-	  number))
+(defun number-to-human-string (number &optional width)
+  "Convert NUMBER to a human-friendly form, at least WIDTH characters.
+If NUMBER is greater than 10, use one decimal place.  Otherwise,
+use two.  Trim any non-significant trailing zeros."
+  (let ((str (replace-regexp-in-string
+	      "\\.$" "" (replace-regexp-in-string
+			 "0+$" ""
+			 (format (cond
+				  ((> number 10) "%.1f")
+				  (t "%.2f"))
+				 number)))))
+    (if width (format (format "%%%ds" width) str) str)))
 
 (defun beeminder-display-midnight-setting (seconds)
   "Convert SECONDS to or from midnight to a time string."
