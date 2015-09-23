@@ -1266,6 +1266,37 @@ property (asks for the comment if it is present)."
 			  (concat "via Org-mode at " (beeminder-current-time-hmsz-string)))))
 	  (beeminder-submit-datapoint slug-str amount comment nil t)))))
 
+(defun beeminder-org-submit-clock-at-point ()
+  "Submit the data from the clock item at point to Beeminder.
+This is mainly useful if submitting on clocking out (see
+`beeminder-org-submit-on-clock-out' failed for some reason, so
+that the user may want to submit clock items later."
+  (interactive)
+  (let ((duration (org-element-property :duration (org-element-at-point))))
+    (when (string-match "\\([[:digit:]]+\\):\\([[:digit:]]\\{2\\}\\)" duration)
+      (let ((minutes (+ (* 60 (string-to-number (match-string 1 duration)))
+			(string-to-number (match-string 2 duration))))
+	    (slug-str (org-entry-get (point)
+				     "slug"
+				     beeminder-org-inherit-beeminder-properties))
+	    (comment (unless (org-entry-get (point)
+					    "ask-comment"
+					    beeminder-org-inherit-beeminder-properties)
+		       (concat "via Org-mode at " (beeminder-current-time-hmsz-string))))
+	    (multiplier (cl-case (intern (or (org-entry-get (point)
+							    "unit"
+							    beeminder-org-inherit-beeminder-properties)
+					     ""))
+			  ((hour hours)
+			   (/ 1 60.0))
+			  ((hail-Mary hail-Marys)
+			   3)
+					; 1 hail-Mary ≈ 20 seconds
+			  (t 1))))
+	(save-excursion
+	  (beeminder-submit-datapoint slug-str (* minutes multiplier)
+				      comment nil t))))))
+
 (defun beeminder-org-submit-on-clock-out ()
   "Submit the time clocked for this item.
 This function should be placed in `org-clock-out-hook'.  It looks
@@ -1283,26 +1314,7 @@ property (asks for the comment if it is present)."
 	     (not (string-match " LINE REMOVED$" (or (current-message) ""))) ; this is really hackish
 	     (org-entry-get
 	      (point) "slug" beeminder-org-inherit-beeminder-properties))
-    (let ((duration (org-element-property :duration (org-element-at-point))))
-      (when (string-match "\\([[:digit:]]+\\):\\([[:digit:]]\\{2\\}\\)" duration)
-	(let ((minutes (+ (* 60 (string-to-number (match-string 1 duration)))
-			  (string-to-number (match-string 2 duration))))
-	      (slug-str (org-entry-get (point)
-				       "slug"
-				       beeminder-org-inherit-beeminder-properties))
-	      (comment (unless (org-entry-get (point)
-					      "ask-comment"
-					      beeminder-org-inherit-beeminder-properties)
-			 (concat "via Org-mode at " (beeminder-current-time-hmsz-string))))
-	      (multiplier (cl-case (intern (or (org-entry-get (point)
-							      "unit"
-							      beeminder-org-inherit-beeminder-properties)
-					       ""))
-			    ((hour hours) (/ 1 60.0))
-			    ((hail-Mary hail-Marys) 3) ; 1 hail-Mary ≈ 20 seconds
-			    (t 1))))
-	  (save-excursion
-	    (beeminder-submit-datapoint slug-str (* minutes multiplier) comment nil t)))))))
+    (beeminder-org-submit-clock-at-point)))
 
 (defun add-or-remove-hook (arg hook function &optional local message)
   "Call `add-hook' if ARG is positive, `remove-hook' otherwise.

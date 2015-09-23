@@ -139,6 +139,10 @@ of minutes is submitted as a Beeminder datapoint.  Alternatively, you
 may set the =unit= property to =hours= so that the value is divided by
 60.
 
+Since it may happen that you clock out some item when offline, you may
+also place point at a particular clock line and trigger the submission
+manually by =M-x beeminder-org-submit-clock-at-point=.
+
 ** Property inheritance
 By default, inheritance is not used for beeminer-related properties.
 However, you can set the
