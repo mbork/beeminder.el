@@ -1200,15 +1200,19 @@ If nil, don't ask."
 		 (funtion :tag "Predicate function"))
   :group 'beeminder)
 
+(defun beeminder-get-datapoint-id ()
+  "Return the id of the datapoint at point."
+  (save-excursion
+    (beginning-of-line)
+    (if (looking-at "[0-9a-f]\\{24\\}")
+	(match-string-no-properties 0)
+      (error "Not at a datapoint"))))
+
 (defun beeminder-delete-datapoint (id)
   "Delete datapoint with id ID.
-If called interactive, take the id from the beginning of the
+If called interactively, take the id from the beginning of the
 line."
-  (interactive (list (save-excursion
-		       (beginning-of-line)
-		       (if (looking-at "[0-9a-f]\\{24\\}")
-			   (match-string-no-properties 0)
-			 (error "Not at a datapoint -- beeminder-delete-datapoint")))))
+  (interactive (list (beeminder-get-datapoint-id)))
   (if (and beeminder-confirm-deletion
 	   (funcall beeminder-confirm-deletion "Are you sure you want to delete this datapoint?"))
       (cond ((beeminder-request-delete
