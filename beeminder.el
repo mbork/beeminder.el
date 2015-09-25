@@ -435,14 +435,13 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
   (if print-message (message (format "Submitting datapoint of %d for goal %s..." amount slug-str)))
   (let ((timestamp (or timestamp (time-to-seconds (beeminder-current-time)))))
     (unless (beeminder-request-post (format "/goals/%s/datapoints.json" slug-str)
-				    (concat
-				     (format "value=%f&comment=%s&timestamp=%d"
-					     amount
-					     (or comment (beeminder-ask-for-comment
-							  slug-str
-							  amount
-							  (beeminder-default-comment timestamp)))
-					     timestamp)))
+				    (format "value=%f&comment=%s&timestamp=%d"
+					    amount
+					    (or comment (beeminder-ask-for-comment
+							 slug-str
+							 amount
+							 (beeminder-default-comment timestamp)))
+					    timestamp))
       (sit-for beeminder-default-timeout)
       (error "Submitting failed, check your internet connection")))
   (if print-message (message (format "Submitting datapoint of %d for goal %s...Done." amount slug-str)))
