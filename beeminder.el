@@ -1204,7 +1204,7 @@ available keywords.")
 
 (define-key beeminder-mode-map (kbd "TAB") #'beeminder-display-goal-details)
 
-(defcustom beeminder-confirm-deletion #'y-or-n-p
+(defcustom beeminder-confirm-datapoint-deletion #'y-or-n-p
   "How to ask for confirmation of datapoint deletion.
 If nil, don't ask."
   :type '(choice (const :tag "Ask with yes-or-no-p" yes-or-no-p)
@@ -1226,8 +1226,8 @@ If nil, don't ask."
 If called interactively, take the id from the beginning of the
 line."
   (interactive (list (beeminder-get-datapoint-id)))
-  (if (and beeminder-confirm-deletion
-	   (funcall beeminder-confirm-deletion "Are you sure you want to delete this datapoint?"))
+  (if (and beeminder-confirm-datapoint-deletion
+	   (funcall beeminder-confirm-datapoint-deletion "Are you sure you want to delete this datapoint?"))
       (cond ((beeminder-request-delete
 	      (concat "/goals/" (cdr (assoc 'slug beeminder-detailed-goal)) "/datapoints/" id ".json"))
 	     (cl-decf (alist-get 'donetoday beeminder-detailed-goal)
