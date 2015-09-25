@@ -94,18 +94,22 @@ The option =beeminder-history-length= determines how many datapoints
 are downloaded from the server.  Its default value is 7, which means
 a week's worth of them.
 
-You can press =q= or =TAB= again to quit the goal details window.  You
-can move point to a datapoint and press =d= to delete it (Emacs will
-ask for confirmation; use the option
-=beeminder-confirm-datapoint-deletion= to change this behavior).
+You can press =q= or =TAB= again to quit the goal details window.
+Pressing =n= and =p= will move you to the next and previous datapoint
+(or N datapoints forward/backward with a prefix argument; notice that
+you don’t need to press =C-u= to enter prefix arguments here, too).
 
-You can also press =e= to edit a datapoint.  You will be asked about
-the timestamp (again, using =org-read-date= if available), the value
-and the comment.  In all three cases, the default is the previous
-value; for the comment, you can also use the usual minibuffer history
-commands like =M-n=, =M-p= or =M-r= (see the node on /Minibuffer
-history/ in the Emacs manual).  Pressing =C-g= at any moment cancels
-the editing.
+You can also press =e= to edit the current datapoint.  You will be
+asked about the timestamp (again, using =org-read-date= if available),
+the value and the comment.  In all three cases, the default is the
+previous value; for the comment, you can also use the usual minibuffer
+history commands like =M-n=, =M-p= or =M-r= (see the node on
+/Minibuffer history/ in the Emacs manual).  Pressing =C-g= at any
+moment cancels the editing.
+
+Pressing =d= deletes the current datapoint.  Emacs will ask for
+confirmation; use the option =beeminder-confirm-datapoint-deletion= to
+change this behavior.
 
 * Org-mode integration
 =beeminder.el= supports two kinds of Org-mode integration: submitting

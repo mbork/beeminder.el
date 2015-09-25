@@ -1130,8 +1130,22 @@ Warning: this function uses `eval', so evil code in TEMPLATE or
 in particular the history of datapoints.")
 
 (define-key beeminder-goal-mode-map (kbd "TAB") #'quit-window)
-(define-key beeminder-goal-mode-map (kbd "n") #'next-line)
-(define-key beeminder-goal-mode-map (kbd "p") #'previous-line)
+
+(defun beeminder-next-datapoint (count)
+  "Move forward COUNT datapoints."
+  (interactive "p")
+  (forward-line 1)
+  (re-search-forward "^[0-9a-f]\\{24\\}" nil t count)
+  (beginning-of-line))
+
+(defun beeminder-previous-datapoint (count)
+  "Move forward COUNT datapoints."
+  (interactive "p")
+  (beginning-of-line)
+  (re-search-backward "^[0-9a-f]\\{24\\}" nil t count))
+
+(define-key beeminder-goal-mode-map (kbd "n") #'beeminder-next-datapoint)
+(define-key beeminder-goal-mode-map (kbd "p") #'beeminder-previous-datapoint)
 
 (defface subtle-highlight '((t :foreground "#006600"))
   "Face for subtly highlighting things.")
