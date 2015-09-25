@@ -147,6 +147,19 @@ Add the necessary details (username and the auth token)."
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
 
+(defun beeminder-request-put (request data &optional timeout)
+  "Send a PUT request to beeminder.com, with TIMEOUT.
+Add the necessary details (username and the auth token)."
+  (request-response-data
+   (request (beeminder-create-api-url request)
+	    :type "PUT"
+	    :data (concat
+		   (format "auth_token=%s&" beeminder-auth-token)
+		   data)
+	    :parser #'json-read
+	    :sync t
+	    :timeout (or timeout beeminder-default-timeout))))
+
 
 ;; API calls (currently synchronous only)
 
@@ -1229,6 +1242,53 @@ line."
 	     (error "I had a problem deleting the datapoint.")))))
 
 (define-key beeminder-goal-mode-map (kbd "d") #'beeminder-delete-datapoint)
+
+(defun beeminder-get-datapoint (id datapoints)
+  "Return datapoint with id ID from DATAPOINTS."
+  (cl-find id datapoints
+	   :key (lambda (dp)
+		  (cdr (assoc 'id dp)))
+	   :test #'string=))
+
+(defun beeminder-edit-datapoint (id)
+  "Edit datapoint with id ID.
+If called interactively, take the id from the beginning of the
+line."
+  (interactive (list (beeminder-get-datapoint-id)))
+  (let* ((datapoints (reverse (cdr (assoc 'datapoints beeminder-detailed-goal))))
+	 (datapoint (aif (beeminder-get-datapoint id datapoints)
+			it
+		      (error "%s" "Invalid datapoint id -- beeminder-get-datapoint")))
+	 (timestamp (ask-for-timestamp (cdr (assoc 'timestamp datapoint))))
+	 (value (string-to-number
+		 (let ((default-value (cdr (assoc 'value datapoint))))
+		   (read-string (format "Value (default %s): " default-value)
+				nil nil (number-to-string default-value)))))
+	 (comment (let ((comment-history
+			 (mapcar (lambda (dp)
+				   (cdr (assoc 'comment dp)))
+				 datapoints)))
+		    (read-string "Comment: "
+				 (cdr (assoc 'comment datapoint))
+				 (cons 'comment-history
+				       (1+ (cl-position
+					    id
+					    datapoints
+					    :key (lambda (dp)
+						   (cdr (assoc 'id dp)))
+					    :test #'string=)))
+				 nil t))))
+    (message "Submitting new datapoint...")
+    (if (beeminder-request-put (format "/goals/%s/datapoints/%s.json"
+				       (beeminder-get-slug beeminder-detailed-goal)
+				       id)
+			       (format "value=%f&comment=%s&timestamp=%d"
+				       value comment timestamp))
+	(message "Submitting new datapoint...done")
+      (sit-for beeminder-default-timeout)
+      (error "Datapoint submitting failed, check your internet connection"))))
+
+(define-key beeminder-goal-mode-map (kbd "e") #'beeminder-edit-datapoint)
 
 
 ;; Org-mode integration

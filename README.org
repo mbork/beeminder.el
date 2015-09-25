@@ -78,7 +78,7 @@ a few seconds to a few minutes to work, probably because of
 Beeminder’s server overload).
 
 * Viewing goal details
-You can press <tab> with point on a goal to display more detailed
+You can press =TAB= with point on a goal to display more detailed
 information about a goal in a separate window.  This information
 includes (by default) most data available in the API, plus a set of
 recent datapoints.  The user option =beeminder-goal-template= holds
@@ -94,9 +94,18 @@ The option =beeminder-history-length= determines how many datapoints
 are downloaded from the server.  Its default value is 7, which means
 a week's worth of them.
 
-Currently, the only thing you can actually /do/ in the =*Beeminder
-goal details*= buffer is to quit it by pressing =q=.  It is planned to
-be able to edit or delete datapoints from here.
+You can press =q= or =TAB= again to quit the goal details window.  You
+can move point to a datapoint and press =d= to delete it (Emacs will
+ask for confirmation; use the option
+=beeminder-confirm-datapoint-deletion= to change this behavior).
+
+You can also press =e= to edit a datapoint.  You will be asked about
+the timestamp (again, using =org-read-date= if available), the value
+and the comment.  In all three cases, the default is the previous
+value; for the comment, you can also use the usual minibuffer history
+commands like =M-n=, =M-p= or =M-r= (see the node on /Minibuffer
+history/ in the Emacs manual).  Pressing =C-g= at any moment cancels
+the editing.
 
 * Org-mode integration
 =beeminder.el= supports two kinds of Org-mode integration: submitting
