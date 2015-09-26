@@ -1247,13 +1247,16 @@ line."
 	   (funcall beeminder-confirm-datapoint-deletion "Are you sure you want to delete this datapoint?"))
       (cond ((beeminder-request-delete
 	      (concat "/goals/" (cdr (assoc 'slug beeminder-detailed-goal)) "/datapoints/" id ".json"))
-	     (cl-decf (alist-get 'donetoday beeminder-detailed-goal)
-		      (cdr (assoc 'value (cl-find id (cdr (assoc 'datapoints beeminder-detailed-goal))
-						  :key (lambda (dp)
-							 (cdr (assoc 'id dp)))
-						  :test #'string=))))
-	     (beeminder-make-goal-dirty (beeminder-get-slug beeminder-detailed-goal))
-	     (message "Datapoint succesfully deleted."))
+	     (let ((datapoints (cdr (assoc 'datapoints beeminder-detailed-goal))))
+	       (cl-decf (alist-get 'donetoday beeminder-detailed-goal)
+			(cdr (assoc 'value (cl-find id datapoints
+						    :key (lambda (dp)
+							   (cdr (assoc 'id dp)))
+						    :test #'string=))))
+	       (cl-delete id datapoints :key (lambda (dp) (cdr (assoc 'id dp))) :test #'string=)
+	       (beeminder-make-goal-dirty (beeminder-get-slug beeminder-detailed-goal))
+	       (beeminder-refresh-goal-details)
+	       (message "Datapoint succesfully deleted.")))
 	    (t
 	     (sit-for beeminder-default-timeout)
 	     (error "I had a problem deleting the datapoint.")))))
