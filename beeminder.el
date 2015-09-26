@@ -1201,20 +1201,23 @@ See the docstring of the function
 `beeminder-insert-goal-template-with-expansion' for the list of
 available keywords.")
 
-(defun beeminder-display-goal-details (goal)
-  "Display details about GOAL in a temporary buffer."
-  ;; Currently, this function depends on dynamical binding.  It should
-  ;; be (somehow) converted to lexical binding.
-  (interactive (list (current-or-read-goal)))
-  (pop-to-buffer "*Beeminder goal details*")
-  (beeminder-goal-mode)
-  (setq-local beeminder-detailed-goal goal)
+(defun beeminder-refresh-goal-details ()
+  "Refresh goal details, assuming that the respective buffer
+exists and is set up properly."
   (let ((inhibit-read-only t))
     (erase-buffer)
     (beeminder-insert-goal-template-with-expansion
      beeminder-goal-template
-     goal))
+     beeminder-detailed-goal))
   (goto-char (point-min)))
+
+(defun beeminder-display-goal-details (goal)
+  "Display details about GOAL in a temporary buffer."
+  (interactive (list (current-or-read-goal)))
+  (pop-to-buffer "*Beeminder goal details*")
+  (beeminder-goal-mode)
+  (setq-local beeminder-detailed-goal goal)
+  (beeminder-refresh-goal-details))
 
 (define-key beeminder-mode-map (kbd "TAB") #'beeminder-display-goal-details)
 
