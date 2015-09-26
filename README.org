@@ -70,10 +70,13 @@ you give a prefix argument, this will be the amount; if not, you will
 be asked for it (default is 1).  Prefix argument =-= (a minus sign)
 submits the datapoint with yesterday’s date.  Prefix argument =C-u=
 asks for a date.  (Having Org-mode loaded works better, since then
-=org-read-date= is used.)  After submitting, the goal is /dirty/,
-i.e., there is a discrepancy between its state on the server and in
-the client.  Dirty goals are shown in italic and gray.  Refresh the
-goal list (by pressing =g=) to “clean” them (it might require from
+=org-read-date= is used.  If you want to use this functionality – and
+believe me, you do – and you happen not to use Org-mode, you can
+=(require 'org)= in your =init.el=.  You don’t have to install
+anything, Org is shipped with Emacs.)  After submitting, the goal is
+/dirty/, i.e., there is a discrepancy between its state on the server
+and in the client.  Dirty goals are shown in italic and gray.  Refresh
+the goal list (by pressing =g=) to “clean” them (it might require from
 a few seconds to a few minutes to work, probably because of
 Beeminder’s server overload).
 
