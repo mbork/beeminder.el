@@ -120,6 +120,10 @@ Pressing =d= deletes the current datapoint.  Emacs will ask for
 confirmation; use the option =beeminder-confirm-datapoint-deletion= to
 change this behavior.
 
+Note that editing a datapoint does /not/ mark the goal as dirty; the
+current design of dirtiness makes it rather hard to fix.  Deleting
+a datapoint works properly with this regard.
+
 * Org-mode integration
 =beeminder.el= supports two kinds of Org-mode integration: submitting
 data on marking items as DONE or on clocking out.  Both use Org
