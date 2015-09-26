@@ -1054,6 +1054,7 @@ Disable FILTER if PARAMETER is nil."
 				   (beeminder-display-losedate-human goal))))
     (pledge . (highlight-subtly (beeminder-display-pledge goal)))
     (midnight . (highlight-subtly (beeminder-display-midnight-setting (cdr (assoc 'deadline goal)))))
+    (donetoday . (highlight-subtly (number-to-human-string (cdr (assoc 'donetoday goal)))))
     (datapoints . (propertize (beeminder-format-datapoints goal) 'face 'shadow)))
   "Alist of symbols and corresponding pieces of code to evaluate
 and insert the result in the goal details info.")
@@ -1188,7 +1189,7 @@ use two.  Trim any non-significant trailing zeros."
 (defcustom beeminder-goal-template
   "Details for Beeminder goal #slug for user #username#backburnerp
 #title#dirtyp
-goal target: #target on #goaldate at rate #rate per #runit (currently at #curval)
+goal target: #target on #goaldate at rate #rate per #runit (currently at #curval, done today: #donetoday)
 goal type: #goaltype#autodatap
 safe until #losedate (current pledge: #pledge, left to do: #limsum, midnight setting: #midnight)
 
