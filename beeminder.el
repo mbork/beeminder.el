@@ -397,6 +397,15 @@ is discouraged.")
   (aif (beeminder-slug-to-gnode slug)
       (ewoc-invalidate beeminder-goals-ewoc it)))
 
+(defun beeminder-clean-dirty-goals ()
+  "Clean all dirty goals manually.
+This may be needed in rare circumstances, namely when
+successfully submitting a datapoint of 0."
+  (interactive)
+  (setq beeminder-dirty-alist ())
+  (save-current-goal
+    (ewoc-refresh beeminder-goals-ewoc)))
+
 (defun beeminder-submit-datapoint (slug-str amount &optional comment timestamp print-message)
   "Submit a datapoint to Beeminder goal SLUG-STR with AMOUNT.
 Additional data are COMMENT and TIMESTAMP (as Unix time).  If

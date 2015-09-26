@@ -80,6 +80,12 @@ the goal list (by pressing =g=) to “clean” them (it might require from
 a few seconds to a few minutes to work, probably because of
 Beeminder’s server overload).
 
+It may happen that the goals which should lose their /dirtiness/ do
+not do it.  (One situation when it can happen is when you submit
+a datapoint of 0.)  In such cases, you can call =M-x
+beeminder-clean-dirty-goals= to manually reset the “dirty” flag for
+all goals.
+
 * Viewing goal details
 You can press =TAB= with point on a goal to display more detailed
 information about a goal in a separate window.  This information
