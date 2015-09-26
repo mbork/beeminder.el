@@ -444,7 +444,7 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
 					    timestamp))
       (sit-for beeminder-default-timeout)
       (error "Submitting failed, check your internet connection")))
-  (if print-message (message (format "Submitting datapoint of %d for goal %s...Done." amount slug-str)))
+  (if print-message (message (format "Submitting datapoint of %d for goal %s...done" amount slug-str)))
   (let* ((slug (intern slug-str))
 	 (goal (beeminder-slug-to-goal slug)))
     (cl-incf (alist-get 'donetoday goal) amount)
@@ -730,7 +730,7 @@ sorted by another criterion previously."
   (unless beeminder-goals
     (message "Beeminder goals downloading...")
     (beeminder-get-goals)
-    (message "Beeminder goals downloading...Done."))
+    (message "Beeminder goals downloading...done"))
   (let ((inhibit-read-only t))
     (erase-buffer)
     (setq beeminder-goals-ewoc (beeminder-create-goals-ewoc))
@@ -841,7 +841,7 @@ end."
   (save-current-goal
    (message "Beeminder goals reloading...")
    (beeminder-get-goals)
-   (message "Beeminder goals reloading...Done.")
+   (message "Beeminder goals reloading...done")
    (beeminder-recreate-ewoc)))
 
 (define-key beeminder-mode-map "g" #'beeminder-reload-goals-list)
