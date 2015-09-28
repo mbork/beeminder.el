@@ -975,7 +975,8 @@ Take the variable `beeminder-show-dirty-donetoday' into account."
     (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
     (if next-goal
 	(ewoc-goto-node beeminder-goals-ewoc next-goal)
-      (goto-char (point-min)))))
+      (goto-char (point-min)))
+    (message "Goal %s killed (hidden from view)." (cdr (assoc 'slug (ewoc-data gnode))))))
 
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
 (define-key beeminder-filter-map "k" #'beeminder-kill-goal)
