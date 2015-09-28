@@ -66,9 +66,23 @@ You can also “kill” individual goals, i.e., make them invisible, with
 “unkill” all killed goals with =f y= (or =C-y=), or show (in the
 minibuffer) which goals are killed with =C-u f y=.
 
-You can disable all filters with =f c=.  Alternatively, you can disable
-a particular filter with =- KEY= (that is, minus sign and the key
-which enables that goal).
+You might want to /save/ current filter settings for later retrieval.
+This can be done with =f s=.  Saved goals can be retrieved by =f r=.
+While saving is not persistent across Emacs sessions, you can (ab)use
+this feature to have your favorite filter settings enabled for
+retrieval in =init.el= by defining the variable
+=beeminder-saved-filters=.  For instance, to be able to quickly
+retrieve the goals which are derailing today, with the exception of
+two of them, you can put this in your =init.el=:
+#+BEGIN_SRC elisp
+  (setq beeminder-saved-filters ((killed "uvi" "meta")
+                                 (losedate . 0)))
+#+END_SRC
+
+You can disable all filters with =f c=.  (This also saves the current
+filters if no filter settings were saved previously.)  Alternatively,
+you can disable a particular filter with =- KEY= (that is, minus sign
+and the key which enables that goal).
 
 * Submitting datapoints
 Move the point to a goal and press =RET= to submit a datapoint.  If

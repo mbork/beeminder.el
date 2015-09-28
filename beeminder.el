@@ -867,11 +867,32 @@ end."
 (defvar beeminder-current-filters '()
   "Alist of filters currently in effect.")
 
-(defun beeminder-clear-filters ()
-  "Clear all filters."
+(defcustom beeminder-saved-filters '()
+  "A remembered set of filters for fast retrieval.")
+
+(defun beeminder-save-filters ()
+  "Save the current filters."
   (interactive)
+  (setq beeminder-saved-filters
+	beeminder-current-filters)
+  (message "Current filter setting saved."))
+
+(defun beeminder-retrieve-filters ()
+  "Retrieve saved filters."
+  (interactive)
+  (setq beeminder-current-filters
+	beeminder-saved-filters)
+  (beeminder-refresh-goals-list)
+  (message "Filter settings retrieved."))
+
+(defun beeminder-clear-filters ()
+  "Clear all filters.
+If there are no saved filters, first save the current filters."
+  (interactive)
+  (unless beeminder-saved-filters
+    (beeminder-save-filters))
   (setq beeminder-current-filters '())
-  (save-current-goal (beeminder-recreate-ewoc)))
+  (beeminder-refresh-goals-list))
 
 (define-key beeminder-mode-map "c" #'beeminder-clear-filters)
 
@@ -880,7 +901,7 @@ end."
 (define-key beeminder-filter-map "c" #'beeminder-clear-filters)
 (define-key beeminder-filter-map "s" #'beeminder-save-filters)
 (define-key beeminder-filter-map "f" #'beeminder-retrieve-filters)
-(define-key beeminder-filter-map "l" #'beeminder-retrieve-filters)
+(define-key beeminder-filter-map "r" #'beeminder-retrieve-filters)
 
 (defcustom beeminder-default-filter-days 3
   "Defalt number of days used for filtering by losedate.
