@@ -30,12 +30,13 @@ displayed; customize it to change the look of the list.
 
 * Usage
 The entry point is =M-x beeminder-list-goals=.  After a while, you
-should see your goals.  Press =h= to see what’s available.  Reload
-your goals with =g=.  Quit with =q=.  Most commands are
-self-explanatory (and if not, their docstrings explain what they do).
-Note: the dates are calculated with the assumption that hours after
-midnight, but before 6:00am, still belong to today!  See the option
-=beeminder-when-the-day-ends= for how to change that.
+should see your goals.  Press =h= to see what’s available.  Refresh
+the list with =C-l=.  Reload your goals with =g=.  Quit with =q=.
+Most commands are self-explanatory (and if not, their docstrings
+explain what they do).  Note: the dates are calculated with the
+assumption that hours after midnight, but before 6:00am, still belong
+to today!  See the option =beeminder-when-the-day-ends= for how to
+change that.
 
 * Sorting
 Currently, you can sort goals according to their “losedate”

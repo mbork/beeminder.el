@@ -843,16 +843,22 @@ end."
 (define-key beeminder-mode-map "m" #'beeminder-sort-by-midnight)
 
 
-;; Reloading goals
+;; refreshing view and reloading goals
+(defun beeminder-refresh-goals-list ()
+  "Refresh the goals list."
+  (interactive)
+  (save-current-goal
+    (beeminder-recreate-ewoc)))
+
 (defun beeminder-reload-goals-list ()
   "Reload the goals from the server."
   (interactive)
-  (save-current-goal
-   (message "Beeminder goals reloading...")
-   (beeminder-get-goals)
-   (message "Beeminder goals reloading...done")
-   (beeminder-recreate-ewoc)))
+  (message "Beeminder goals reloading...")
+  (beeminder-get-goals)
+  (message "Beeminder goals reloading...done")
+  (beeminder-refresh-goals-list))
 
+(define-key beeminder-mode-map (kbd "C-l") #'beeminder-refresh-goals-list)
 (define-key beeminder-mode-map "g" #'beeminder-reload-goals-list)
 
 
