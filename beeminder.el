@@ -955,7 +955,7 @@ Take the variable `beeminder-show-dirty-donetoday' into account."
 
 (defun beeminder-not-killed-p (goal kill-list)
   "Return nil if GOAL is in the KILL-LIST."
-  (not (member (cdr (assoc 'slug goal)) kill-list)))
+  (not (member (beeminder-get-slug goal) kill-list)))
 
 (defvar beeminder-filters `((losedate ,#'beeminder-days-p
 				  ,beeminder-default-filter-days
@@ -992,7 +992,7 @@ Take the variable `beeminder-show-dirty-donetoday' into account."
 			   (ewoc-prev beeminder-goals-ewoc gnode))))
 	(ewoc-delete beeminder-goals-ewoc gnode)
 	(ewoc-refresh beeminder-goals-ewoc)
-	(push (cdr (assoc 'slug (ewoc-data gnode)))
+	(push (beeminder-get-slug (ewoc-data gnode))
 	      (alist-get 'killed beeminder-current-filters))
 	(ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
 	(if next-goal
@@ -1009,7 +1009,7 @@ Take the variable `beeminder-show-dirty-donetoday' into account."
   (interactive)
   (message "Killed goals: %s."
 	   (aif (alist-get 'killed beeminder-current-filters)
-	       (mapconcat #'identity it ", ")
+	       (mapconcat #'symbol-name it ", ")
 	     "none")))
 
 (defun beeminder-clear-kills ()
