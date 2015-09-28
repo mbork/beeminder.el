@@ -965,18 +965,20 @@ Take the variable `beeminder-show-dirty-donetoday' into account."
 (defun beeminder-kill-goal (gnode)
   "Delete GNODE from `beeminder-goals-ewoc'."
   (interactive (list (beeminder-slug-to-gnode (intern (cdr (assoc 'slug (current-or-read-goal)))))))
-  (let ((inhibit-read-only t)
-	(next-goal (or (ewoc-next beeminder-goals-ewoc gnode)
-		       (ewoc-prev beeminder-goals-ewoc gnode))))
-    (ewoc-delete beeminder-goals-ewoc gnode)
-    (ewoc-refresh beeminder-goals-ewoc)
-    (push (cdr (assoc 'slug (ewoc-data gnode)))
-	  (alist-get 'killed beeminder-current-filters))
-    (ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
-    (if next-goal
-	(ewoc-goto-node beeminder-goals-ewoc next-goal)
-      (goto-char (point-min)))
-    (message "Goal %s killed (hidden from view)." (cdr (assoc 'slug (ewoc-data gnode))))))
+  (if gnode
+      (let ((inhibit-read-only t)
+	    (next-goal (or (ewoc-next beeminder-goals-ewoc gnode)
+			   (ewoc-prev beeminder-goals-ewoc gnode))))
+	(ewoc-delete beeminder-goals-ewoc gnode)
+	(ewoc-refresh beeminder-goals-ewoc)
+	(push (cdr (assoc 'slug (ewoc-data gnode)))
+	      (alist-get 'killed beeminder-current-filters))
+	(ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
+	(if next-goal
+	    (ewoc-goto-node beeminder-goals-ewoc next-goal)
+	  (goto-char (point-min)))
+	(message "Goal %s killed (hidden from view)." (cdr (assoc 'slug (ewoc-data gnode)))))
+    (message "Goal already killed.")))
 
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
 (define-key beeminder-filter-map "k" #'beeminder-kill-goal)
