@@ -45,11 +45,11 @@ Currently, you can sort goals according to their “losedate”
 * Filtering
 The main drawback of the official clients is that you can’t easily
 hide goals which are of no interest for you at the moment.  With
-Emacs, you can.
+Emacs, you can.  Filtering commands are located on prefix =f=.
 
-Curently, you can filter goals by derailment time (=NUMBER-OF-DAYS d=,
-number of days defaults to 3) or by how much percent of daily rate you
-did today (=PERCENTAGE t=, defaults to 100).  What “today” means is
+You can filter goals by derailment time (=NUMBER-OF-DAYS f d=, number
+of days defaults to 3) or by how much percent of daily rate you did
+today (=PERCENTAGE f t=, defaults to 100).  What “today” means is
 governed by options =beeminder-when-the-day-ends= (which see) and
 =beeminder-use-goal-midnight-today-values= (which see).  TL;DR: with
 the default setting, “today” is the stretch of time between 6:00am and
@@ -57,11 +57,16 @@ the default setting, “today” is the stretch of time between 6:00am and
 /or/ make the notion of “today” depend on the goal’s “midnight”
 setting.
 
-You can also “kill” inividual goals, i.e., make them invisible, with
-=C-k=.  You can “unkill” all killed goals with =C-y=, or show which
-goals are killed with =C-u C-y=.
+(Currently, you can use just =d= and =t= commands for filtering by
+derailment time and percentage of today's work done.  However, this
+may change in the future.)
 
-You can disable all filters with =c=.  Alternatively, you can disable
+You can also “kill” individual goals, i.e., make them invisible, with
+=f k=.  (This is also bound to =C-k= for convenience).  You can
+“unkill” all killed goals with =f y= (or =C-y=), or show (in the
+minibuffer) which goals are killed with =C-u f y=.
+
+You can disable all filters with =f c=.  Alternatively, you can disable
 a particular filter with =- KEY= (that is, minus sign and the key
 which enables that goal).
 

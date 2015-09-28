@@ -875,6 +875,13 @@ end."
 
 (define-key beeminder-mode-map "c" #'beeminder-clear-filters)
 
+(define-prefix-command 'beeminder-filter-map)
+(define-key beeminder-mode-map "f" #'beeminder-filter-map)
+(define-key beeminder-filter-map "c" #'beeminder-clear-filters)
+(define-key beeminder-filter-map "s" #'beeminder-save-filters)
+(define-key beeminder-filter-map "f" #'beeminder-retrieve-filters)
+(define-key beeminder-filter-map "l" #'beeminder-retrieve-filters)
+
 (defcustom beeminder-default-filter-days 3
   "Defalt number of days used for filtering by losedate.
 If the user doesn't specify the number of days for filtering, all
@@ -971,6 +978,7 @@ Take the variable `beeminder-show-dirty-donetoday' into account."
       (goto-char (point-min)))))
 
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
+(define-key beeminder-filter-map "k" #'beeminder-kill-goal)
 
 (defun beeminder-show-kills ()
   "Show all killed goals."
@@ -996,6 +1004,7 @@ With prefix argument, show the list of killed goals."
     (beeminder-clear-kills)))
 
 (define-key beeminder-mode-map (kbd "C-y") #'beeminder-clear-or-show-kills)
+(define-key beeminder-filter-map "y" #'beeminder-clear-or-show-kills)
 
 (defun beeminder-apply-filter (filter)
   "Apply FILTER (a dotted pair of symbol and parameter).
@@ -1039,7 +1048,9 @@ Disable FILTER if PARAMETER is nil."
 						       beeminder-default-filter-donetoday)))
 
 (define-key beeminder-mode-map (kbd "d") #'beeminder-filter-by-losedate)
+(define-key beeminder-filter-map (kbd "d") #'beeminder-filter-by-losedate)
 (define-key beeminder-mode-map (kbd "t") #'beeminder-filter-by-donetoday)
+(define-key beeminder-filter-map (kbd "t") #'beeminder-filter-by-donetoday)
 
 
 ;; Displaying goal details
