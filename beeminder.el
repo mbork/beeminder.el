@@ -397,8 +397,8 @@ is discouraged.")
   (aif (beeminder-slug-to-gnode slug)
       (ewoc-invalidate beeminder-goals-ewoc it)))
 
-(defun beeminder-clean-dirty-goals ()
-  "Clean all dirty goals manually.
+(defun beeminder-clear-dirty-goals ()
+  "Clear all dirty goals manually.
 This may be needed in rare circumstances, namely when
 successfully submitting a datapoint of 0."
   (interactive)

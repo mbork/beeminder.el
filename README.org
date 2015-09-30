@@ -103,7 +103,7 @@ Beeminder’s server overload).
 It may happen that the goals which should lose their /dirtiness/ do
 not do it.  (One situation when it can happen is when you submit
 a datapoint of 0.)  In such cases, you can call =M-x
-beeminder-clean-dirty-goals= to manually reset the “dirty” flag for
+beeminder-clear-dirty-goals= to manually reset the “dirty” flag for
 all goals.
 
 * Viewing goal details
