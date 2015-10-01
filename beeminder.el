@@ -503,7 +503,9 @@ might happen."
 (defun beeminder-time-to-days (time)
   "Compute the number of days from 0001-12-31 BC until TIME.
 Take into consideration `beeminder-when-the-day-ends'."
-  (time-to-days (time-add time (- beeminder-when-the-day-ends))))
+  (time-to-days
+   (time-add time
+	     (seconds-to-time (- beeminder-when-the-day-ends)))))
 
 (defun beeminder-human-time (time)
   "Convert (future) TIME to a human-friendly format.
@@ -520,15 +522,17 @@ Midnight is treated as belonging to the previous day, not the following one."
     (cond ((zerop delta) (format-time-string "     %R" time))
 	  ((= 1 delta) (concat " " beeminder-tomorrow-code
 			       (format-time-string " %R" time)))
-	  ((<= delta 7) (concat (if beeminder-human-time-use-weekday
-				    (format-time-string " %a"
-							(time-add time
-								  (- beeminder-when-the-day-ends)))
-				  (format "  +%d" delta))
-				" "
-				(format-time-string "%R" time)))
-	  (t (format-time-string "%Y-%m-%d" (time-add time
-						      (- beeminder-when-the-day-ends)))))))
+	  ((<= delta 7)
+	   (concat (if beeminder-human-time-use-weekday
+		       (format-time-string " %a"
+					   (time-add time
+						     (seconds-to-time (- beeminder-when-the-day-ends))))
+		     (format "  +%d" delta))
+		   " "
+		   (format-time-string "%R" time)))
+	  (t (format-time-string "%Y-%m-%d"
+				 (time-add time
+					   (seconds-to-time (- beeminder-when-the-day-ends))))))))
 
 (defconst beeminder-lanes-to-faces-alist
   '((-2 . beeminder-red) (-1 . beeminder-yellow) (1 . beeminder-blue) (2 . beeminder-green))
