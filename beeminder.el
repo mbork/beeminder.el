@@ -686,12 +686,7 @@ If ARG is positive, shorten the header; otherwise, do not."
 (defun beeminder-print-filter (filter)
   "Return a printed representation of FILTER.
 It should be an element of `beeminder-current-filters'."
-  (let ((filter-pp (nth (if beeminder-short-header 4 3)
-			(assoc (car filter) beeminder-filters))))
-    (cond
-     ((stringp filter-pp) (format filter-pp (cdr filter)))
-     ((functionp filter-pp) (funcall filter-pp (cdr filter)))
-     (t error "Wrong format of `beeminder-filters' for filter %s" (car filter)))))
+  (funcall (nth 3 (assoc (car filter) beeminder-filters)) (cdr filter)))
 
 (defun beeminder-ewoc-header ()
   "Generate header for the Beeminder EWOC."
@@ -934,14 +929,20 @@ If nil, use the global midnight defined by
   :group 'beeminder)
 
 (defun beeminder-days-p (goal days)
-  "Return nil if time to derailment of GOAL > DAYS."
-  (<= (- (beeminder-time-to-days (cdr (assoc 'losedate goal)))
-	 (beeminder-time-to-days (beeminder-current-time)))
-      days))
+  "Return nil if time to derailment of GOAL > DAYS.
+If DAYS is negative, return nil if time to derailment of GOAL is
+<= -DAYS."
+  (let ((days-left (- (beeminder-time-to-days (cdr (assoc 'losedate goal)))
+		      (beeminder-time-to-days (beeminder-current-time)))))
+    (if (> days 0)
+	(<= days-left days)
+      (> days-left (- days)))))
 
 (defun beeminder-donetoday-p (goal percentage)
   "Return nil if donetoday for GOAL >= PERCENTAGE * day's amount.
-Take the variable `beeminder-show-dirty-donetoday' into account."
+If PERCENTAGE is negative, return nil if donetoday of GOAL is
+less than PERCENTAGE * day's amount.  Take the variable
+`beeminder-show-dirty-donetoday' into account."
   (if (and beeminder-show-dirty-donetoday
 	   (alist-get (beeminder-get-slug goal) beeminder-dirty-alist))
       t
@@ -952,10 +953,14 @@ Take the variable `beeminder-show-dirty-donetoday' into account."
 			    (m (/ 365.0 12))
 			    (w 7)
 			    (d 1)
-			    (h (/ 1 24.0))))))
+			    (h (/ 1 24.0)))))
+	   (100*donetoday (* 100 (cdr (assoc 'donetoday goal))))
+	   (percentage*daily-rate (* percentage daily-rate)))
       (when (> rate 0)
-	(< (* 100 (cdr (assoc 'donetoday goal)))
-	   (* percentage daily-rate))))))
+	(if (> percentage 0)
+	    (< 100*donetoday
+	       percentage*daily-rate)
+	  (>= 100*donetoday (- percentage*daily-rate)))))))
 
 (defun beeminder-not-killed-p (goal kill-list)
   "Return nil if GOAL is in the KILL-LIST."
@@ -963,29 +968,34 @@ Take the variable `beeminder-show-dirty-donetoday' into account."
 
 (defvar beeminder-filters `((losedate ,#'beeminder-days-p
 				  ,beeminder-default-filter-days
-				  "days to derailment (%d)"
-				  "d2d(%d)")
+				  (lambda (days)
+				    (format (if beeminder-short-header
+						"d2d(%s%d)"
+					      "days to derailment (%s%d)")
+					    (if (> days 0) "<=" ">")
+					    (abs days))))
 			    (donetoday ,#'beeminder-donetoday-p
 				       ,beeminder-default-filter-donetoday
-				       "done today (%d%%)"
-				       "dt(%d%%)")
+				       (lambda (donetoday)
+					 (format (if beeminder-short-header
+						     "dt(%s%d%%)"
+						   "done today (%s%d%%)")
+						 (if (> donetoday 0) "<" ">=")
+						 (abs donetoday))))
 			    (killed ,#'beeminder-not-killed-p
 				    '()
 				    (lambda (kill-list)
-				      (format "%d goal%s killed"
+				      (format (if beeminder-short-header
+						  "%dgk"
+						"%d goal%s killed")
 					      (length kill-list)
-					      (beeminder-plural-ending (length kill-list))))
-				    (lambda (kill-list)
-				      (format "%d gk" (length kill-list)))))
+					      (beeminder-plural-ending (length kill-list))))))
 
   "List of possible filters.  Each element is a list, consisting of:
 - symbol, denoting the filter,
 - predicate (with two arguments - the goal and the parameter),
 - default value for the parameter,
-- formatting function (with one argument - the parameter) or a format
-  string (with one placeholder)
-- formatting function or a format string for the shortened version of
-  header.")
+- formatting function (with one argument - the parameter).")
 
 (defun beeminder-kill-goal (gnode)
   "Delete GNODE from `beeminder-goals-ewoc'."
