@@ -32,7 +32,6 @@
 (require 'request)
 (require 'cl-lib)
 (require 'ewoc)
-(require 'seq)
 
 ;;; Code:
 
