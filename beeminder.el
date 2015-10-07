@@ -36,6 +36,31 @@
 ;;; Code:
 
 
+;; Utilities
+(defun beeminder-alist-get (key alist)
+  "Return the value associated to KEY in ALIST.
+This function is needed for Emacsen older than v25."
+  (cdr (assoc key alist)))
+
+(defun beeminder-set-alist-value (key alist value)
+  "Set the value corresponding to KEY in ALIST to VALUE.
+Note: ALIST should be a symbol.  This is morally equivalent to
+`(setf (alist-get key (symbol-value alist)) value)',
+but works in older Emacsen."
+  (let ((pair (assoc key (symbol-value alist))))
+    (if pair
+	(setcdr pair value)
+      (set alist (acons key value (symbol-value alist))))))
+
+(defun beeminder-inc-alist-value (key alist increment)
+  "Increment the value corresponding to KEY in ALIST by INCREMENT.
+Throw an error if KEY is not in ALIST."
+  (let ((pair (assoc key alist)))
+    (if pair
+	(incf (cdr pair) increment)
+      (error "Nothing to increment"))))
+
+
 ;; Settings
 
 (defgroup beeminder nil
