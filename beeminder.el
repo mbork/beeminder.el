@@ -419,8 +419,9 @@ is discouraged.")
 
 (defun beeminder-make-goal-dirty (slug)
   "Make the goal with SLUG dirty."
-  (setf (alist-get slug beeminder-dirty-alist)
-	(cdr (assoc 'curval (beeminder-slug-to-goal slug))))
+  (beeminder-set-alist-value slug
+			     'beeminder-dirty-alist
+			     (cdr (assoc 'curval (beeminder-slug-to-goal slug))))
   (aif (beeminder-slug-to-gnode slug)
       (ewoc-invalidate beeminder-goals-ewoc it)))
 
@@ -483,7 +484,7 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
   (if print-message (message (format "Submitting datapoint of %d for goal %s...done" amount slug-str)))
   (let* ((slug (intern slug-str))
 	 (goal (beeminder-slug-to-goal slug)))
-    (cl-incf (alist-get 'donetoday goal) amount)
+    (beeminder-inc-alist-value 'donetoday goal amount)
     (beeminder-make-goal-dirty slug)))
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
@@ -625,8 +626,8 @@ and the cdr the list of arguments it should get after the goal."
 
 (defun beeminder-goal-face (goal)
   "Return the face for displaying GOAL."
-  (if (alist-get (intern (cdr (assoc 'slug goal)))
-		 beeminder-dirty-alist)
+  (if (beeminder-alist-get (intern (cdr (assoc 'slug goal)))
+			   beeminder-dirty-alist)
       'beeminder-dirty
     (cdr (assoc (* (cdr (assoc 'yaw goal))
 		   (beeminder-normalize-lane (cdr (assoc 'lane goal))))
@@ -970,7 +971,7 @@ If nil, use the global midnight defined by
   "Return nil if donetoday for GOAL >= PERCENTAGE * day's amount.
 Take the variable `beeminder-show-dirty-donetoday' into account."
   (if (and beeminder-show-dirty-donetoday
-	   (alist-get (beeminder-get-slug goal) beeminder-dirty-alist))
+	   (beeminder-alist-get (beeminder-get-slug goal) beeminder-dirty-alist))
       t
     (let* ((rate (beeminder-get-rate goal))
 	   (daily-rate (/ rate
@@ -1023,8 +1024,10 @@ Take the variable `beeminder-show-dirty-donetoday' into account."
 			   (ewoc-prev beeminder-goals-ewoc gnode))))
 	(ewoc-delete beeminder-goals-ewoc gnode)
 	(ewoc-refresh beeminder-goals-ewoc)
-	(push (beeminder-get-slug (ewoc-data gnode))
-	      (alist-get 'killed beeminder-current-filters))
+	(beeminder-set-alist-value 'killed
+				   'beeminder-current-filters
+				   (cons (beeminder-get-slug (ewoc-data gnode))
+					 (beeminder-alist-get 'killed beeminder-current-filters)))
 	(ewoc-set-hf beeminder-goals-ewoc (beeminder-ewoc-header) "")
 	(if next-goal
 	    (ewoc-goto-node beeminder-goals-ewoc next-goal)
@@ -1039,7 +1042,7 @@ Take the variable `beeminder-show-dirty-donetoday' into account."
   "Show all killed goals."
   (interactive)
   (message "Killed goals: %s."
-	   (aif (alist-get 'killed beeminder-current-filters)
+	   (aif (beeminder-alist-get 'killed beeminder-current-filters)
 	       (mapconcat #'symbol-name it ", ")
 	     "none")))
 
@@ -1077,8 +1080,7 @@ This means deleting some goals from `beeminder-goals-ewoc'."
 (defun beeminder-enable-filter (filter parameter)
   "Enable FILTER (symbol) with PARAMETER (number).
 Disable FILTER if PARAMETER is nil."
-  (setf (alist-get filter beeminder-current-filters)
-	parameter)
+  (beeminder-set-alist-value filter 'beeminder-current-filters parameter)
   (setq beeminder-current-filters (rassq-delete-all nil beeminder-current-filters))
   (save-current-goal (beeminder-recreate-ewoc)))
 
@@ -1329,11 +1331,12 @@ line."
       (cond ((beeminder-request-delete
 	      (concat "/goals/" (cdr (assoc 'slug beeminder-detailed-goal)) "/datapoints/" id ".json"))
 	     (let ((datapoints (cdr (assoc 'datapoints beeminder-detailed-goal))))
-	       (cl-decf (alist-get 'donetoday beeminder-detailed-goal)
-			(cdr (assoc 'value (cl-find id datapoints
-						    :key (lambda (dp)
-							   (cdr (assoc 'id dp)))
-						    :test #'string=))))
+	       (beeminder-inc-alist-value 'donetoday
+					  beeminder-detailed-goal
+					  (- (cdr (assoc 'value (cl-find id datapoints
+									 :key (lambda (dp)
+										(cdr (assoc 'id dp)))
+									 :test #'string=)))))
 	       (cl-delete id datapoints :key (lambda (dp) (cdr (assoc 'id dp))) :test #'string=)
 	       (beeminder-make-goal-dirty (beeminder-get-slug beeminder-detailed-goal))
 	       (beeminder-refresh-goal-details)
