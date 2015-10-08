@@ -61,6 +61,11 @@
 
 
 ;; Utilities
+(defun trim-leading-whitespace (string)
+  "Trim tabs and spaces from the beginning of STRING."
+  (when (string-match "^[ \t]*" string)
+    (replace-match "" nil nil string)))
+
 (defun beeminder-alist-get (key alist)
   "Return the value associated to KEY in ALIST.
 This function is needed for Emacsen older than v25."
