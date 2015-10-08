@@ -41,7 +41,6 @@
   (defalias 'cl-incf 'incf)
   (defalias 'cl-decf 'decf)
   (defalias 'cl-case 'case)
-  (defalias 'cl-position 'position)
   (defalias 'cl-delete 'delete*)
   (defmacro setq-local (var val)
     "This is taken from subr.el."
@@ -1410,7 +1409,7 @@ line."
 		    (read-string "Comment: "
 				 (cdr (assoc 'comment datapoint))
 				 (cons 'comment-history
-				       (1+ (cl-position
+				       (1+ (position
 					    id
 					    datapoints
 					    :key (lambda (dp)
