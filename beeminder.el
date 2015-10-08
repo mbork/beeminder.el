@@ -300,9 +300,12 @@ Return a vector of sexps, each describing one goal."
 	       initial-input history default-value inherit-input-method))
 
 (defun beeminder-before-first-goal-p ()
-  "Return t if the point is before the first goal."
-  (< (point)
-     (ewoc-location (ewoc-nth beeminder-goals-ewoc 0))))
+  "Return t if the point is before the first goal or if there is
+no first goal."
+  (aif (ewoc-nth beeminder-goals-ewoc 0)
+      (< (point)
+	 (ewoc-location it))
+    t))
 
 (defun beeminder-get-slug (goal)
   "Return the slug of GOAL."
