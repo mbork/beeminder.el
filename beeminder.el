@@ -416,7 +416,7 @@ If `org-read-date' is present, use that; if not, fall back to
 `safe-date-to-time' and augment the result with current time."
   (time-to-seconds
    (if (fboundp 'org-read-date)
-       (org-read-date t t nil nil default)
+       (org-read-date t t nil nil (beeminder-safe-time default))
      (let (time)
        (while
 	   (progn (setq time (safe-date-to-time (beeminder-read-string "Date+time: ")))
