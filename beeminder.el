@@ -862,9 +862,9 @@ If SEC2 < TIME < SEC1, return t.  In all other cases, return nil.
 This function is useful for sorting goals by their \"midnight\"
 setting, with the goals which are after their \"midnight\" at the
 end."
-  (or (< sec1 sec2 time)
-      (< time sec1 sec2)
-      (< sec2 time sec1)))
+  (or (increasingp sec1 sec2 time)
+      (increasingp time sec1 sec2)
+      (increasingp sec2 time sec1)))
 
 (defun beeminder-sort-by-midnight ()
   "Sort entries in `beeminder-goals' by their midnight, taking current time into consideration."
