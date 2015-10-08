@@ -435,7 +435,7 @@ If `org-read-date' is present, use that; if not, fall back to
   "Ask the user for the comment for the goal named SLUG-STR.
 Include AMOUNT in the question, and default to DEFAULT-COMMENT."
   (beeminder-read-string
-   (format "Comment for amount %d for goal %s: " amount slug-str)
+   (format "Comment for amount %s for goal %s: " (number-to-human-string amount) slug-str)
    nil nil default-comment))
 
 (defcustom beeminder-ask-for-comment t
