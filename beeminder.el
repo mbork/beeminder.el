@@ -528,11 +528,17 @@ might happen."
   "Return \"s\" if NUMBER not equal to one, and \"\" otherwise."
   (if (= number 1) "" "s"))
 
+(defun beeminder-safe-time (time)
+  "Convert TIME to Emacs time format if it is a number."
+  (if (numberp time)
+      (seconds-to-time time)
+    time))
+
 (defun beeminder-time-to-days (time)
   "Compute the number of days from 0001-12-31 BC until TIME.
 Take into consideration `beeminder-when-the-day-ends'."
   (time-to-days
-   (time-add time
+   (time-add (beeminder-safe-time time)
 	     (seconds-to-time (- beeminder-when-the-day-ends)))))
 
 (defun beeminder-human-time (time)
