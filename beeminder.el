@@ -1179,7 +1179,7 @@ and insert the result in the goal details info.")
 
 (defun beeminder-display-time-field (alist field)
   "Return ALIST's (unix-time) FIELD formatted."
-  (format-time-string "%x %X" (time-to-seconds (cdr (assoc field alist)))))
+  (format-time-string "%x %X" (seconds-to-time (cdr (assoc field alist)))))
 
 (defcustom beeminder-datapoint-format
   '((beeminder-display-string-field id 25 t)
