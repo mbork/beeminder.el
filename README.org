@@ -147,12 +147,13 @@ a datapoint works properly with this regard.
 * Org-mode integration
 =beeminder.el= supports two kinds of Org-mode integration: submitting
 data on marking items as DONE or on clocking out.  Both use Org
-properties to set various things up.  In order to turn them on for
-some item, you have to first evaluate one of the functions
+properties to set various things up.  Org-mode integration can be
+toggled with the =beeminder-org-integration-mode= command; as the name
+suggests, it is a (global) minor mode.  You may also turn the two
+features on or off independently by evaluating the functions
 =beeminder-org-done-submitting= or
-=beeminder-org-clock-out-submitting=.  You may also use them in your
-=init.el=; you must then supply a numeric argument, which turns the
-relevant feature on if positive and off otherwise.
+=beeminder-org-clock-out-submitting=, with a positive or a nonpositive
+argument respectively.
 
 Then, for each item you want to link to a Beeminder goal, set its
 =beeminder= property to =done= or =clock=, and its =slug= property to

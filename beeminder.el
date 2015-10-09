@@ -1520,12 +1520,13 @@ property (asks for the comment if it is present)."
 (defun add-or-remove-hook (arg hook function &optional local message)
   "Call `add-hook' if ARG is positive, `remove-hook' otherwise.
 Print MESSAGE and \"on\" or \"off\" if non-nil."
-  (funcall (if (> arg 0) #'add-hook #'remove-hook) hook function local)
-  (if message (message "%s %s" message (if (> arg 0) "on" "off"))))
+  (let ((on (> arg 0)))
+    (funcall (if on #'add-hook #'remove-hook) hook function local)
+    (if message (message "%s %s" message (if on "on" "off")))))
 
 (defun beeminder-org-done-submitting (arg)
   "Turn submitting on marking as DONE on.
-With negative argument ARG, turn it off."
+With nonpositive argument ARG, turn it off."
   (interactive "p")
   (add-or-remove-hook arg
 		      'org-trigger-hook
@@ -1535,13 +1536,27 @@ With negative argument ARG, turn it off."
 
 (defun beeminder-org-clocking-out-submitting (arg)
   "Turn submitting on clocking out on.
-With negative argument ARG, turn it off."
+With nonpositive argument ARG, turn it off."
   (interactive "p")
   (add-or-remove-hook arg
 		      'org-clock-out-hook
 		      #'beeminder-org-submit-on-clock-out
 		      nil
 		      "Submitting goals on clocking out"))
+
+(define-minor-mode beeminder-org-integration-mode
+  "Toggle a (global) minor mode for Org/Beeminder integration.
+When on, clocking out and marking as DONE for headlines with suitable
+:beeminder: property is submitted automatically."
+  :init-value nil
+  :global t
+  :lighter " B-O"
+  (if beeminder-org-integration-mode
+      (progn
+	(beeminder-org-done-submitting 1)
+	(beeminder-org-clocking-out-submitting 1))
+    (beeminder-org-done-submitting 0)
+    (beeminder-org-clocking-out-submitting 0)))
 
 
 (provide 'beeminder)
