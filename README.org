@@ -195,9 +195,7 @@ However, you can set the
 
 * Planned features
 - Better error handling (currently it is almost non-existent)
-- Org-mode integration
 - More sorting/filtering options (per request)
-- Showing/editing previous datapoints
 
 * Bug reports/feature requests
 Feel free to send bug reports and/or feature requests to me.
