@@ -1275,14 +1275,14 @@ in particular the history of datapoints.")
 (defun number-to-human-string (number &optional width)
   "Convert NUMBER to a human-friendly form, at least WIDTH characters.
 If NUMBER is greater than 10, use one decimal place.  Otherwise,
-use two.  Trim any non-significant trailing zeros."
+use two.  Trim any non-significant trailing zeros and the decimal
+point if needed."
   (let ((str (replace-regexp-in-string
-	      "\\.$" "" (replace-regexp-in-string
-			 "0+$" ""
-			 (format (cond
-				  ((> number 10) "%.1f")
-				  (t "%.2f"))
-				 number)))))
+	      "\\.?0+$" ""
+	      (format (cond
+		       ((> number 10) "%.1f")
+		       (t "%.2f"))
+		      number))))
     (if width (format (format "%%%ds" width) str) str)))
 
 (defun beeminder-display-midnight-setting (seconds)
