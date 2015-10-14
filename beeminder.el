@@ -1517,33 +1517,6 @@ property (asks for the comment if it is present)."
 	      (point) "slug" beeminder-org-inherit-beeminder-properties))
     (beeminder-org-submit-clock-at-point)))
 
-(defun add-or-remove-hook (arg hook function &optional local message)
-  "Call `add-hook' if ARG is positive, `remove-hook' otherwise.
-Print MESSAGE and \"on\" or \"off\" if non-nil."
-  (let ((on (> arg 0)))
-    (funcall (if on #'add-hook #'remove-hook) hook function local)
-    (if message (message "%s %s" message (if on "on" "off")))))
-
-(defun beeminder-org-done-submitting (arg)
-  "Turn submitting on marking as DONE on.
-With nonpositive argument ARG, turn it off."
-  (interactive "p")
-  (add-or-remove-hook arg
-		      'org-trigger-hook
-		      #'beeminder-org-submit-on-done
-		      nil
-		      "Submitting goals on DONE"))
-
-(defun beeminder-org-clocking-out-submitting (arg)
-  "Turn submitting on clocking out on.
-With nonpositive argument ARG, turn it off."
-  (interactive "p")
-  (add-or-remove-hook arg
-		      'org-clock-out-hook
-		      #'beeminder-org-submit-on-clock-out
-		      nil
-		      "Submitting goals on clocking out"))
-
 (define-minor-mode beeminder-org-integration-mode
   "Toggle a (global) minor mode for Org/Beeminder integration.
 When on, clocking out and marking as DONE for headlines with suitable
@@ -1553,10 +1526,10 @@ When on, clocking out and marking as DONE for headlines with suitable
   :lighter " B-O"
   (if beeminder-org-integration-mode
       (progn
-	(beeminder-org-done-submitting 1)
-	(beeminder-org-clocking-out-submitting 1))
-    (beeminder-org-done-submitting 0)
-    (beeminder-org-clocking-out-submitting 0)))
+	(add-hook 'org-trigger-hook #'beeminder-org-submit-on-done)
+	(add-hook 'org-clock-out-hook #'beeminder-org-submit-on-clock-out))
+    (remove-hook 'org-trigger-hook #'beeminder-org-submit-on-done)
+    (remove-hook 'org-clock-out-hook #'beeminder-org-submit-on-clock-out)))
 
 
 (provide 'beeminder)
