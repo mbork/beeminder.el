@@ -784,7 +784,7 @@ It should be an element of `beeminder-current-filters'."
 (defun beeminder-create-goals-ewoc ()
   "Return a newly created EWOC for Beeminder goals."
   (ewoc-create (lambda (goal) (insert (beeminder-goal-representation goal)))
-	       (beeminder-ewoc-header)""))
+	       (beeminder-ewoc-header)))
 
 (defun beeminder-recreate-ewoc ()
   "Recreate Beeminder EWOC from the goal list.
