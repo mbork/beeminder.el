@@ -758,10 +758,12 @@ It should be an element of `beeminder-current-filters'."
 (defun beeminder-ewoc-header ()
   "Generate header for the Beeminder EWOC."
   (concat (format (if beeminder-short-header
-		      "Beeminder goals  user:%s  goals:%d/%d"
-		      "Beeminder goals for user %s (%d goals displayed out of %d total)")
+		      "Beeminder goals  user:%s  goals:%s/%d"
+		    "Beeminder goals for user %s (%s goals displayed out of %d total)")
 		  beeminder-username
-		  (length (ewoc-collect beeminder-goals-ewoc #'true))
+		  (if beeminder-goals-ewoc
+		      (length (ewoc-collect beeminder-goals-ewoc #'true))
+		    0)
 		  (length beeminder-goals))
 	  (propertize (concat (format (if beeminder-short-header
 					  "  sort:%s"
