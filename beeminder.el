@@ -997,15 +997,29 @@ If nil, use the global midnight defined by
   :type 'boolean
   :group 'beeminder)
 
+(defcustom beeminder-show-everyday t
+  "If non-nil, show \"everyday goals\" irrespective of the
+  \"days\" filter.")
+
+(defcustom beeminder-everyday-goals-list
+  '()
+  "A list of slugs of \"everyday goals\".  These are the goals which
+should be done every day, so even when filtering goals with deadline
+after some number of days, they should be shown.")
+
 (defun beeminder-days-p (goal days)
   "Return nil if time to derailment of GOAL > DAYS.
 If DAYS is negative, return nil if time to derailment of GOAL is
-<= -DAYS."
-  (let ((days-left (- (beeminder-time-to-days (cdr (assoc 'losedate goal)))
-		      (beeminder-time-to-days (beeminder-current-time)))))
-    (if (> days 0)
-	(<= days-left days)
-      (> days-left (- days)))))
+<= -DAYS.  If the goal is in `beeminder-everyday-goals-list',
+return t anyway."
+  (if (and beeminder-show-everyday
+	   (memq (beeminder-get-slug goal) beeminder-everyday-goals-list))
+      t
+    (let ((days-left (- (beeminder-time-to-days (cdr (assoc 'losedate goal)))
+			(beeminder-time-to-days (beeminder-current-time)))))
+      (if (> days 0)
+	  (<= days-left days)
+	(> days-left (- days))))))
 
 (defun beeminder-donetoday-p (goal percentage)
   "Return nil if donetoday for GOAL >= PERCENTAGE * day's amount.
