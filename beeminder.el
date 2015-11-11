@@ -512,8 +512,9 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
   (if print-message (message (format "Submitting datapoint of %d for goal %s...done" amount slug-str)))
   (let* ((slug (intern slug-str))
 	 (goal (beeminder-slug-to-goal slug)))
-    (beeminder-inc-alist-value 'donetoday goal amount)
-    (beeminder-make-goal-dirty slug)))
+    (when goal
+      (beeminder-inc-alist-value 'donetoday goal amount)
+      (beeminder-make-goal-dirty slug))))
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
 
