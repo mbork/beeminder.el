@@ -762,9 +762,16 @@ It should be an element of `beeminder-current-filters'."
 		    0)
 		  (length beeminder-goals))
 	  (propertize (concat (format (if beeminder-short-header
-					  "  sort:%s"
+					  "  srt:%s"
 					"\nsorting criterion: %s")
 				      (caddr beeminder-current-sorting-setting))
+			      (if beeminder-short-header
+				  (format "  e%s"
+					(if beeminder-show-everyday "+" "-"))
+				(format "      everyday goals: %s"
+					  (if beeminder-show-everyday
+					      "displayed"
+					    "omitted")))
 			      (format (if beeminder-short-header
 					  "  fil:%s"
 					(format "\nfilter%s: %%s\n"
@@ -1006,6 +1013,22 @@ If nil, use the global midnight defined by
   "A list of slugs of \"everyday goals\".  These are the goals which
 should be done every day, so even when filtering goals with deadline
 after some number of days, they should be shown.")
+
+(defun beeminder-toggle-show-everyday (arg)
+  "Toggle showing \"everyday goals\" if ARG is zero or nil.
+If ARG is positive, turn it on; if negative, off."
+  (interactive "P")
+  (let ((narg (prefix-numeric-value arg)))
+    (cond ((null arg)
+	   (setq beeminder-show-everyday (not beeminder-show-everyday)))
+	  ((> narg 0)
+	   (setq beeminder-show-everyday t))
+	  ((< narg 0)
+	   (setq beeminder-show-everyday nil))))
+  (beeminder-refresh-goals-list))
+
+(define-key beeminder-mode-map "e" #'beeminder-toggle-show-everyday)
+(define-key beeminder-filter-map "e" #'beeminder-toggle-show-everyday)
 
 (defun beeminder-days-p (goal days)
   "Return nil if time to derailment of GOAL > DAYS.

@@ -66,11 +66,24 @@ You can also “kill” individual goals, i.e., make them invisible, with
 “unkill” all killed goals with =f y= (or =C-y=), or show (in the
 minibuffer) which goals are killed with =C-u f y=.
 
-You might want to /save/ current filter settings for later retrieval.
-This can be done with =f s=.  Saved goals can be retrieved by =f r=.
-While saving is not persistent across Emacs sessions, you can (ab)use
-this feature to have your favorite filter settings enabled for
-retrieval in =init.el= by defining the variable
+If you're like me, many of your goals are of the “do this every day”
+category.  I usually set the rate for such goals to 0.8 daily, and
+enter 1.0 each day, and set the “max safe days” to e.g. 3 (of course,
+you need /Plan Bee/ for that).  This way, I have a bit of leeway –
+I can safely slip once every six days.  On the other hand, if one of
+these goals derails in, say, 2 days, it can easily get lost,
+especially when filtering out all goals with due date e.g. later than
+tomorrow.  In order to avoid that, you can set the variable
+=beeminder-everyday-goals-list= in your =init.el= to a list of slugs
+of “everyday” goals (as symbols).  These goals will be shown even if
+their deadline is later than the derailment time filter setting.  You
+may toggle displaying them by pressing =e=.
+
+You might also want to /save/ current filter settings for later
+retrieval.  This can be done with =f s=.  Saved goals can be retrieved
+by =f r=.  While saving is not persistent across Emacs sessions, you
+can (ab)use this feature to have your favorite filter settings enabled
+for retrieval in =init.el= by defining the variable
 =beeminder-saved-filters=.  For instance, to be able to quickly
 retrieve the goals which are derailing today, with the exception of
 two of them, you can put this in your =init.el=:
