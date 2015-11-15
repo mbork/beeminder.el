@@ -88,8 +88,8 @@ for retrieval in =init.el= by defining the variable
 retrieve the goals which are derailing today, with the exception of
 two of them, you can put this in your =init.el=:
 #+BEGIN_SRC elisp
-  (setq beeminder-saved-filters ((killed uvi meta)
-                                 (losedate . 0)))
+  (setq beeminder-saved-filters '((killed uvi meta)
+                                  (losedate . 0)))
 #+END_SRC
 
 You can disable all filters with =f c=.  (This also saves the current
