@@ -1040,9 +1040,9 @@ return t anyway."
       t
     (let ((days-left (- (beeminder-time-to-days (cdr (assoc 'losedate goal)))
 			(beeminder-time-to-days (beeminder-current-time)))))
-      (if (> days 0)
+      (if (>= days 0)
 	  (<= days-left days)
-	(> days-left (- days))))))
+	(>= days-left (- days))))))
 
 (defun beeminder-donetoday-p (goal percentage)
   "Return nil if donetoday for GOAL >= PERCENTAGE * day's amount.
@@ -1063,10 +1063,13 @@ less than PERCENTAGE * day's amount.  Take the variable
 	   (100*donetoday (* 100 (cdr (assoc 'donetoday goal))))
 	   (percentage*daily-rate (* percentage daily-rate)))
       (when (> rate 0)
-	(if (> percentage 0)
-	    (< 100*donetoday
-	       percentage*daily-rate)
-	  (>= 100*donetoday (- percentage*daily-rate)))))))
+	(cond ((> percentage 0)
+	       (< 100*donetoday
+		  percentage*daily-rate))
+	      ((zerop percentage)
+	       (zerop 100*donetoday))
+	      (t
+	       (>= 100*donetoday (- percentage*daily-rate))))))))
 
 (defun beeminder-not-killed-p (goal kill-list)
   "Return nil if GOAL is in the KILL-LIST."
@@ -1078,7 +1081,7 @@ less than PERCENTAGE * day's amount.  Take the variable
 				    (format (if beeminder-short-header
 						"d2d(%s%d)"
 					      "days to derailment (%s%d)")
-					    (if (> days 0) "<=" ">")
+					    (if (> days 0) "<=" ">=")
 					    (abs days))))
 			    (donetoday ,#'beeminder-donetoday-p
 				       ,beeminder-default-filter-donetoday
@@ -1086,7 +1089,9 @@ less than PERCENTAGE * day's amount.  Take the variable
 					 (format (if beeminder-short-header
 						     "dt(%s%d%%)"
 						   "done today (%s%d%%)")
-						 (if (> donetoday 0) "<" ">=")
+						 (cond ((> donetoday 0) "<")
+						       ((zerop donetoday) "=")
+						       (t ">="))
 						 (abs donetoday))))
 			    (killed ,#'beeminder-not-killed-p
 				    '()

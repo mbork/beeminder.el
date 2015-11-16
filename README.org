@@ -57,6 +57,10 @@ the default setting, “today” is the stretch of time between 6:00am and
 /or/ make the notion of “today” depend on the goal’s “midnight”
 setting.
 
+You can also set a zero or negative argument to both filtering
+commands.  Try it to see what happens; =beeminder.el= tries to do the
+right thing, which is different for both filters.
+
 (Currently, you can use just =d= and =t= commands for filtering by
 derailment time and percentage of today's work done.  However, this
 may change in the future.)
