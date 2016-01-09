@@ -918,7 +918,8 @@ end."
 (define-key beeminder-mode-map "m" #'beeminder-sort-by-midnight)
 
 
-;; refreshing view and reloading goals
+;; Refreshing view and reloading goals
+
 (defun beeminder-refresh-goals-list ()
   "Refresh the goals list."
   (interactive)
