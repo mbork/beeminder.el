@@ -1082,7 +1082,7 @@ less than PERCENTAGE * day's amount.  Take the variable
 				    (format (if beeminder-short-header
 						"d2d(%s%d)"
 					      "days to derailment (%s%d)")
-					    (if (> days 0) "<=" ">=")
+					    (if (>= days 0) "<=" ">=")
 					    (abs days))))
 			    (donetoday ,#'beeminder-donetoday-p
 				       ,beeminder-default-filter-donetoday
