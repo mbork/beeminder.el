@@ -709,20 +709,20 @@ deadline."
 ;; Faces for goals
 
 (defface beeminder-green '((t :foreground "#080"))
-  "Face for displaying Beeminder goals in green."
-  :group 'beeminder-faces)
+	 "Face for displaying Beeminder goals in green."
+	 :group 'beeminder-faces)
 
 (defface beeminder-blue '((t :foreground "#008"))
-  "Face for displaying Beeminder goals in blue."
-  :group 'beeminder-faces)
+	 "Face for displaying Beeminder goals in blue."
+	 :group 'beeminder-faces)
 
 (defface beeminder-yellow '((t :foreground "#880"))
-  "Face for displaying Beeminder goals in green."
-  :group 'beeminder-faces)
+	 "Face for displaying Beeminder goals in green."
+	 :group 'beeminder-faces)
 
 (defface beeminder-red '((t :foreground "#800"))
-  "Face for displaying Beeminder goals in red."
-  :group 'beeminder-faces)
+	 "Face for displaying Beeminder goals in red."
+	 :group 'beeminder-faces)
 
 
 ;; Beeminder EWOC
@@ -767,11 +767,11 @@ It should be an element of `beeminder-current-filters'."
 				      (caddr beeminder-current-sorting-setting))
 			      (if beeminder-short-header
 				  (format "  e%s"
-					(if beeminder-show-everyday "+" "-"))
+					  (if beeminder-show-everyday "+" "-"))
 				(format "      everyday goals: %s"
-					  (if beeminder-show-everyday
-					      "displayed"
-					    "omitted")))
+					(if beeminder-show-everyday
+					    "displayed"
+					  "omitted")))
 			      (format (if beeminder-short-header
 					  "  fil:%s"
 					(format "\nfilter%s: %%s\n"
