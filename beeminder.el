@@ -1,4 +1,4 @@
-;;; beeminder.el --- Emacs client for Beeminder
+;;; beeminder.el --- Emacs client for Beeminder     -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015 Marcin 'mbork' Borkowski
 
@@ -1299,7 +1299,7 @@ Warning: this function uses `eval', so evil code in TEMPLATE or
       (insert (format "%s"
 		      (cond ((symbolp sexp)
 			     (aif (assoc sexp beeminder-goal-template-fields-alist)
-				 (eval (cdr it))
+				 (eval (cdr it) `((goal . ,goal) t))
 			       (highlight-subtly (cdr (assoc sexp goal)))))
 			    (t (eval sexp))))))))
 
