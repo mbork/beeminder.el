@@ -536,6 +536,60 @@ it using Elisp's sort, and then recreate the EWOC."
 	    (sort ewoc-list pred))))
 
 
+;; Logging
+(define-derived-mode beeminder-log-mode special-mode "Beeminder log"
+  "A major mode for logging beeminder.el actions.")
+
+(defface beeminder-error '((t :foreground "#800" :weight bold))
+	 "Face for displaying error notifications.")
+
+(defface beeminder-warning '((t :foreground "#880" :weight bold))
+	 "Face for displaying warning notifications.")
+
+(defcustom beeminder-notification-expire-time 8
+  "After that many seconds less important notifications expire.
+TODO: not yet implemented."
+  :type 'integer
+  :group 'beeminder)
+
+(defun beeminder-log (message &optional level)
+  "Put MESSAGE into the log and possibly into the notification
+area.  LEVEL can be `:error' or `:warning'.  Messages without one
+of these two levels expire after
+`beeminder-notification-expire-time' seconds."
+  (save-excursion
+    (set-buffer (get-buffer-create "*Beeminder log*"))
+    (beeminder-log-mode)
+    (goto-char (point-max))
+    (let ((inhibit-read-only t))
+      (insert message "\n")))
+  (message "Beeminder%s: %s"
+	   (cl-case level
+	     (:error " error")
+	     (:warning " warning")
+	     (t ""))
+	   message)
+  (setq beeminder-notification
+	(cond ((eq level :error)
+	       (propertize message 'face 'beeminder-error))
+	      ((eq level :warning)
+	       (propertize message 'face 'beeminder-warning))
+	      (t message)))
+  (beeminder-refresh-goals-list))
+
+(defun beeminder-clear-notification ()
+  "Clear the notification."
+  (interactive)
+  (setq beeminder-notification nil)
+  (beeminder-refresh-goals-list))
+
+(define-key beeminder-mode-map (kbd "C") #'beeminder-clear-notification)
+
+(defvar beeminder-notification nil
+  "A message that should appear right below the header in
+Beeminder mode.")
+
+
 ;; Displaying goals
 
 (defvar beeminder-human-time-use-weekday t
@@ -782,7 +836,8 @@ It should be an element of `beeminder-current-filters'."
 						     beeminder-current-filters
 						     ", ")
 					"none")))
-		      'face 'shadow)))
+		      'face 'shadow)
+	  (aif beeminder-notification (concat "    " it) "")))
 
 (defun beeminder-create-goals-ewoc ()
   "Return a newly created EWOC for Beeminder goals."
