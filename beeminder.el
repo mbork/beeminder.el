@@ -48,6 +48,9 @@
   (defmacro aif (cond then &rest else)
     `(let ((it ,cond))
        (if it ,then ,@else)))
+  (defmacro awhen (cond &rest body)
+    `(aif ,cond
+	 (progn ,@body)))
   (defun increasingp (&rest args)
     "Return t if ARGS are in increasing order."
     (if (cdr args)
@@ -552,6 +555,10 @@ TODO: not yet implemented."
   :type 'integer
   :group 'beeminder)
 
+(defvar beeminder-notification-expiration-timer nil
+  "Timer used to clear notifications after
+`beeminder-notification-expire-time'.")
+
 (defun beeminder-log (message &optional level)
   "Put MESSAGE into the log and possibly into the notification
 area.  LEVEL can be `:error' or `:warning'.  Messages without one
@@ -575,6 +582,10 @@ of these two levels expire after
 	      ((eq level :warning)
 	       (propertize message 'face 'beeminder-warning))
 	      (t message)))
+  (awhen beeminder-notification-expiration-timer (cancel-timer it))
+  (unless (memq level '(:error :warning))
+    (setq beeminder-notification-expiration-timer
+	  (run-at-time beeminder-notification-expire-time nil #'beeminder-clear-notification)))
   (beeminder-refresh-goals-list))
 
 (defun beeminder-clear-notification ()
