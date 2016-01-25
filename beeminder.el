@@ -313,8 +313,13 @@ Return a vector of sexps, each describing one goal."
 	  goals)))
 
 (defun beeminder-refresh-goal (slug-str)
-  "Refresh autodata and graph of the goal named SLUG-STR."
+  "Refresh autodata and graph of the goal named SLUG-STR.
+Please do not use unless really necessary, since it creates
+a considerable server load."
+  (interactive (list (cdr (assoc 'slug (current-or-read-goal)))))
   (beeminder-request-get (concat "/goals/" slug-str "/refresh_graph.json")))
+
+(define-key beeminder-mode-map (kbd "G") #'beeminder-refresh-goal)
 
 
 ;; Submitting datapoints
