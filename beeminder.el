@@ -505,10 +505,10 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
     (unless (beeminder-request-post (format "/goals/%s/datapoints.json" slug-str)
 				    (format "value=%f&comment=%s&timestamp=%d"
 					    amount
-					    (or comment (beeminder-ask-for-comment
-							 slug-str
-							 amount
-							 (beeminder-default-comment timestamp)))
+					    (url-hexify-string (or comment (beeminder-ask-for-comment
+									    slug-str
+									    amount
+									    (beeminder-default-comment timestamp))))
 					    timestamp))
       (sit-for beeminder-default-timeout)
       (error "Submitting failed, check your internet connection")))
