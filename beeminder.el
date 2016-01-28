@@ -317,7 +317,8 @@ Return a vector of sexps, each describing one goal."
 Please do not use unless really necessary, since it creates
 a considerable server load."
   (interactive (list (cdr (assoc 'slug (current-or-read-goal)))))
-  (beeminder-request-get (concat "/goals/" slug-str "/refresh_graph.json")))
+  (beeminder-request-get (concat "/goals/" slug-str "/refresh_graph.json"))
+  (beeminder-log (format "goal %s refreshed." slug-str)))
 
 (define-key beeminder-mode-map (kbd "G") #'beeminder-refresh-goal)
 
