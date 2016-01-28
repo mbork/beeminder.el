@@ -163,16 +163,14 @@ If on the first goal, move to (point-min)."
 STRING should begin with a slash."
   (concat beeminder-api-url beeminder-username string))
 
-(defun beeminder-request-get (request &optional timeout)
+(defun beeminder-request-get (request &optional params timeout)
   "Send a GET REQUEST to beeminder.com, with TIMEOUT.
 Add the necessary details (including the username and the auth
 token)."
   (request-response-data
-   (request (concat (beeminder-create-api-url request)
-		    (if (string-match "\\?" request) "&" "?") ; this is hackish...
-		    "auth_token="
-		    beeminder-auth-token)
+   (request (beeminder-create-api-url request)
 	    :parser #'json-read
+	    :params (append params (list (cons "auth_token" beeminder-auth-token)))
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
 
@@ -260,10 +258,12 @@ Return a vector of sexps, each describing one goal."
   (let* ((goals (append (beeminder-request-get "/goals.json") nil)) ; goal data
 	 (datapoints-data (cdr (assoc 'goals ; datapoints data
 				      (beeminder-request-get
-				       (format ".json?diff_since=%d"
-					       (- (time-to-seconds
-						   (beeminder-current-time))
-						  (* beeminder-history-length 24 60 60)))))))
+				       ".json"
+				       (list
+					(cons "diff_since"
+					      (number-to-string
+					       (- (time-to-seconds (beeminder-current-time))
+						  (* beeminder-history-length 24 60 60)))))))))
 	 (datapoints			; datapoints alone
 	  (mapcar
 	   (lambda (goal)
