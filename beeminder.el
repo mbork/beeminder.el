@@ -163,16 +163,24 @@ If on the first goal, move to (point-min)."
 STRING should begin with a slash."
   (concat beeminder-api-url beeminder-username string))
 
-(defun beeminder-request-get (request &optional params timeout)
+(defun beeminder-request-get (request &optional params success-fun error-fun timeout)
   "Send a GET REQUEST to beeminder.com, with TIMEOUT.
 Add the necessary details (including the username and the auth
 token)."
-  (request-response-data
-   (request (beeminder-create-api-url request)
-	    :parser #'json-read
-	    :params (append params (list (cons "auth_token" beeminder-auth-token)))
-	    :sync t
-	    :timeout (or timeout beeminder-default-timeout))))
+  ;; For now, we use async only if SUCCESS-FUN is non-nil.
+  (if success-fun
+      (request (beeminder-create-api-url request)
+	       :parser #'json-read
+	       :params (append params (list (cons "auth_token" beeminder-auth-token)))
+	       :success success-fun
+	       :error error-fun
+	       :timeout (or timeout beeminder-default-timeout))
+    (request-response-data
+     (request (beeminder-create-api-url request)
+	      :parser #'json-read
+	      :params (append params (list (cons "auth_token" beeminder-auth-token)))
+	      :sync t
+	      :timeout (or timeout beeminder-default-timeout)))))
 
 (defun beeminder-request-post (request data &optional timeout)
   "Send a POST REQUEST with given DATA and TIMEOUT to beeminder.com.
