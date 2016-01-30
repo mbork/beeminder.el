@@ -195,17 +195,16 @@ Add the username and the auth token."
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
 
-(defun beeminder-request-delete (request &optional timeout)
+(defun beeminder-request-delete (request &optional success-fun error-fun timeout)
   "Send a DELETE request to beeminder.com, with TIMEOUT.
 Add the necessary details (username and the auth token)."
   (request-response-data
-   (request (concat (beeminder-create-api-url request)
-		    (if (string-match "\\?" request) "&" "?") ; this is hackish...
-		    "auth_token="
-		    beeminder-auth-token)
+   (request (concat (beeminder-create-api-url request))
+	    :params (list (cons "auth_token" beeminder-auth-token))
 	    :type "DELETE"
 	    :parser #'json-read
-	    :sync t
+	    :success success-fun
+	    :error error-fun
 	    :timeout (or timeout beeminder-default-timeout))))
 
 (defun beeminder-request-put (request data &optional timeout)
@@ -1507,22 +1506,26 @@ line."
   (interactive (list (beeminder-get-datapoint-id)))
   (if (and beeminder-confirm-datapoint-deletion
 	   (funcall beeminder-confirm-datapoint-deletion "Are you sure you want to delete this datapoint?"))
-      (cond ((beeminder-request-delete
-	      (concat "/goals/" (cdr (assoc 'slug beeminder-detailed-goal)) "/datapoints/" id ".json"))
-	     (let ((datapoints (cdr (assoc 'datapoints beeminder-detailed-goal))))
-	       (beeminder-inc-alist-value 'donetoday
-					  beeminder-detailed-goal
-					  (- (cdr (assoc 'value (cl-find id datapoints
-									 :key (lambda (dp)
-										(cdr (assoc 'id dp)))
-									 :test #'string=)))))
-	       (cl-delete id datapoints :key (lambda (dp) (cdr (assoc 'id dp))) :test #'string=)
-	       (beeminder-make-goal-dirty (beeminder-get-slug beeminder-detailed-goal))
-	       (beeminder-refresh-goal-details)
-	       (message "Datapoint succesfully deleted.")))
-	    (t
-	     (sit-for beeminder-default-timeout)
-	     (error "I had a problem deleting the datapoint.")))))
+      (beeminder-request-delete
+       (concat "/goals/" (cdr (assoc 'slug beeminder-detailed-goal)) "/datapoints/" id ".json")
+       (cl-function (lambda (&rest _)
+		      (let ((datapoints (cdr (assoc 'datapoints beeminder-detailed-goal))))
+			(beeminder-inc-alist-value 'donetoday
+						   beeminder-detailed-goal
+						   (- (cdr (assoc 'value (cl-find id datapoints
+										  :key (lambda (dp)
+											 (cdr (assoc 'id dp)))
+										  :test #'string=)))))
+			(cl-delete id datapoints :key (lambda (dp) (cdr (assoc 'id dp))) :test #'string=)
+			(beeminder-make-goal-dirty (beeminder-get-slug beeminder-detailed-goal))
+			(beeminder-refresh-goal-details)
+			(beeminder-log (format "datapoint %s succesfully deleted" id)))))
+       (cl-function (lambda (&key error-thrown &allow-other-keys)
+		      (beeminder-log (format "error while deleting datapoint %s for goal %s: %s"
+					     id
+					     (cdr (assoc 'slug beeminder-detailed-goal))
+					     error-thrown)
+				     :error))))))
 
 (define-key beeminder-goal-mode-map (kbd "d") #'beeminder-delete-datapoint)
 
