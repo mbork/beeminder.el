@@ -207,7 +207,7 @@ Add the necessary details (username and the auth token)."
 	    :error error-fun
 	    :timeout (or timeout beeminder-default-timeout))))
 
-(defun beeminder-request-put (request data &optional timeout)
+(defun beeminder-request-put (request data success-fun error-fun &optional timeout)
   "Send a PUT request to beeminder.com, with TIMEOUT.
 Add the necessary details (username and the auth token)."
   (request-response-data
@@ -216,7 +216,8 @@ Add the necessary details (username and the auth token)."
 	    :data (append data
 			  (list (cons "auth_token" beeminder-auth-token)))
 	    :parser #'json-read
-	    :sync t
+	    :success success-fun
+	    :error error-fun
 	    :timeout (or timeout beeminder-default-timeout))))
 
 
@@ -1563,17 +1564,16 @@ line."
 						   (cdr (assoc 'id dp)))
 					    :test #'string=)))
 				 nil t))))
-    (message "Updating datapoint...")
-    (if (beeminder-request-put (format "/goals/%s/datapoints/%s.json"
-				       (beeminder-get-slug beeminder-detailed-goal)
-				       id)
-			       (list
-				(cons "value" (format "%s" value))
-				(cons "comment" comment)
-				(cons "timestamp" (format "%s" timestamp))))
-	(message "Updating datapoint...done")
-      (sit-for beeminder-default-timeout)
-      (error "Datapoint submitting failed, check your internet connection"))))
+    (beeminder-log "updating datapoint...")
+    (beeminder-request-put (format "/goals/%s/datapoints/%s.json"
+				   (beeminder-get-slug beeminder-detailed-goal)
+				   id)
+			   (list
+			    (cons "value" (format "%s" value))
+			    (cons "comment" comment)
+			    (cons "timestamp" (format "%s" timestamp)))
+			   (cl-function (lambda (&rest _) (beeminder-log "updating datapoint...done")))
+			   (cl-function (lambda (&rest _) (beeminder-log "updating datapoint failed!" :error))))))
 
 (define-key beeminder-goal-mode-map (kbd "e") #'beeminder-edit-datapoint)
 
