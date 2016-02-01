@@ -213,9 +213,8 @@ Add the necessary details (username and the auth token)."
   (request-response-data
    (request (beeminder-create-api-url request)
 	    :type "PUT"
-	    :data (concat
-		   (format "auth_token=%s&" beeminder-auth-token)
-		   data)
+	    :data (append data
+			  (list (cons "auth_token" beeminder-auth-token)))
 	    :parser #'json-read
 	    :sync t
 	    :timeout (or timeout beeminder-default-timeout))))
@@ -1564,13 +1563,15 @@ line."
 						   (cdr (assoc 'id dp)))
 					    :test #'string=)))
 				 nil t))))
-    (message "Submitting new datapoint...")
+    (message "Updating datapoint...")
     (if (beeminder-request-put (format "/goals/%s/datapoints/%s.json"
 				       (beeminder-get-slug beeminder-detailed-goal)
 				       id)
-			       (format "value=%f&comment=%s&timestamp=%d"
-				       value comment timestamp))
-	(message "Submitting new datapoint...done")
+			       (list
+				(cons "value" (format "%s" value))
+				(cons "comment" comment)
+				(cons "timestamp" (format "%s" timestamp))))
+	(message "Updating datapoint...done")
       (sit-for beeminder-default-timeout)
       (error "Datapoint submitting failed, check your internet connection"))))
 
