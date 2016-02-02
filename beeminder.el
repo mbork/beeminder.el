@@ -1007,8 +1007,9 @@ end."
 (defun beeminder-refresh-goals-list ()
   "Refresh the goals list."
   (interactive)
-  (save-current-goal
-    (beeminder-recreate-ewoc)))
+  (with-current-buffer (ewoc-buffer beeminder-goals-ewoc)
+    (save-current-goal
+      (beeminder-recreate-ewoc))))
 
 (defun beeminder-reload-goals-list ()
   "Reload the goals from the server."
