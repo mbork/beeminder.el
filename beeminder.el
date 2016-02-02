@@ -182,17 +182,17 @@ token)."
 	      :sync t
 	      :timeout (or timeout beeminder-default-timeout)))))
 
-(defun beeminder-request-post (request data &optional timeout)
+(defun beeminder-request-post (request data success-fun error-fun &optional timeout)
   "Send a POST REQUEST with given DATA and TIMEOUT to beeminder.com.
 Add the username and the auth token."
   (request-response-data
    (request (beeminder-create-api-url request)
 	    :type "POST"
-	    :data (concat
-		   (format "auth_token=%s&" beeminder-auth-token)
-		   data)
+	    :data (append data
+			  (list (cons "auth_token" beeminder-auth-token)))
 	    :parser #'json-read
-	    :sync t
+	    :success success-fun
+	    :error error-fun
 	    :timeout (or timeout beeminder-default-timeout))))
 
 (defun beeminder-request-delete (request &optional success-fun error-fun timeout)
@@ -483,7 +483,7 @@ successfully submitting a datapoint of 0."
   (save-current-goal
     (ewoc-refresh beeminder-goals-ewoc)))
 
-(defun beeminder-submit-datapoint (slug-str amount &optional comment timestamp print-message)
+(defun beeminder-submit-datapoint (slug-str value &optional comment timestamp)
   "Submit a datapoint to Beeminder goal SLUG-STR with AMOUNT.
 Additional data are COMMENT and TIMESTAMP (as Unix time).  If
 COMMENT is nil, then ask the user for the comment.  If TIMESTAMP
@@ -500,7 +500,7 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
   (interactive
    (let* ((slug-str (cdr (assoc 'slug (current-or-read-goal))))
 	  (yesterdayp (eq current-prefix-arg '-))
-	  (amount (if (numberp current-prefix-arg)
+	  (value (if (numberp current-prefix-arg)
 		      current-prefix-arg
 		    (string-to-number (beeminder-read-string
 				       (format "Datapoint value for %s%s: "
@@ -509,33 +509,36 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
 				       nil nil "1"))))
 	  (current-timestamp (time-to-seconds (beeminder-current-time))))
      (list slug-str
-	   amount
+	   value
 	   (unless beeminder-ask-for-comment
 	     (beeminder-default-comment current-timestamp))
 	   (or (when yesterdayp
 		 (- current-timestamp (* 24 60 60)))
 	       (when (consp current-prefix-arg)
 		 (ask-for-timestamp))
-	       current-timestamp)
-	   t)))
-  (if print-message (message (format "Submitting datapoint of %d for goal %s..." amount slug-str)))
+	       current-timestamp))))
   (let ((timestamp (or timestamp (time-to-seconds (beeminder-current-time)))))
-    (unless (beeminder-request-post (format "/goals/%s/datapoints.json" slug-str)
-				    (format "value=%f&comment=%s&timestamp=%d"
-					    amount
-					    (url-hexify-string (or comment (beeminder-ask-for-comment
-									    slug-str
-									    amount
-									    (beeminder-default-comment timestamp))))
-					    timestamp))
-      (sit-for beeminder-default-timeout)
-      (error "Submitting failed, check your internet connection")))
-  (if print-message (message (format "Submitting datapoint of %d for goal %s...done" amount slug-str)))
-  (let* ((slug (intern slug-str))
-	 (goal (beeminder-slug-to-goal slug)))
-    (when goal
-      (beeminder-inc-alist-value 'donetoday goal amount)
-      (beeminder-make-goal-dirty slug))))
+    (beeminder-log (format "submitting datapoint of %s for goal %s..."
+			   (number-to-human-string value)
+			   slug-str))
+    (beeminder-request-post (format "/goals/%s/datapoints.json" slug-str)
+			    (list
+			     (cons "value" (format "%f" value))
+			     (cons "comment" (or comment (beeminder-ask-for-comment
+							  slug-str
+							  value
+							  (beeminder-default-comment timestamp))))
+			     (cons "timestamp" (format "%s" timestamp)))
+			    (cl-function (lambda (&rest _)
+					   (beeminder-log (format "submitting datapoint of %s for goal %s...done"
+								  (number-to-human-string value)
+								  slug-str))
+					   (let* ((slug (intern slug-str))
+						  (goal (beeminder-slug-to-goal slug)))
+					     (when goal
+					       (beeminder-inc-alist-value 'donetoday goal value)
+					       (beeminder-make-goal-dirty slug)))))
+			    (cl-function (lambda (&rest _) (beeminder-log "submitting datapoint failed!" :error))))))
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
 
@@ -1615,7 +1618,7 @@ property (asks for the comment if it is present)."
 					       "ask-comment"
 					       beeminder-org-inherit-beeminder-properties)
 			  (concat "via Org-mode at " (beeminder-current-time-hmsz-string)))))
-	  (beeminder-submit-datapoint slug-str amount comment nil t)))))
+	  (beeminder-submit-datapoint slug-str amount comment)))))
 
 (defun beeminder-org-submit-clock-at-point ()
   "Submit the data from the clock item at point to Beeminder.
@@ -1646,7 +1649,7 @@ that the user may want to submit clock items later."
 			  (t 1))))
 	(save-excursion
 	  (beeminder-submit-datapoint slug-str (* minutes multiplier)
-				      comment nil t))))))
+				      comment))))))
 
 (defun beeminder-org-submit-on-clock-out ()
   "Submit the time clocked for this item.
