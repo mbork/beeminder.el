@@ -330,6 +330,11 @@ a considerable server load."
 					(beeminder-log
 					 (format
 					  "goal %s refreshed"
+					  slug-str))))
+			 (cl-function (lambda (&rest _)
+					(beeminder-log
+					 (format
+					  "goal %s could not be refreshed"
 					  slug-str))))))
 
 (define-key beeminder-mode-map (kbd "G") #'beeminder-refresh-goal)
