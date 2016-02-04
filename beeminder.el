@@ -195,7 +195,7 @@ Add the username and the auth token."
 	    :error error-fun
 	    :timeout (or timeout beeminder-default-timeout))))
 
-(defun beeminder-request-delete (request &optional success-fun error-fun timeout)
+(defun beeminder-request-delete (request success-fun error-fun &optional timeout)
   "Send a DELETE request to beeminder.com, with TIMEOUT.
 Add the necessary details (username and the auth token)."
   (request-response-data
