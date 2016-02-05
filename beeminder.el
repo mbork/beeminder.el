@@ -903,6 +903,7 @@ sorted by another criterion previously."
   (interactive)
   (switch-to-buffer "*Beeminder goals*")
   (buffer-disable-undo)
+  (setq truncate-lines t)
   (unless beeminder-goals
     (message "Beeminder goals downloading...")
     (beeminder-get-goals)
@@ -911,8 +912,7 @@ sorted by another criterion previously."
     (erase-buffer)
     (setq beeminder-goals-ewoc (beeminder-create-goals-ewoc))
     (beeminder-recreate-ewoc))
-  (beeminder-mode)
-  (setq truncate-lines t))
+  (beeminder-mode))
 
 
 ;; Current time function
