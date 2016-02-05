@@ -881,12 +881,12 @@ It should be an element of `beeminder-current-filters'."
   (ewoc-create (lambda (goal) (insert (beeminder-goal-representation goal)))
 	       (beeminder-ewoc-header)))
 
-(defun beeminder-recreate-ewoc ()
-  "Recreate Beeminder EWOC from the goal list.
-In particular, reapply filtering and sorting settings.  Note: since
-only the last sorting criterion is remembered, and sorting is stable,
-this might actually change the ordering of goals, which may have been
-sorted by another criterion previously."
+(defun beeminder-populate-ewoc ()
+  "Populate Beeminder EWOC using the goal list.
+In particular, apply filtering and sorting settings.  Note: since
+only the last sorting criterion is remembered, and sorting is
+stable, this might actually change the ordering of goals, which
+may have been sorted by another criterion previously."
   (ewoc-filter beeminder-goals-ewoc #'ignore)
   (mapcar (lambda (goal)
 	    (ewoc-enter-last beeminder-goals-ewoc goal))
@@ -911,7 +911,7 @@ sorted by another criterion previously."
   (let ((inhibit-read-only t))
     (erase-buffer)
     (setq beeminder-goals-ewoc (beeminder-create-goals-ewoc))
-    (beeminder-recreate-ewoc))
+    (beeminder-populate-ewoc))
   (beeminder-mode))
 
 
@@ -1018,7 +1018,7 @@ end."
   (interactive)
   (with-current-buffer (ewoc-buffer beeminder-goals-ewoc)
     (save-current-goal
-      (beeminder-recreate-ewoc))))
+      (beeminder-populate-ewoc))))
 
 (defun beeminder-reload-goals-list ()
   "Reload the goals from the server."
@@ -1239,7 +1239,7 @@ less than PERCENTAGE * day's amount.  Take the variable
   (interactive)
   (setq beeminder-current-filters
 	(assq-delete-all 'killed beeminder-current-filters))
-  (beeminder-recreate-ewoc))
+  (beeminder-populate-ewoc))
 
 (defun beeminder-clear-or-show-kills (arg)
   "Unkill all killed goals if ARG is nil.
@@ -1270,7 +1270,7 @@ This means deleting some goals from `beeminder-goals-ewoc'."
 Disable FILTER if PARAMETER is nil."
   (beeminder-set-alist-value filter 'beeminder-current-filters parameter)
   (setq beeminder-current-filters (rassq-delete-all nil beeminder-current-filters))
-  (save-current-goal (beeminder-recreate-ewoc)))
+  (save-current-goal (beeminder-populate-ewoc)))
 
 (defun beeminder-filter-parameter (raw-prefix default)
   "Return filter parameter based on RAW-PREFIX and DEFAULT."
