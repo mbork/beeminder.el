@@ -185,15 +185,14 @@ token)."
 (defun beeminder-request-post (request data success-fun error-fun &optional timeout)
   "Send a POST REQUEST with given DATA and TIMEOUT to beeminder.com.
 Add the username and the auth token."
-  (request-response-data
-   (request (beeminder-create-api-url request)
-	    :type "POST"
-	    :data (append data
-			  (list (cons "auth_token" beeminder-auth-token)))
-	    :parser #'json-read
-	    :success success-fun
-	    :error error-fun
-	    :timeout (or timeout beeminder-default-timeout))))
+  (request (beeminder-create-api-url request)
+	   :type "POST"
+	   :data (append data
+			 (list (cons "auth_token" beeminder-auth-token)))
+	   :parser #'json-read
+	   :success success-fun
+	   :error error-fun
+	   :timeout (or timeout beeminder-default-timeout)))
 
 (defun beeminder-request-delete (request success-fun error-fun &optional timeout)
   "Send a DELETE request to beeminder.com, with TIMEOUT.
