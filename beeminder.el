@@ -941,16 +941,18 @@ the printed representation of this sorting method (as a string)."
 	     (beeminder-get-slug (ewoc-data (ewoc-locate beeminder-goals-ewoc)))))
 	  (current-line (unless current-goal-slug (line-number-at-pos))))
      ,@body
-     (if (not current-goal-slug)
-	 (goto-line current-line)
-       (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0))
-       (let ((current-node (ewoc-nth beeminder-goals-ewoc 0)))
-	 (while (and current-node
-		     (not (eq (beeminder-get-slug (ewoc-data current-node))
-			      current-goal-slug)))
-	   (ewoc-goto-next beeminder-goals-ewoc 1)
-	   (setq current-node (ewoc-next beeminder-goals-ewoc current-node)))
-	 (unless current-node (goto-char (point-min)))))))
+     (cond ((not current-goal-slug)
+	    (goto-char (point-min))
+	    (forward-line (1- current-line)))
+	   (t
+	    (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0))
+	    (let ((current-node (ewoc-nth beeminder-goals-ewoc 0)))
+	      (while (and current-node
+			  (not (eq (beeminder-get-slug (ewoc-data current-node))
+				   current-goal-slug)))
+		(ewoc-goto-next beeminder-goals-ewoc 1)
+		(setq current-node (ewoc-next beeminder-goals-ewoc current-node)))
+	      (unless current-node (goto-char (point-min))))))))
 
 (defun beeminder-sort-by-field (field predicate info)
   "Sort entries in `beeminder-goals-ewoc' by FIELD, using PREDICATE.
