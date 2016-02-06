@@ -625,6 +625,13 @@ of these two levels expire after
   "A message that should appear right below the header in
 Beeminder mode.")
 
+(defun beeminder-pop-log ()
+  "Pop the Beeminder log buffer."
+  (interactive)
+  (pop-to-buffer "*Beeminder log*"))
+
+(define-key beeminder-mode-map (kbd "L") #'beeminder-pop-log)
+
 
 ;; Displaying goals
 
