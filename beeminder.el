@@ -1661,9 +1661,8 @@ that the user may want to submit clock items later."
 			   3)
 					; 1 hail-Mary ≈ 20 seconds
 			  (t 1))))
-	(save-excursion
-	  (beeminder-submit-datapoint slug-str (* minutes multiplier)
-				      comment))))))
+	(beeminder-submit-datapoint slug-str (* minutes multiplier)
+				    comment)))))
 
 (defun beeminder-org-submit-on-clock-out ()
   "Submit the time clocked for this item.
