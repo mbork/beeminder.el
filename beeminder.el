@@ -261,62 +261,72 @@ Take `beeminder-when-the-day-ends' into consideration."
 (defun beeminder-get-goals ()
   "Get all the user's Beeminder goals.
 Return a vector of sexps, each describing one goal."
-  (let* ((goals (append (beeminder-request-get "/goals.json") nil)) ; goal data
-	 (datapoints-data (cdr (assoc 'goals ; datapoints data
-				      (beeminder-request-get
-				       ".json"
-				       (list
-					(cons "diff_since"
-					      (number-to-string
-					       (- (time-to-seconds (beeminder-current-time))
-						  (* beeminder-history-length 24 60 60)))))))))
-	 (datapoints			; datapoints alone
-	  (mapcar
-	   (lambda (goal)
-	     (cons (cdr (assoc 'slug goal))
-		   (append (cdr (assoc 'datapoints goal)) nil)))
-	   datapoints-data))
-	 (deadlines			; deadlines alone
-	  (mapcar
-	   (lambda (goal)
-	     (cons (cdr (assoc 'slug goal))
-		   (cdr (assoc 'deadline goal))))
-	   goals))
-	 (today-values
-	  (mapcar
-	   (lambda (goal)
-	     (let ((last-midnight (if beeminder-use-goal-midnight-today-values
-				      (last-goal-midnight (cdr (assoc (car goal) deadlines))
-							  (beeminder-current-time))
-				    (last-user-midnight (beeminder-current-time)))))
-	       (cons (car goal)
-		     (cl-reduce #'+
-				(mapcar (lambda (datapoint)
-					  (if (> (cdr (assoc 'timestamp datapoint))
-						 last-midnight)
-					      (cdr (assoc 'value datapoint))
-					    0))
-					(cdr goal))))))
-	   datapoints)))
-    (setq beeminder-goals (mapcar
-			   (lambda (goal)
-			     (let ((slug-str (cdr (assoc 'slug goal))))
-			       (cons (cons 'datapoints
-					   (cdr (assoc slug-str datapoints)))
-				     (cons
-				      (cons 'donetoday
-					    (cdr (assoc
-						  (cdr (assoc 'slug goal))
-						  today-values)))
-				      goal))))
-			   goals))
-    (mapc (lambda (goal)
-	    (let ((slug (intern (cdr (assoc 'slug goal)))))
-	      (if (and (cdr (assoc slug beeminder-dirty-alist))
-		       (/= (cdr (assoc 'curval goal))
-			   (cdr (assoc slug beeminder-dirty-alist))))
-		  (setq beeminder-dirty-alist (assq-delete-all slug beeminder-dirty-alist)))))
-	  goals)))
+  (beeminder-log "fetching goals...")
+  (beeminder-request-get
+   "/goals.json"
+   ()
+   (cl-function (lambda (&key data &allow-other-keys)
+		  (let ((goals (append data nil)))
+		    (beeminder-request-get
+		     ".json"
+		     (list
+		      (cons "diff_since"
+			    (number-to-string
+			     (- (time-to-seconds (beeminder-current-time))
+				(* beeminder-history-length 24 60 60)))))
+		     (cl-function (lambda (&key data &allow-other-keys)
+				    (let* ((datapoints ; datapoints alone
+					    (mapcar
+					     (lambda (goal)
+					       (cons (cdr (assoc 'slug goal))
+						     (append (cdr (assoc 'datapoints goal)) nil)))
+					     (cdr (assoc 'goals data))))
+					   (deadlines ; deadlines alone
+					    (mapcar
+					     (lambda (goal)
+					       (cons (cdr (assoc 'slug goal))
+						     (cdr (assoc 'deadline goal))))
+					     goals))
+					   (today-values
+					    (mapcar
+					     (lambda (goal)
+					       (let ((last-midnight (if beeminder-use-goal-midnight-today-values
+									(last-goal-midnight (cdr (assoc (car goal) deadlines))
+											    (beeminder-current-time))
+								      (last-user-midnight (beeminder-current-time)))))
+						 (cons (car goal)
+						       (cl-reduce #'+
+								  (mapcar (lambda (datapoint)
+									    (if (> (cdr (assoc 'timestamp datapoint))
+										   last-midnight)
+										(cdr (assoc 'value datapoint))
+									      0))
+									  (cdr goal))))))
+					     datapoints)))
+				      (setq beeminder-goals (mapcar
+							     (lambda (goal)
+							       (let ((slug-str (cdr (assoc 'slug goal))))
+								 (cons (cons 'datapoints
+									     (cdr (assoc slug-str datapoints)))
+								       (cons
+									(cons 'donetoday
+									      (cdr (assoc
+										    (cdr (assoc 'slug goal))
+										    today-values)))
+									goal))))
+							     goals))
+				      (mapc (lambda (goal)
+					      (let ((slug (intern (cdr (assoc 'slug goal)))))
+						(if (and (cdr (assoc slug beeminder-dirty-alist))
+							 (/= (cdr (assoc 'curval goal))
+							     (cdr (assoc slug beeminder-dirty-alist))))
+						    (setq beeminder-dirty-alist (assq-delete-all slug beeminder-dirty-alist)))))
+					    goals)
+				      (beeminder-log "fetching goals...done"))))
+		     (cl-function (lambda (&key error-thrown &allow-other-keys)
+				    (beeminder-log (format "fetching goals...error: %s" error-thrown))))))))
+   (cl-function (lambda (&key error-thrown &allow-other-keys)
+		  (beeminder-log (format "fetching goals...error: %s" error-thrown))))))
 
 (defun beeminder-refresh-goal (slug-str)
   "Refresh autodata and graph of the goal named SLUG-STR.
@@ -1031,9 +1041,7 @@ end."
 (defun beeminder-reload-goals-list ()
   "Reload the goals from the server."
   (interactive)
-  (message "Beeminder goals reloading...")
   (beeminder-get-goals)
-  (message "Beeminder goals reloading...done")
   (beeminder-refresh-goals-list))
 
 (define-key beeminder-mode-map (kbd "C-l") #'beeminder-refresh-goals-list)
