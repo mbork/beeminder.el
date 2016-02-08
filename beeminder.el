@@ -167,20 +167,12 @@ STRING should begin with a slash."
   "Send a GET REQUEST to beeminder.com, with TIMEOUT.
 Add the necessary details (including the username and the auth
 token)."
-  ;; For now, we use async only if SUCCESS-FUN is non-nil.
-  (if success-fun
-      (request (beeminder-create-api-url request)
-	       :parser #'json-read
-	       :params (append params (list (cons "auth_token" beeminder-auth-token)))
-	       :success success-fun
-	       :error error-fun
-	       :timeout (or timeout beeminder-default-timeout))
-    (request-response-data
-     (request (beeminder-create-api-url request)
-	      :parser #'json-read
-	      :params (append params (list (cons "auth_token" beeminder-auth-token)))
-	      :sync t
-	      :timeout (or timeout beeminder-default-timeout)))))
+  (request (beeminder-create-api-url request)
+	   :parser #'json-read
+	   :params (append params (list (cons "auth_token" beeminder-auth-token)))
+	   :success success-fun
+	   :error error-fun
+	   :timeout (or timeout beeminder-default-timeout)))
 
 (defun beeminder-request-post (request data success-fun error-fun &optional timeout)
   "Send a POST REQUEST with given DATA and TIMEOUT to beeminder.com.
