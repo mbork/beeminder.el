@@ -258,6 +258,7 @@ Return a vector of sexps, each describing one goal."
    "/goals.json"
    ()
    (cl-function (lambda (&key data &allow-other-keys)
+		  (beeminder-log "fetching goals.......")
 		  (let ((goals (append data nil)))
 		    (beeminder-request-get
 		     ".json"
