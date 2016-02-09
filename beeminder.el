@@ -119,7 +119,7 @@ You can retrieve it from the URL
   "The list of sexps representing goals.
 Updated by `beeminder-get-goals'.")
 
-(defcustom beeminder-default-timeout 12
+(defcustom beeminder-default-timeout 30
   "Default timeout for HTTP requests sent to beeminder, in seconds."
   :type 'number
   :group 'beeminder)
