@@ -545,7 +545,12 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
 					     (when goal
 					       (beeminder-inc-alist-value 'donetoday goal value)
 					       (beeminder-make-goal-dirty slug)))))
-			    (cl-function (lambda (&rest _) (beeminder-log "submitting datapoint failed!" :error))))))
+			    (cl-function (lambda (&rest _)
+					   (beeminder-log
+					    (format "submitting datapoint of %s for goal %s...failed"
+						    (number-to-human-string value)
+						    slug-str)
+					    :error))))))
 
 (define-key beeminder-mode-map (kbd "RET") #'beeminder-submit-datapoint)
 
