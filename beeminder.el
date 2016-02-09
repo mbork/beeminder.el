@@ -594,32 +594,34 @@ TODO: not yet implemented."
 
 (defun beeminder-log (message &optional level)
   "Put MESSAGE into the log and possibly into the notification
-area.  LEVEL can be `:error' or `:warning'.  Messages without one
-of these two levels expire after
+area.  LEVEL can be `:error', `:warning' or `:logonly'.  Messages
+without any of these levels expire after
 `beeminder-notification-expire-time' seconds."
-  (save-excursion
-    (set-buffer (get-buffer-create "*Beeminder log*"))
-    (beeminder-log-mode)
-    (goto-char (point-max))
-    (let ((inhibit-read-only t))
-      (insert message "\n")))
-  (message "Beeminder%s: %s"
-	   (cl-case level
-	     (:error " error")
-	     (:warning " warning")
-	     (t ""))
-	   message)
-  (setq beeminder-notification
-	(cond ((eq level :error)
-	       (propertize message 'face 'beeminder-error))
-	      ((eq level :warning)
-	       (propertize message 'face 'beeminder-warning))
-	      (t message)))
-  (awhen beeminder-notification-expiration-timer (cancel-timer it))
-  (unless (memq level '(:error :warning))
-    (setq beeminder-notification-expiration-timer
-	  (run-at-time beeminder-notification-expire-time nil #'beeminder-clear-notification)))
-  (beeminder-refresh-goals-list))
+  (let ((level-string (cl-case level
+			(:error " error")
+			(:warning " warning")
+			(t ""))))
+    (save-excursion
+      (set-buffer (get-buffer-create "*Beeminder log*"))
+      (beeminder-log-mode)
+      (goto-char (point-max))
+      (let ((inhibit-read-only t))
+	(insert (current-time-string) level-string ":    " message "\n")))
+    (unless (eq level :logonly)
+      (message "Beeminder%s: %s"
+	       level-string
+	       message)
+      (setq beeminder-notification
+	    (cond ((eq level :error)
+		   (propertize message 'face 'beeminder-error))
+		  ((eq level :warning)
+		   (propertize message 'face 'beeminder-warning))
+		  (t message))))
+    (awhen beeminder-notification-expiration-timer (cancel-timer it))
+    (unless (memq level '(:error :warning))
+      (setq beeminder-notification-expiration-timer
+	    (run-at-time beeminder-notification-expire-time nil #'beeminder-clear-notification)))
+    (beeminder-refresh-goals-list)))
 
 (defun beeminder-clear-notification ()
   "Clear the notification."
