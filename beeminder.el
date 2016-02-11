@@ -251,8 +251,8 @@ Take `beeminder-when-the-day-ends' into consideration."
   "Number of days from which to load datapoints.")
 
 (defun beeminder-get-goals ()
-  "Get all the user's Beeminder goals.
-Return a vector of sexps, each describing one goal."
+  "Get all the user's Beeminder goals and put them in the
+`beeminder-goals' variable."
   (beeminder-log "fetching goals...")
   (beeminder-request-get
    "/goals.json"
