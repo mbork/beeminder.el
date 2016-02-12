@@ -621,7 +621,7 @@ without any of these levels expire after
     (unless (memq level '(:error :warning))
       (setq beeminder-notification-expiration-timer
 	    (run-at-time beeminder-notification-expire-time nil #'beeminder-clear-notification)))
-    (beeminder-refresh-goals-list)))
+    (when beeminder-goals-ewoc (beeminder-refresh-goals-list))))
 
 (defun beeminder-clear-notification ()
   "Clear the notification."
@@ -950,26 +950,31 @@ the printed representation of this sorting method (as a string)."
 (defvar beeminder-current-sorting-setting beeminder-default-sorting-setting)
 
 (defmacro save-current-goal (&rest body)
-  "Evaluate BODY and bring the point back to the current goal."
+  "Evaluate BODY and bring the point back to the current goal.
+If the Beeminder EWOC disappeared (for some reason), just
+evaluate the body."
   (declare (indent 0) (debug t))
-  `(let* ((current-goal-slug
-	   (if (beeminder-before-first-goal-p)
-	       nil
-	     (beeminder-get-slug (ewoc-data (ewoc-locate beeminder-goals-ewoc)))))
-	  (current-line (unless current-goal-slug (line-number-at-pos))))
-     ,@body
-     (cond ((not current-goal-slug)
-	    (goto-char (point-min))
-	    (forward-line (1- current-line)))
-	   (t
-	    (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0))
-	    (let ((current-node (ewoc-nth beeminder-goals-ewoc 0)))
-	      (while (and current-node
-			  (not (eq (beeminder-get-slug (ewoc-data current-node))
-				   current-goal-slug)))
-		(ewoc-goto-next beeminder-goals-ewoc 1)
-		(setq current-node (ewoc-next beeminder-goals-ewoc current-node)))
-	      (unless current-node (goto-char (point-min))))))))
+  `(if beeminder-goals-ewoc
+       (with-current-buffer (ewoc-buffer beeminder-goals-ewoc)
+	 (let* ((current-goal-slug
+		 (if (beeminder-before-first-goal-p)
+		     nil
+		   (beeminder-get-slug (ewoc-data (ewoc-locate beeminder-goals-ewoc)))))
+		(current-line (unless current-goal-slug (line-number-at-pos))))
+	   ,@body
+	   (cond ((not current-goal-slug)
+		  (goto-char (point-min))
+		  (forward-line (1- current-line)))
+		 (t
+		  (ewoc-goto-node beeminder-goals-ewoc (ewoc-nth beeminder-goals-ewoc 0))
+		  (let ((current-node (ewoc-nth beeminder-goals-ewoc 0)))
+		    (while (and current-node
+				(not (eq (beeminder-get-slug (ewoc-data current-node))
+					 current-goal-slug)))
+		      (ewoc-goto-next beeminder-goals-ewoc 1)
+		      (setq current-node (ewoc-next beeminder-goals-ewoc current-node)))
+		    (unless current-node (goto-char (point-min))))))))
+     ,@body))
 
 (defun beeminder-sort-by-field (field predicate info)
   "Sort entries in `beeminder-goals-ewoc' by FIELD, using PREDICATE.
@@ -1034,13 +1039,8 @@ end."
 (defun beeminder-refresh-goals-list ()
   "Refresh the goals list."
   (interactive)
-  (if beeminder-goals-ewoc		; TODO: this may become
-					; obsolete once
-					; beeminder-get-goals gets
-					; a callback or something.
-      (with-current-buffer (ewoc-buffer beeminder-goals-ewoc)
-	(save-current-goal
-	  (beeminder-populate-ewoc)))))
+  (save-current-goal
+    (beeminder-populate-ewoc)))
 
 (defun beeminder-reload-goals-list ()
   "Reload the goals from the server."
