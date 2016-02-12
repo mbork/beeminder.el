@@ -1,5 +1,9 @@
 What to do?
 
+* DONE Make `save-current-goal' use `with-current-buffer'
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2016-02-12 pią 22:22]
+:END:
 * DONE Define macro save-current-goal, add it to refreshing routine
 * DONE Add "some goals killed" to the sorting/filtering info
 * DONE Customizable goal display
@@ -34,7 +38,10 @@ completion).  Use it in beeminder-kill-goal and beeminder-submit-datapoint.
 * DONE convert lambdas in beeminder-filters to functions
 * DONE make beeminder-filter-command more lispy
 * DONE Convert plists (in filters) to alists
-* TODO Better error handling
+* DONE Better error handling
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2016-02-11 czw 22:54]
+:END:
 * DONE Rewrite beeminder-submit-datapoint
 so that as little as possible is computed in the `interactive' clause
 * DONE Fix computing of donetoday
@@ -42,9 +49,15 @@ so that as little as possible is computed in the `interactive' clause
 * DONE Rewrite beeminder-filter-command
 so that it does not depend on =last-command-event=
 * DONE Show previous datapoints
-* TODO Datapoint editing
+* DONE Datapoint editing
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2016-02-11 czw 22:54]
+:END:
 * TODO Refactor beeminder-submit-datapoint
 - fix a bug when both comment and timestamp are nil
 - split into the interactive/non-interactive functions
-* TODO Convert beeminder-display-goal-details to lexical binding
+* DONE Convert beeminder-display-goal-details to lexical binding
+:LOGBOOK:
+- State "DONE"       from "TODO"       [2016-02-11 czw 22:54]
+:END:
 * TODO Make beeminder-human-time work with the past
