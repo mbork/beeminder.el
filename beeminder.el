@@ -1259,7 +1259,7 @@ less than PERCENTAGE * day's amount.  Take the variable
   (interactive)
   (setq beeminder-current-filters
 	(assq-delete-all 'killed beeminder-current-filters))
-  (beeminder-populate-ewoc))
+  (beeminder-refresh-goals-list))
 
 (defun beeminder-clear-or-show-kills (arg)
   "Unkill all killed goals if ARG is nil.
@@ -1290,7 +1290,7 @@ This means deleting some goals from `beeminder-goals-ewoc'."
 Disable FILTER if PARAMETER is nil."
   (beeminder-set-alist-value filter 'beeminder-current-filters parameter)
   (setq beeminder-current-filters (rassq-delete-all nil beeminder-current-filters))
-  (save-current-goal (beeminder-populate-ewoc)))
+  (beeminder-refresh-goals-list))
 
 (defun beeminder-filter-parameter (raw-prefix default)
   "Return filter parameter based on RAW-PREFIX and DEFAULT."
