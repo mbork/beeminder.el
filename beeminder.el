@@ -921,9 +921,7 @@ may have been sorted by another criterion previously."
   (buffer-disable-undo)
   (setq truncate-lines t)
   (unless beeminder-goals
-    (message "Beeminder goals downloading...")
-    (beeminder-get-goals)
-    (message "Beeminder goals downloading...done"))
+    (beeminder-get-goals))
   (let ((inhibit-read-only t))
     (erase-buffer)
     (setq beeminder-goals-ewoc (beeminder-create-goals-ewoc))
