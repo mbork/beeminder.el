@@ -917,16 +917,18 @@ may have been sorted by another criterion previously."
 (defun beeminder-list-goals ()
   "Switch to a buffer containing the list of Beeminder goals."
   (interactive)
-  (switch-to-buffer "*Beeminder goals*")
-  (buffer-disable-undo)
-  (setq truncate-lines t)
-  (unless beeminder-goals
-    (beeminder-get-goals))
+  (aif (get-buffer "*Beeminder goals*")
+      (switch-to-buffer it)
+    (switch-to-buffer "*Beeminder goals*")
+    (buffer-disable-undo)
+    (beeminder-mode))
   (let ((inhibit-read-only t))
     (erase-buffer)
     (setq beeminder-goals-ewoc (beeminder-create-goals-ewoc))
     (beeminder-populate-ewoc))
-  (beeminder-mode))
+  (setq truncate-lines t)
+  (unless beeminder-goals
+    (beeminder-get-goals)))
 
 
 ;; Current time function
