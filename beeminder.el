@@ -508,12 +508,12 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
    (let* ((slug-str (cdr (assoc 'slug (current-or-read-goal))))
 	  (yesterdayp (eq current-prefix-arg '-))
 	  (value (if (numberp current-prefix-arg)
-		      current-prefix-arg
-		    (string-to-number (beeminder-read-string
-				       (format "Datapoint value for %s%s: "
-					       slug-str
-					       (if yesterdayp " (yesterday)" ""))
-				       nil nil "1"))))
+		     current-prefix-arg
+		   (string-to-number (beeminder-read-string
+				      (format "Datapoint value for %s%s: "
+					      slug-str
+					      (if yesterdayp " (yesterday)" ""))
+				      nil nil "1"))))
 	  (current-timestamp (time-to-seconds (beeminder-current-time))))
      (list slug-str
 	   value
