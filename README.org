@@ -207,6 +207,11 @@ Since it may happen that you clock out some item when offline, you may
 also place point at a particular clock line and trigger the submission
 manually by =M-x beeminder-org-submit-clock-at-point=.
 
+Note that calling =beeminder-org-submit-clock-at-point= multiple times
+on the same clock line submits it only once.  More precisely, the
+idempotency key is constructed from the start and end times of the
+clock item.
+
 ** Property inheritance
 By default, inheritance is not used for beeminer-related properties.
 However, you can set the

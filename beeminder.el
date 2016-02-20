@@ -490,12 +490,12 @@ successfully submitting a datapoint of 0."
   (save-current-goal
     (ewoc-refresh beeminder-goals-ewoc)))
 
-(defun beeminder-submit-datapoint (slug-str value &optional comment timestamp)
+(defun beeminder-submit-datapoint (slug-str value &optional comment timestamp id)
   "Submit a datapoint to Beeminder goal SLUG-STR with AMOUNT.
 Additional data are COMMENT and TIMESTAMP (as Unix time).  If
 COMMENT is nil, then ask the user for the comment.  If TIMESTAMP
 is nil, assume now.  If PRINT-MESSAGE is non-nil, print suitable
-messages in the echo area.
+messages in the echo area.  If ID is non-nil, use it as requestid.
 
 If called interactively, ask for SLUG-STR (with completion) unless the
 point is on a goal node.  Then, ask for AMOUNT unless the user
@@ -535,6 +535,7 @@ a prefix argument of `-', use previous day as the TIMESTAMP."
 							  slug-str
 							  value
 							  (beeminder-default-comment timestamp))))
+			     (if id (cons "requestid" id))
 			     (cons "timestamp" (format "%s" timestamp)))
 			    (cl-function (lambda (&rest _)
 					   (beeminder-log (format "submitting datapoint of %s for goal %s...done"
@@ -1652,7 +1653,9 @@ This is mainly useful if submitting on clocking out (see
 `beeminder-org-submit-on-clock-out' failed for some reason, so
 that the user may want to submit clock items later."
   (interactive)
-  (let ((duration (org-element-property :duration (org-element-at-point))))
+  (let* ((element (org-element-at-point))
+	 (timestamp (org-element-property :value element))
+	 (duration (org-element-property :duration element)))
     (when (string-match "\\([[:digit:]]+\\):\\([[:digit:]]\\{2\\}\\)" duration)
       (let ((minutes (+ (* 60 (string-to-number (match-string 1 duration)))
 			(string-to-number (match-string 2 duration))))
@@ -1672,9 +1675,22 @@ that the user may want to submit clock items later."
 			  ((hail-Mary hail-Marys)
 			   3)
 					; 1 hail-Mary ≈ 20 seconds
-			  (t 1))))
+			  (t 1)))
+	    (id (format "%04d%02d%02d%02d%02dto%04d%02d%02d%02d%02d"
+			(org-element-property :year-start timestamp)
+			(org-element-property :month-start timestamp)
+			(org-element-property :day-start timestamp)
+			(org-element-property :hour-start timestamp)
+			(org-element-property :minute-start timestamp)
+			(org-element-property :year-end timestamp)
+			(org-element-property :month-end timestamp)
+			(org-element-property :day-end timestamp)
+			(org-element-property :hour-end timestamp)
+			(org-element-property :minute-end timestamp))))
 	(beeminder-submit-datapoint slug-str (* minutes multiplier)
-				    comment)))))
+				    comment
+				    nil
+				    id)))))
 
 (defun beeminder-org-submit-on-clock-out ()
   "Submit the time clocked for this item.
