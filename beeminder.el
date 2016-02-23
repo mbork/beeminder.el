@@ -1171,10 +1171,10 @@ less than PERCENTAGE * day's amount.  Take the variable
     (let* ((rate (beeminder-get-rate goal))
 	   (daily-rate (/ rate
 			  (cl-case (intern (cdr (assoc 'runits goal)))
-			    (y 365)
+			    (y 365.0)
 			    (m (/ 365.0 12))
-			    (w 7)
-			    (d 1)
+			    (w 7.0)
+			    (d 1.0)
 			    (h (/ 1 24.0)))))
 	   (100*donetoday (* 100 (cdr (assoc 'donetoday goal))))
 	   (percentage*daily-rate (* percentage daily-rate)))
