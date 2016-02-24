@@ -806,16 +806,16 @@ deadline."
 	 (minutes (/ (- (cdr (assoc 'losedate goal))
 			(time-to-seconds (beeminder-current-time)))
 		     60)))
-    (message "%s (%d minute%s left, %s to do)"
-	     (replace-regexp-in-string
-	      " \\{2,\\}"
-	      "  "
-	      (beeminder-goal-representation goal))
-	     minutes
-	     (beeminder-plural-ending minutes)
-	     (let ((limsum (cdr (assoc 'limsum goal))))
-	       (string-match "[[:digit:]]+\\(\\.[[:digit:]]*\\)?" limsum)
-	       (match-string 0 limsum)))))
+    (beeminder-log (format "next goal: %s (%d minute%s left, %s to do)"
+			   (replace-regexp-in-string
+			    " \\{2,\\}"
+			    "  "
+			    (beeminder-goal-representation goal))
+			   minutes
+			   (beeminder-plural-ending minutes)
+			   (let ((limsum (cdr (assoc 'limsum goal))))
+			     (string-match "[[:digit:]]+\\(\\.[[:digit:]]*\\)?" limsum)
+			     (match-string 0 limsum))))))
 
 
 ;; Faces for goals
@@ -1075,7 +1075,7 @@ end."
   (interactive)
   (setq beeminder-saved-filters
 	beeminder-current-filters)
-  (message "Current filter setting saved."))
+  (beeminder-log (format "current filter settings %s saved." beeminder-current-filters)))
 
 (defun beeminder-retrieve-filters ()
   "Retrieve saved filters."
@@ -1083,7 +1083,7 @@ end."
   (setq beeminder-current-filters
 	beeminder-saved-filters)
   (beeminder-refresh-goals-list)
-  (message "Filter settings retrieved."))
+  (beeminder-log (format "filter settings %s retrieved." beeminder-current-filters)))
 
 (defun beeminder-clear-filters ()
   "Clear all filters.
@@ -1250,8 +1250,8 @@ less than PERCENTAGE * day's amount.  Take the variable
 	(if next-goal
 	    (ewoc-goto-node beeminder-goals-ewoc next-goal)
 	  (goto-char (point-min)))
-	(message "Goal %s killed (hidden from view)." (cdr (assoc 'slug (ewoc-data gnode)))))
-    (message "Goal already killed.")))
+	(beeminder-log (format "goal %s killed (hidden from view)." (cdr (assoc 'slug (ewoc-data gnode))))))
+    (beeminder-log (format "goal %s already killed." (cdr (assoc 'slug (ewoc-data gnode))))))))
 
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
 (define-key beeminder-filter-map "k" #'beeminder-kill-goal)
@@ -1259,10 +1259,10 @@ less than PERCENTAGE * day's amount.  Take the variable
 (defun beeminder-show-kills ()
   "Show all killed goals."
   (interactive)
-  (message "Killed goals: %s."
-	   (aif (beeminder-alist-get 'killed beeminder-current-filters)
-	       (mapconcat #'symbol-name it ", ")
-	     "none")))
+  (beeminder-log (format "killed goals: %s."
+			 (aif (beeminder-alist-get 'killed beeminder-current-filters)
+			     (mapconcat #'symbol-name it ", ")
+			   "none"))))
 
 (defun beeminder-clear-kills ()
   "Unkill all killed goals."
