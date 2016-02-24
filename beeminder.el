@@ -1251,7 +1251,7 @@ less than PERCENTAGE * day's amount.  Take the variable
 	    (ewoc-goto-node beeminder-goals-ewoc next-goal)
 	  (goto-char (point-min)))
 	(beeminder-log (format "goal %s killed (hidden from view)." (cdr (assoc 'slug (ewoc-data gnode))))))
-    (beeminder-log (format "goal %s already killed." (cdr (assoc 'slug (ewoc-data gnode))))))))
+    (beeminder-log (format "goal %s already killed." (cdr (assoc 'slug (ewoc-data gnode)))))))
 
 (define-key beeminder-mode-map (kbd "C-k") #'beeminder-kill-goal)
 (define-key beeminder-filter-map "k" #'beeminder-kill-goal)
