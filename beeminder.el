@@ -315,11 +315,14 @@ Take `beeminder-when-the-day-ends' into consideration."
 							     (cdr (assoc slug beeminder-dirty-alist))))
 						    (setq beeminder-dirty-alist (assq-delete-all slug beeminder-dirty-alist)))))
 					    goals)
-				      (beeminder-log "fetching goals...done"))))
+				      (beeminder-log "fetching goals...done")
+				      (setq beeminder-reloading-in-progress nil))))
 		     (cl-function (lambda (&key error-thrown &allow-other-keys)
-				    (beeminder-log (format "fetching goals...error: %s" error-thrown))))))))
+				    (beeminder-log (format "fetching goals...error: %s" error-thrown))
+				    (setq beeminder-reloading-in-progress nil)))))))
    (cl-function (lambda (&key error-thrown &allow-other-keys)
-		  (beeminder-log (format "fetching goals...error: %s" error-thrown))))))
+		  (beeminder-log (format "fetching goals...error: %s" error-thrown))
+		  (setq beeminder-reloading-in-progress nil)))))
 
 (defun beeminder-refresh-goal (slug-str)
   "Refresh autodata and graph of the goal named SLUG-STR.
@@ -1043,11 +1046,16 @@ end."
   (save-current-goal
     (beeminder-populate-ewoc)))
 
+(defvar beeminder-reloading-in-progress nil
+  "Non-nil if currently reloading data from the server.")
+
 (defun beeminder-reload-goals-list ()
   "Reload the goals from the server."
   (interactive)
-  (beeminder-get-goals)
-  (beeminder-refresh-goals-list))
+  (if beeminder-reloading-in-progress
+      (beeminder-log "fetching goals already in progress, please wait!")
+    (setq beeminder-reloading-in-progress t)
+    (beeminder-get-goals)))
 
 (define-key beeminder-mode-map (kbd "C-l") #'beeminder-refresh-goals-list)
 (define-key beeminder-mode-map "g" #'beeminder-reload-goals-list)
