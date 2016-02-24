@@ -606,6 +606,7 @@ without any of these levels expire after
 			(:warning " warning")
 			(t ""))))
     (save-excursion
+      (setq message (subst-char-in-string ?\n ?\s message t))
       (set-buffer (get-buffer-create "*Beeminder log*"))
       (beeminder-log-mode)
       (goto-char (point-max))
