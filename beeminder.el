@@ -1663,44 +1663,47 @@ This is mainly useful if submitting on clocking out (see
 `beeminder-org-submit-on-clock-out' failed for some reason, so
 that the user may want to submit clock items later."
   (interactive)
-  (let* ((element (org-element-at-point))
-	 (timestamp (org-element-property :value element))
-	 (duration (org-element-property :duration element)))
-    (when (string-match "\\([[:digit:]]+\\):\\([[:digit:]]\\{2\\}\\)" duration)
-      (let ((minutes (+ (* 60 (string-to-number (match-string 1 duration)))
-			(string-to-number (match-string 2 duration))))
-	    (slug-str (org-entry-get (point)
-				     "slug"
-				     beeminder-org-inherit-beeminder-properties))
-	    (comment (unless (org-entry-get (point)
-					    "ask-comment"
-					    beeminder-org-inherit-beeminder-properties)
-		       (concat "via Org-mode at " (beeminder-current-time-hmsz-string))))
-	    (multiplier (cl-case (intern (or (org-entry-get (point)
-							    "unit"
-							    beeminder-org-inherit-beeminder-properties)
-					     ""))
-			  ((hour hours)
-			   (/ 1 60.0))
-			  ((hail-Mary hail-Marys)
-			   3)
+  (let ((element (org-element-at-point)))
+    (if (eq (org-element-type element) 'clock)
+	(let ((timestamp (org-element-property :value element))
+	      (duration (org-element-property :duration element)))
+	  (when (string-match "\\([[:digit:]]+\\):\\([[:digit:]]\\{2\\}\\)" duration)
+	    (let ((minutes (+ (* 60 (string-to-number (match-string 1 duration)))
+			      (string-to-number (match-string 2 duration))))
+		  (slug-str (org-entry-get (point)
+					   "slug"
+					   beeminder-org-inherit-beeminder-properties))
+		  (comment (unless (org-entry-get (point)
+						  "ask-comment"
+						  beeminder-org-inherit-beeminder-properties)
+			     (concat "via Org-mode at " (beeminder-current-time-hmsz-string))))
+		  (multiplier (cl-case (intern (or (org-entry-get (point)
+								  "unit"
+								  beeminder-org-inherit-beeminder-properties)
+						   ""))
+				((hour hours)
+				 (/ 1 60.0))
+				((hail-Mary hail-Marys)
+				 3)
 					; 1 hail-Mary ≈ 20 seconds
-			  (t 1)))
-	    (id (format "%04d%02d%02d%02d%02dto%04d%02d%02d%02d%02d"
-			(org-element-property :year-start timestamp)
-			(org-element-property :month-start timestamp)
-			(org-element-property :day-start timestamp)
-			(org-element-property :hour-start timestamp)
-			(org-element-property :minute-start timestamp)
-			(org-element-property :year-end timestamp)
-			(org-element-property :month-end timestamp)
-			(org-element-property :day-end timestamp)
-			(org-element-property :hour-end timestamp)
-			(org-element-property :minute-end timestamp))))
-	(beeminder-submit-datapoint slug-str (* minutes multiplier)
-				    comment
-				    nil
-				    id)))))
+				(t 1)))
+		  (id (format "%04d%02d%02d%02d%02dto%04d%02d%02d%02d%02d"
+			      (org-element-property :year-start timestamp)
+			      (org-element-property :month-start timestamp)
+			      (org-element-property :day-start timestamp)
+			      (org-element-property :hour-start timestamp)
+			      (org-element-property :minute-start timestamp)
+			      (org-element-property :year-end timestamp)
+			      (org-element-property :month-end timestamp)
+			      (org-element-property :day-end timestamp)
+			      (org-element-property :hour-end timestamp)
+			      (org-element-property :minute-end timestamp))))
+	      (beeminder-submit-datapoint slug-str (* minutes multiplier)
+					  comment
+					  nil
+					  id))))
+      (beeminder-log "no clock at point!" :nolog))))
+
 
 (defun beeminder-org-submit-on-clock-out ()
   "Submit the time clocked for this item.
