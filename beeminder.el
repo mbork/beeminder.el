@@ -598,20 +598,21 @@ TODO: not yet implemented."
 
 (defun beeminder-log (message &optional level)
   "Put MESSAGE into the log and possibly into the notification
-area.  LEVEL can be `:error', `:warning' or `:logonly'.  Messages
-without any of these levels expire after
+area.  LEVEL can be `:error', `:warning', `:logonly' or `:nolog'.
+Messages without any of these levels expire after
 `beeminder-notification-expire-time' seconds."
   (let ((level-string (cl-case level
 			(:error " error")
 			(:warning " warning")
 			(t ""))))
-    (save-excursion
-      (setq message (subst-char-in-string ?\n ?\s message t))
-      (set-buffer (get-buffer-create "*Beeminder log*"))
-      (beeminder-log-mode)
-      (goto-char (point-max))
-      (let ((inhibit-read-only t))
-	(insert (current-time-string) level-string ":    " message "\n")))
+    (unless (eq level :nolog)
+      (save-excursion
+	(setq message (subst-char-in-string ?\n ?\s message t))
+	(set-buffer (get-buffer-create "*Beeminder log*"))
+	(beeminder-log-mode)
+	(goto-char (point-max))
+	(let ((inhibit-read-only t))
+	  (insert (current-time-string) level-string ":    " message "\n"))))
     (unless (eq level :logonly)
       (message "Beeminder%s: %s"
 	       level-string
