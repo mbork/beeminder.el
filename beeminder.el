@@ -1704,6 +1704,29 @@ that the user may want to submit clock items later."
 					  id))))
       (beeminder-log "no clock at point!" :nolog))))
 
+(defun beeminder-org-submit-all-clocks (begin end)
+  "Submit all clocks in the region to Beeminder.
+In interactive use, use region if active and current subtree
+otherwise.  Use with caution!"
+  (interactive (if (use-region-p)
+		   (list (region-beginning)
+			 (region-end))
+		 (list nil nil)))
+  (save-excursion
+    (save-restriction
+      (narrow-to-region
+       (or begin (progn (org-back-to-heading t)
+			(point)))
+       (or end (progn (org-end-of-subtree t t)
+		      (when (and (org-at-heading-p) ; see org-narrow-to-subtree
+				 (not (eobp)))
+			(backward-char 1))
+		      (point))))
+      (goto-char (point-min))
+      (while (re-search-forward "^CLOCK: " nil t)
+	(if (eq (org-element-type (org-element-at-point))
+		'clock)
+	    (beeminder-org-submit-clock-at-point))))))
 
 (defun beeminder-org-submit-on-clock-out ()
   "Submit the time clocked for this item.
