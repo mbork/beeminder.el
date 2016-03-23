@@ -61,3 +61,6 @@ so that it does not depend on =last-command-event=
 - State "DONE"       from "TODO"       [2016-02-11 czw 22:54]
 :END:
 * TODO Make beeminder-human-time work with the past
+* TODO Displaying graphs
+* TODO Road editing
+* TODO Dynamically loading past data
