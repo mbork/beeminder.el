@@ -1704,14 +1704,22 @@ that the user may want to submit clock items later."
 					  id))))
       (beeminder-log "no clock at point!" :nolog))))
 
-(defun beeminder-org-submit-all-clocks (begin end)
-  "Submit all clocks in the region to Beeminder.
+(defcustom beeminder-org-submit-all-clocks-default-minutes (* 24 60)
+  "By default, only the clocks from this many lastminutes will be
+submitted by `beeminder-org-submit-all-clocks'.  Does not have to
+be an integer (i.e., value like 0.5 means 30 seconds).")
+
+(defun beeminder-org-submit-all-clocks (begin end minutes)
+  "Submit all clocks from last MINUTES in the region to Beeminder.
 In interactive use, use region if active and current subtree
 otherwise.  Use with caution!"
   (interactive (if (use-region-p)
 		   (list (region-beginning)
-			 (region-end))
-		 (list nil nil)))
+			 (region-end)
+			 current-prefix-arg)
+		 (list nil nil current-prefix-arg)))
+  (unless (numberp minutes)
+    (setq minutes beeminder-org-submit-all-clocks-default-minutes))
   (save-excursion
     (save-restriction
       (narrow-to-region
@@ -1723,10 +1731,23 @@ otherwise.  Use with caution!"
 			(backward-char 1))
 		      (point))))
       (goto-char (point-min))
-      (while (re-search-forward "^CLOCK: " nil t)
-	(if (eq (org-element-type (org-element-at-point))
-		'clock)
-	    (beeminder-org-submit-clock-at-point))))))
+      (while (re-search-forward "CLOCK: " nil t)
+	(let ((eap (org-element-at-point)))
+	  (when (and (eq (org-element-type eap)
+			 'clock)
+		     (eq (org-element-property :status eap)
+			 'closed))
+	    (let ((ts (org-element-property :value eap)))
+	      (when (< (time-to-seconds
+			(time-subtract (beeminder-current-time)
+				       (encode-time 0
+						    (org-element-property :minute-end ts)
+						    (org-element-property :hour-end ts)
+						    (org-element-property :day-end ts)
+						    (org-element-property :month-end ts)
+						    (org-element-property :year-end ts))))
+		       (* 60 minutes))
+		(beeminder-org-submit-clock-at-point)))))))))
 
 (defun beeminder-org-submit-on-clock-out ()
   "Submit the time clocked for this item.
