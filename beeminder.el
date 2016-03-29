@@ -1515,6 +1515,9 @@ exists and is set up properly."
      beeminder-detailed-goal))
   (goto-char (point-min)))
 
+(defvar beeminder-detailed-goal nil
+  "The current goal in the details buffer.")
+
 (defun beeminder-display-goal-details (goal)
   "Display details about GOAL in a temporary buffer."
   (interactive (list (current-or-read-goal)))
