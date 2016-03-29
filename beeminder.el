@@ -1332,7 +1332,9 @@ Disable FILTER if PARAMETER is nil."
 ;; Displaying goal details
 
 (defcustom beeminder-goal-template-fields-alist
-  '((backburnerp . (if (string= (cdr (assoc 'burner goal)) "backburner") "(backburner)" ""))
+  '((slug . (propertize (symbol-name (beeminder-get-slug goal)) 'face (beeminder-goal-face goal)))
+    (limsum . (propertize (cdr (assoc 'limsum goal)) 'face (beeminder-goal-face goal)))
+    (backburnerp . (if (string= (cdr (assoc 'burner goal)) "backburner") "(backburner)" ""))
     (username . beeminder-username)
     (dirtyp . (if (assoc (beeminder-get-slug goal) beeminder-dirty-alist)
 		  (propertize " (goal dirty!)" 'face 'beeminder-dirty) ""))
