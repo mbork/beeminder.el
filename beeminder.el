@@ -1623,6 +1623,19 @@ line."
 
 (define-key beeminder-goal-mode-map (kbd "e") #'beeminder-edit-datapoint)
 
+(defun beeminder-display-raw-goal-details ()
+  "Display the raw details about GOAL in a temporary buffer.
+The internal representation is an alist."
+  (interactive)
+  (let ((goal beeminder-detailed-goal))
+    (pop-to-buffer "*Beeminder raw goal details*")
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (insert (pp-to-string goal))
+      (goto-char (point-min)))))
+
+(define-key beeminder-goal-mode-map (kbd ".") #'beeminder-display-raw-goal-details)
+
 
 ;; Org-mode integration
 
