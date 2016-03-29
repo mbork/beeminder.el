@@ -101,7 +101,7 @@ two of them, you can put this in your =init.el=:
 You can disable all filters with =f c=.  (This also saves the current
 filters if no filter settings were saved previously.)  Alternatively,
 you can disable a particular filter with =- KEY= (that is, minus sign
-and the key which enables that goal).
+and the key which enables that filter).
 
 * Submitting datapoints
 Move the point to a goal and press =RET= to submit a datapoint.  If
