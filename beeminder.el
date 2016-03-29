@@ -1452,7 +1452,7 @@ in particular the history of datapoints.")
 (define-key beeminder-goal-mode-map (kbd "n") #'beeminder-next-datapoint)
 (define-key beeminder-goal-mode-map (kbd "p") #'beeminder-previous-datapoint)
 
-(defface subtle-highlight '((t :foreground "#006600"))
+(defface subtle-highlight '((t :foreground "#004400"))
   "Face for subtly highlighting things.")
 
 (defun highlight-subtly (string)
