@@ -213,17 +213,26 @@ Since it may happen that you clock out some item when offline, you may
 also place point at a particular clock line and trigger the submission
 manually by =M-x beeminder-org-submit-clock-at-point=.
 
+If you clocked more items while you were offline, you may find the
+command =M-x beeminder-org-submit-all-clocks= useful.  It submits all
+clocks in the region (if the region is active) or in the current
+subtree otherwise.  For performance reasons, it submits only clocks
+that ended less than =beeminder-org-submit-all-clocks-default-minutes=
+minutes ago (by default $24\cdot 60=1440$ minutes).  This value can be
+also changed using a numeric prefix argument.
+
 Note that calling =beeminder-org-submit-clock-at-point= multiple times
 on the same clock line submits it only once.  More precisely, the
 idempotency key is constructed from the start and end times of the
 clock item.
 
-** Property inheritance
-By default, inheritance is not used for beeminer-related properties.
-However, you can set the
-
 * Planned features
-- More sorting/filtering options (per request)
+- More sorting/filtering options (per request).
+- Displaying goal graphs.
+- Visiting the current goal's webpage.
+- Loading more datapoints for selected goal.
+- More statistics for a goal.
+- Road editing (much less likely to be done).
 
 * Bug reports/feature requests
 Feel free to send bug reports and/or feature requests to me.
