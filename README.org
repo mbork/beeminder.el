@@ -218,7 +218,7 @@ command =M-x beeminder-org-submit-all-clocks= useful.  It submits all
 clocks in the region (if the region is active) or in the current
 subtree otherwise.  For performance reasons, it submits only clocks
 that ended less than =beeminder-org-submit-all-clocks-default-minutes=
-minutes ago (by default $24\cdot 60=1440$ minutes).  This value can be
+minutes ago (by default 24 · 60 = 1440 minutes).  This value can be
 also changed using a numeric prefix argument.
 
 Note that calling =beeminder-org-submit-clock-at-point= multiple times
