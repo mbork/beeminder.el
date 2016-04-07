@@ -250,6 +250,16 @@ Take `beeminder-when-the-day-ends' into consideration."
 (defcustom beeminder-history-length 7
   "Number of days from which to load datapoints.")
 
+(defun beeminder-compute-today-value (datapoints last-midnight)
+  "Compute the today's value for DATAPOINTS since LAST-MIDNIGHT."
+  (cl-reduce #'+
+	     (mapcar (lambda (datapoint)
+		       (if (> (cdr (assoc 'timestamp datapoint))
+			      last-midnight)
+			   (cdr (assoc 'value datapoint))
+			 0))
+		     datapoints)))
+
 (defun beeminder-get-goals ()
   "Get all the user's Beeminder goals and put them in the
 `beeminder-goals' variable."
@@ -288,13 +298,7 @@ Take `beeminder-when-the-day-ends' into consideration."
 											    (beeminder-current-time))
 								      (last-user-midnight (beeminder-current-time)))))
 						 (cons (car goal)
-						       (cl-reduce #'+
-								  (mapcar (lambda (datapoint)
-									    (if (> (cdr (assoc 'timestamp datapoint))
-										   last-midnight)
-										(cdr (assoc 'value datapoint))
-									      0))
-									  (cdr goal))))))
+						       (beeminder-compute-today-value (cdr goal) last-midnight))))
 					     datapoints)))
 				      (setq beeminder-goals (mapcar
 							     (lambda (goal)
