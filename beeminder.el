@@ -250,12 +250,13 @@ Take `beeminder-when-the-day-ends' into consideration."
 (defcustom beeminder-history-length 7
   "Number of days from which to load datapoints.")
 
-(defun beeminder-compute-today-value (datapoints last-midnight)
-  "Compute the today's value for DATAPOINTS since LAST-MIDNIGHT."
+(defun beeminder-sum-today-value (datapoints start-time stop-time)
+  "Sum the value for DATAPOINTS between START-TIME and STOP-TIME."
   (cl-reduce #'+
 	     (mapcar (lambda (datapoint)
-		       (if (> (cdr (assoc 'timestamp datapoint))
-			      last-midnight)
+		       (if (< start-time
+			      (cdr (assoc 'timestamp datapoint))
+			      stop-time)
 			   (cdr (assoc 'value datapoint))
 			 0))
 		     datapoints)))
@@ -269,13 +270,14 @@ Take `beeminder-when-the-day-ends' into consideration."
    ()
    (cl-function (lambda (&key data &allow-other-keys)
 		  (beeminder-log "fetching goals.......")
-		  (let ((goals (append data nil)))
+		  (let ((goals (append data nil))
+			(now (beeminder-current-time)))
 		    (beeminder-request-get
 		     ".json"
 		     (list
 		      (cons "diff_since"
 			    (number-to-string
-			     (- (last-user-midnight (beeminder-current-time))
+			     (- (last-user-midnight now)
 				(* beeminder-history-length 24 60 60)))))
 		     (cl-function (lambda (&key data &allow-other-keys)
 				    (let* ((datapoints ; datapoints alone
@@ -295,10 +297,10 @@ Take `beeminder-when-the-day-ends' into consideration."
 					     (lambda (goal)
 					       (let ((last-midnight (if beeminder-use-goal-midnight-today-values
 									(last-goal-midnight (cdr (assoc (car goal) deadlines))
-											    (beeminder-current-time))
-								      (last-user-midnight (beeminder-current-time)))))
+											    now)
+								      (last-user-midnight now))))
 						 (cons (car goal)
-						       (beeminder-compute-today-value (cdr goal) last-midnight))))
+						       (beeminder-sum-today-value (cdr goal) last-midnight (time-to-seconds now)))))
 					     datapoints)))
 				      (setq beeminder-goals (mapcar
 							     (lambda (goal)
