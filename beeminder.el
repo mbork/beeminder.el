@@ -275,7 +275,7 @@ Take `beeminder-when-the-day-ends' into consideration."
 		     (list
 		      (cons "diff_since"
 			    (number-to-string
-			     (- (time-to-seconds (beeminder-current-time))
+			     (- (last-user-midnight (beeminder-current-time))
 				(* beeminder-history-length 24 60 60)))))
 		     (cl-function (lambda (&key data &allow-other-keys)
 				    (let* ((datapoints ; datapoints alone
