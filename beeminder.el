@@ -1643,6 +1643,30 @@ The internal representation is an alist."
 (define-key beeminder-goal-mode-map (kbd ".") #'beeminder-display-raw-goal-details)
 
 
+;; Displaying graphs
+(defun beeminder-download-graph (slug-str)
+  "Download graph for goal SLUG and put it in the tmp directory,
+under the \"beeminder-el\" subdirectory.  The filename is
+\"SLUG.png\"."
+  (interactive (list (cdr (assoc 'slug (current-or-read-goal)))))
+  (make-directory (concat temporary-file-directory "beeminder-el") t)
+  (let* ((image-file (concat temporary-file-directory "beeminder-el/" slug-str ".png"))
+	 (image (create-image image-file)))
+    (let ((inhibit-message t))
+      (url-copy-file (alist-get 'graph_url (beeminder-slug-to-goal (intern slug-str)))
+		     image-file
+		     t))
+    (beeminder-display-goal-details (beeminder-slug-to-goal (intern slug-str)))
+    (goto-char (point-max))
+    (save-excursion
+      (let ((inhibit-read-only t))
+	(insert-image image)))
+    (let* ((size (image-size image))
+	   (width (ceiling (car size)))
+	   (height (ceiling (cdr size))))
+      (fit-window-to-buffer (selected-window) height height width width))
+    (recenter 0)))
+
 ;; Org-mode integration
 
 (defcustom beeminder-org-inherit-beeminder-properties nil
