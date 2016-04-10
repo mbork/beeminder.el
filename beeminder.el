@@ -1656,11 +1656,10 @@ under the \"beeminder-el\" subdirectory.  The filename is
       (url-copy-file (alist-get 'graph_url (beeminder-slug-to-goal (intern slug-str)))
 		     image-file
 		     t))
-    (beeminder-display-goal-details (beeminder-slug-to-goal (intern slug-str)))
-    (goto-char (point-max))
+    (beeminder-display-goal-details (beeminder-slug-to-goal (intern slug-str))) 
     (save-excursion
       (let ((inhibit-read-only t))
-	(insert-image image)))
+	(put-image image (point-max) "[Graphs are not supported in this Emacs!]")))
     (let* ((size (image-size image))
 	   (width (ceiling (car size)))
 	   (height (ceiling (cdr size))))
