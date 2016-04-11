@@ -1638,7 +1638,8 @@ The internal representation is an alist."
     (let ((inhibit-read-only t))
       (erase-buffer)
       (insert (pp-to-string goal))
-      (goto-char (point-min)))))
+      (goto-char (point-min))
+      (special-mode))))
 
 (define-key beeminder-goal-mode-map (kbd ".") #'beeminder-display-raw-goal-details)
 
