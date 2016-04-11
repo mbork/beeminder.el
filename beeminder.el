@@ -1528,6 +1528,7 @@ exists and is set up properly."
   "Display details about GOAL in a temporary buffer."
   (interactive (list (current-or-read-goal)))
   (pop-to-buffer "*Beeminder goal details*")
+  (remove-images (point-min) (point-max))
   (beeminder-goal-mode)
   (setq-local beeminder-detailed-goal goal)
   (beeminder-refresh-goal-details))
@@ -1645,28 +1646,52 @@ The internal representation is an alist."
 
 
 ;; Displaying graphs
+
 (defun beeminder-download-graph (slug-str)
   "Download graph for goal SLUG and put it in the tmp directory,
-under the \"beeminder-el\" subdirectory.  The filename is
-\"SLUG.png\"."
-  (interactive (list (cdr (assoc 'slug (current-or-read-goal)))))
+under the \"beeminder-el\" subdirectory and filename
+\"SLUG.png\".  Return the full filename."
   (make-directory (concat temporary-file-directory "beeminder-el") t)
   (let* ((image-file (concat temporary-file-directory "beeminder-el/" slug-str ".png"))
-	 (image (create-image image-file)))
-    (let ((inhibit-message t))
-      (url-copy-file (alist-get 'graph_url (beeminder-slug-to-goal (intern slug-str)))
-		     image-file
-		     t))
-    (beeminder-display-goal-details (beeminder-slug-to-goal (intern slug-str))) 
-    (save-excursion
-      (let ((inhibit-read-only t))
-	(put-image image (point-max) "[Graphs are not supported in this Emacs!]")))
-    (let* ((size (image-size image))
-	   (width (ceiling (car size)))
-	   (height (ceiling (cdr size))))
-      (fit-window-to-buffer (selected-window) height height width width))
-    (recenter 0)))
+	 (inhibit-message t))
+    (url-copy-file (alist-get 'graph_url (beeminder-slug-to-goal (intern slug-str)))
+		   image-file
+		   t)
+    image-file))
 
+(defun beeminder-insert-graph (image)
+  "Insert IMAGE at end-of-buffer.  Remove any existing images
+first and position the point and window so that the image can be
+seen next."
+  (remove-images (point-min) (point-max))
+  (goto-char (point-max))
+  (let ((inhibit-read-only t))
+    (remove-images (point-min) (point-max))
+    (save-excursion
+      (insert "\n")
+      (put-image image (point-max) "[Graphs are not supported in this Emacs!]")))
+  (let* ((size (image-size image))
+	 (width (ceiling (car size)))
+	 (height (ceiling (cdr size))))
+    (fit-window-to-buffer (selected-window) height height width width))
+  (recenter 0))
+
+(defun beeminder-display-graph (slug-str)
+  "Download the graph of the goal SLUG-STR and display it.
+Switch to the \"details\" buffer first if needed.  Do nothing if
+the graph is already displayed."
+  (interactive (list (if beeminder-detailed-goal
+			 (cdr (assoc 'slug beeminder-detailed-goal))
+		       (cdr (assoc 'slug (current-or-read-goal))))))
+  (let* ((image-file (beeminder-download-graph slug-str))
+	 (image (create-image image-file)))
+    (beeminder-display-goal-details (beeminder-slug-to-goal (intern slug-str))) 
+    (beeminder-insert-graph image)))
+
+(define-key beeminder-goal-mode-map (kbd "i") #'beeminder-display-graph)
+(define-key beeminder-mode-map (kbd "i") #'beeminder-display-graph)
+
+
 ;; Org-mode integration
 
 (defcustom beeminder-org-inherit-beeminder-properties nil
