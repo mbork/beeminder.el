@@ -144,7 +144,13 @@ embed arbitrary s-exps in the template (preceding them also with #).
 
 The option =beeminder-history-length= determines how many datapoints
 are downloaded from the server.  Its default value is 7, which means
-a week's worth of them.
+a week's worth of them.  Pressing =m= downloads more datapoints (with
+a positive prefix argument, it downloads that many more days' worth of
+datapoints; with a negative prefix argument, it downloads datapoints
+from number of days equal to the abolute value of the argument; with
+prefix argument equal to zero, it downloads all datapoints; without
+a prefix argument, it downloads datapoints from
+=beeminder-history-length= more days than displayed currently.)
 
 You can press =q= or =TAB= again to quit the goal details window.
 Pressing =n= and =p= will move you to the next and previous datapoint

@@ -1365,7 +1365,10 @@ Disable FILTER if PARAMETER is nil."
     (pledge . (highlight-subtly (beeminder-display-pledge goal)))
     (midnight . (highlight-subtly (beeminder-display-midnight-setting (cdr (assoc 'deadline goal)))))
     (donetoday . (highlight-subtly (number-to-human-string (cdr (assoc 'donetoday goal)))))
-    (datapoints . (propertize (beeminder-format-datapoints goal) 'face 'shadow)))
+    (datapoints . (propertize (beeminder-format-datapoints goal) 'face
+			      'shadow))
+    (history-length . (highlight-subtly (let ((hl (cdr (assoc 'history-length goal))))
+					  (if (zerop hl) "all" (format "%s" hl))))))
   "Alist of symbols and corresponding pieces of code to evaluate
 and insert the result in the goal details info.")
 
@@ -1503,7 +1506,7 @@ goal target: #target on #goaldate at rate #rate per #runit (currently at #curval
 goal type: #goaltype#autodatap
 safe until #losedate (current pledge: #pledge, left to do: #limsum, midnight setting: #midnight)
 
-Recent datapoints (#(or (beeminder-alist-get 'history-length beeminder-detailed-goal) (symbol-value 'beeminder-history-length)) days):
+Recent datapoints (#history-length days):
 #datapoints
 "
   "The default template for displaying goal details.
@@ -1647,18 +1650,35 @@ The internal representation is an alist."
 
 ;; Downloading more datapoints
 (defun beeminder-download-datapoints (slug-str days)
-  "Download datapoints from last DAYS for goal named SLUG-STR."
+  "Download datapoints from last DAYS for goal named SLUG-STR.
+If called interactively in the *Beeminder goal details* buffer, use
+current goal; otherwise, ask for the goal.  If called without a prefix
+argument, increase the downloaded history by
+`beeminder-history-length' days."
   (interactive (list (if beeminder-detailed-goal
 			 (cdr (assoc 'slug beeminder-detailed-goal))
 		       (cdr (assoc 'slug (current-or-read-goal))))
-		     (prefix-numeric-value current-prefix-arg)))
+		     current-prefix-arg))
+  (setq days
+	(if days
+	    (prefix-numeric-value days)
+	  beeminder-history-length))
+  (setq days
+	(cond ((> days 0)
+	       (+ (cdr (assoc 'history-length (beeminder-slug-to-goal (intern slug-str))))
+		  days))
+	      ((< days 0)
+	       (- days))
+	      (t 0)))
   (beeminder-log (format "fetching datapoints for goal %s..." slug-str))
   (beeminder-request-get (format "/goals/%s.json" slug-str)
-			 (list (cons "datapoints" "true")
-			   (cons "diff_since"
-			    (number-to-string
-			     (- (last-user-midnight (beeminder-current-time))
-				(* days 24 60 60)))))
+			 (cons (cons "datapoints" "true")
+			       (unless (zerop days)
+				 (cons (cons "diff_since"
+					     (number-to-string
+					      (- (last-user-midnight (beeminder-current-time))
+						 (* days 24 60 60))))
+				       nil)))
 			 (cl-function (lambda (&key data &allow-other-keys)
 					(beeminder-log (format "fetching datapoints for goal %s...done" slug-str))
 					(let* ((gl (beeminder-slug-to-goal (intern slug-str)))
@@ -1670,6 +1690,8 @@ The internal representation is an alist."
 					    (beeminder-refresh-goal-details)))))
 			 (cl-function (lambda (&key error-thrown &allow-other-keys)
 					(beeminder-log (format "fetching datapoints for goal %s...error: %s" slug-str error-thrown))))))
+
+(define-key beeminder-goal-mode-map (kbd "m") #'beeminder-download-datapoints)
 
 
 ;; Displaying graphs
