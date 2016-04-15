@@ -1433,7 +1433,7 @@ Warning: this function uses `eval', so evil code in TEMPLATE or
 		      (cond ((symbolp sexp)
 			     (aif (assoc sexp beeminder-goal-template-fields-alist)
 				 (eval (cdr it) `((goal . ,goal) t))
-			       (highlight-subtly (cdr (assoc sexp goal)))))
+			       (highlight-subtly (format "%s" (cdr (assoc sexp goal))))))
 			    (t (eval sexp))))))))
 
 (define-derived-mode beeminder-goal-mode special-mode "Beeminder goal"
