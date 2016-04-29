@@ -214,7 +214,7 @@ Add the necessary details (username and the auth token)."
 
 ;; API calls (currently synchronous only)
 
-(defun last-goal-midnight (goal-deadline now)
+(defun last-goal-midnight (goal-deadline now) ; TODO: maybe refactor using beeminder-determine-date!
   "Return the last \"midnight\" for GOAL-DEADLINE, counting from NOW.
 GOAL-DEADLINE is an offset from real midnight in seconds, NOW is
 a time value."
@@ -232,7 +232,7 @@ a time value."
 	(- last-midnight (* 24 60 60))
       last-midnight)))
 
-(defun last-user-midnight (now)
+(defun last-user-midnight (now) ; TODO: maybe refactor using beeminder-determine-date!
   "Return the last \"midnight\" counting from NOW, as Unix timestamp.
 Take `beeminder-when-the-day-ends' into consideration."
   (let* ((now-decoded (decode-time now))
@@ -1694,6 +1694,35 @@ argument, increase the downloaded history by
 (define-key beeminder-goal-mode-map (kbd "m") #'beeminder-download-datapoints)
 
 
+;; Statistics
+(defun beeminder-determine-date (time day-end)
+  "Return date for TIME, taking DAY-END into account.
+TIME is the number of seconds counted from the beginning of Unix
+epoch; day-end is the offset from midnight in seconds.  The date
+is a string in ISO 8601 basic format (i.e., \"20160417\" for
+April 17, 2016)."
+  (format-time-string "%Y%m%d" (time-subtract time day-end)))
+
+(defun beeminder-gather-datapoints-by-day (goal)
+  "Return an alist of datapoints, collated by date.
+The car of each entry is a string representing the date in ISO
+8601 basic format (i.e., \"20160417\" for April 17, 2016), and
+the cdr is the list of datapoints.  If
+`beeminder-use-goal-midnight-today-values' is nil, use the goal's
+\"midnight\" setting to determine the date; otherwise, use
+`beeminder-when-the-day-ends'."
+  (let ((day-end (if beeminder-use-goal-midnight-today-values
+		     beeminder-when-the-day-ends
+		   (cdr (assoc 'deadline goal))))
+	datapoints-by-day)
+    (mapc (lambda (datapoint)
+	    (let ((date (beeminder-determine-date (cdr (assoc 'timestamp datapoint)) day-end)))
+	      (aif (assoc date datapoints-by-day)
+		  (push datapoint (cdr it))
+		(push (list date datapoint) datapoints-by-day))))
+	  (cdr (assoc 'datapoints goal)))
+    datapoints-by-day))
+
 ;; Displaying graphs
 
 (defun beeminder-download-graph (slug-str)
