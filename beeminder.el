@@ -1723,6 +1723,28 @@ the cdr is the list of datapoints.  If
 	  (cdr (assoc 'datapoints goal)))
     datapoints-by-day))
 
+(defvar beeminder-aggregation-methods
+  '(("sum" . (lambda (dps) (apply #'+ dps)))
+    ("last" . car))
+  "An alist mapping aggregation methods to actual functions."
+  ;; TODO: Currently, only sum and last are supported!
+  )
+
+(defun beeminder-aggregate-values (values aggday)
+  "Aggregate VALUES (from one day) using the AGGDAY method."
+  (funcall (beeminder-alist-get aggday beeminder-aggregation-methods)
+	   values))
+
+(defun beeminder-aggregate-datapoints (datapoints-by-day aggday)
+  "Aggregate DATAPOINTS-BY-DAY using the AGGDAY method."
+  (mapcar (lambda (day-datapoints)
+	    (cons (car day-datapoints)
+		  (beeminder-aggregate-values
+		   (mapcar (lambda (dp) (beeminder-alist-get 'value dp))
+			   (cdr day-datapoints))
+		   aggday)))
+	  datapoints-by-day))
+
 ;; Displaying graphs
 
 (defun beeminder-download-graph (slug-str)
