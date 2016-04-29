@@ -1057,10 +1057,14 @@ end."
 (defvar beeminder-reloading-in-progress nil
   "Non-nil if currently reloading data from the server.")
 
-(defun beeminder-reload-goals-list ()
-  "Reload the goals from the server."
-  (interactive)
-  (if beeminder-reloading-in-progress
+(defun beeminder-reload-goals-list (&optional force)
+  "Reload the goals from the server.
+With a prefix argument, do it even if reloading is in progress
+(this is useful when the `beeminder-reloading-in-progress'
+variable is somehow messed up)."
+  (interactive "P")
+  (if (and beeminder-reloading-in-progress
+	   (not force))
       (beeminder-log "fetching goals already in progress, please wait!")
     (setq beeminder-reloading-in-progress t)
     (beeminder-get-goals)))
