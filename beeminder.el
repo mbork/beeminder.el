@@ -1448,8 +1448,6 @@ Warning: this function uses `eval', so evil code in TEMPLATE or
   "A major mode for a buffer displaying details of a Beeminder goal,
 in particular the history of datapoints.")
 
-(define-key beeminder-goal-mode-map (kbd "TAB") #'quit-window)
-
 (defun beeminder-next-datapoint (count)
   "Move forward COUNT datapoints."
   (interactive "p")
