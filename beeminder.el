@@ -30,7 +30,7 @@
 
 (require 'json)
 (require 'request)
-(if (>= emacs-major-version 25)
+(if (>= emacs-major-version 24)
     (progn
       (require 'cl-lib)
       (require 'anaphora)
@@ -423,7 +423,8 @@ goal slug and return that goal instead."
 (defun beeminder-current-time-hmsz-string (&optional timestamp)
   "Return TIMESTAMP (Unix time) as a string.
 Use current time by default.  Format is hh:mm:ss tz."
-  (let ((decoded-time (decode-time (or (seconds-to-time timestamp)
+  (let ((decoded-time (decode-time (or (when timestamp
+					 (seconds-to-time timestamp))
 				       (beeminder-current-time)))))
     (format "%02d:%02d:%02d %s"
 	    (caddr decoded-time)
