@@ -212,7 +212,7 @@ Add the necessary details (username and the auth token)."
 	    :timeout (or timeout beeminder-default-timeout))))
 
 
-;; API calls (currently synchronous only)
+;; API calls
 
 (defun last-goal-midnight (goal-deadline now) ; TODO: maybe refactor using beeminder-determine-date!
   "Return the last \"midnight\" for GOAL-DEADLINE, counting from NOW.
@@ -1653,7 +1653,7 @@ The internal representation is an alist."
 
 ;; Downloading more datapoints
 (defun beeminder-download-datapoints (slug-str days)
-  "Download datapoints from last DAYS for goal named SLUG-STR.
+  "Download datapoints for goal named SLUG-STR from last DAYS.
 If called interactively in the *Beeminder goal details* buffer, use
 current goal; otherwise, ask for the goal.  If called without a prefix
 argument, increase the downloaded history by
@@ -1747,6 +1747,7 @@ the cdr is the list of datapoints.  If
 			   (cdr day-datapoints))
 		   aggday)))
 	  datapoints-by-day))
+
 
 ;; Displaying graphs
 
