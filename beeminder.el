@@ -1736,12 +1736,65 @@ the cdr is the list of datapoints.  If
 	  (cdr (assoc 'datapoints goal)))
     datapoints-by-day))
 
+;; (defun beeminder-gather-datapoints-by-day (goal)
+;;   "Return an alist of datapoints, collated by date.
+;; The car of each entry is a string representing the date in ISO
+;; 8601 basic format (i.e., \"20160417\" for April 17, 2016), and
+;; the cdr is the list of datapoints.  If
+;; `beeminder-use-goal-midnight-today-values' is nil, use the goal's
+;; \"midnight\" setting to determine the date; otherwise, use
+;; `beeminder-when-the-day-ends'."
+;;   (let ((day-end (if beeminder-use-goal-midnight-today-values
+;; 		     beeminder-when-the-day-ends
+;; 		   (cdr (assoc 'deadline goal))))
+;; 	datapoints-by-day)
+;;     (mapc (lambda (datapoint)
+;; 	    (let ((date (beeminder-determine-date (cdr (assoc 'timestamp datapoint)) day-end)))
+;; 	      (aif (assoc date datapoints-by-day)
+;; 		  (push datapoint (cdr it))
+;; 		(push (list date datapoint) datapoints-by-day))))
+;; 	  (cdr (assoc 'datapoints goal)))
+;;     datapoints-by-day))
+
+(defun beeminder-uniq-mean (list)
+  "Return the mean of numbers in LIST after deleting
+  duplicates."
+  (let ((list list))
+	(/ (apply #'+ (delete-dups list))
+	   (length list)
+	   1.0)))
+
+(defun beeminder-median (list)
+  "Return a median of numbers in LIST.
+If LIST contains an even number of elements n, return
+the (n/2)-th one."
+  (let ((list list) median-list)
+    (setq list (sort list #'<)
+	  median-list list)
+    (while (cddr list)
+      (setq median-list (cdr median-list)
+	    list (cddr list)))
+    (if (cdr list)
+	(* 0.5 (+ (car median-list) (cadr median-list)))
+      (car median-list))))
+
 (defvar beeminder-aggregation-methods
   '(("sum" . (lambda (dps) (apply #'+ dps)))
-    ("last" . car))
-  "An alist mapping aggregation methods to actual functions."
-  ;; TODO: Currently, only sum and last are supported!
-  )
+    ("last" . car) ; this is no mistake - the list is in reverse order!
+    ("first" . (lambda (dps) (car (last dps))))
+    ("min" . (lambda (dps) (apply #'min dps)))
+    ("max" . (lambda (dps) (apply #'max dps)))
+    ("truemean" . (lambda (dps) (/ (apply #'+ dps) (length dps) 1.0)))
+    ("uniqmean" . beeminder-uniq-mean)
+    ("mean" . beeminder-uniq-mean)
+    ("median" . beeminder-median)
+    ("jolly" . (lambda (dps) (if dps 1 0)))
+    ("binary" . (lambda (dps) (if dps 1 0)))
+    ("nonzero" . (lambda (dps) (if (cl-some (lambda (dp) (not (= 0 dp))) dps) 1 0)))
+    ("triangle" . (lambda (dps) (let ((sum (apply #'+ dps))) (* sum (1+ sum) 0.5))))
+    ("square" . (lambda (dps) (let ((sum (apply #'+ dps))) (* sum sum))))
+    ("count" . length))
+  "An alist mapping aggregation methods to actual functions.")
 
 (defun beeminder-aggregate-values (values aggday)
   "Aggregate VALUES (from one day) using the AGGDAY method."
