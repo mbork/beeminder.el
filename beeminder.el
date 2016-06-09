@@ -88,8 +88,12 @@ but works in older Emacsen."
 Throw an error if KEY is not in ALIST."
   (let ((pair (assoc key alist)))
     (if pair
-	(incf (cdr pair) increment)
-      (error "Nothing to increment"))))
+		(incf (cdr pair) increment)
+	  (error "Nothing to increment"))))
+
+(defun beeminder-to-list (sequence)
+  "Turn SEQUENCE into a list."
+  (append sequence nil))
 
 
 ;; Settings
@@ -270,7 +274,7 @@ Take `beeminder-when-the-day-ends' into consideration."
    ()
    (cl-function (lambda (&key data &allow-other-keys)
 		  (beeminder-log "fetching goals.......")
-		  (let ((goals (append data nil))
+		  (let ((goals (beeminder-to-list data))
 			(now (beeminder-current-time)))
 		    (beeminder-request-get
 		     ".json"
@@ -1693,7 +1697,7 @@ argument, increase the downloaded history by
 					(let* ((gl (beeminder-slug-to-goal (intern slug-str)))
 					       (dp (assoc 'datapoints gl))
 					       (hl (assoc 'history-length gl)))
-					  (setcdr dp (append (cdr (assoc 'datapoints data)) nil))
+					  (setcdr dp (beeminder-to-list (cdr (assoc 'datapoints data))))
 					  (setcdr hl days)
 					  (when beeminder-detailed-goal
 					    (beeminder-refresh-goal-details)))))
@@ -1707,7 +1711,7 @@ argument, increase the downloaded history by
 (defun beeminder-determine-date (time day-end)
   "Return date for TIME, taking DAY-END into account.
 TIME is the number of seconds counted from the beginning of Unix
-epoch; day-end is the offset from midnight in seconds.  The date
+epoch; DAY-END is the offset from midnight in seconds.  The date
 is a string in ISO 8601 basic format (i.e., \"20160417\" for
 April 17, 2016)."
   (format-time-string "%Y%m%d" (time-subtract time day-end)))
@@ -1764,7 +1768,7 @@ under the \"beeminder-el\" subdirectory and filename
   (make-directory (concat temporary-file-directory "beeminder-el") t)
   (let* ((image-file (concat temporary-file-directory "beeminder-el/" slug-str ".png"))
 	 (inhibit-message t))
-    (url-copy-file (alist-get 'graph_url (beeminder-slug-to-goal (intern slug-str)))
+    (url-copy-file (beeminder-alist-get 'graph_url (beeminder-slug-to-goal (intern slug-str)))
 		   image-file
 		   t)
     image-file))
