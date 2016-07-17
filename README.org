@@ -50,22 +50,23 @@ hide goals which are of no interest for you at the moment.  With
 Emacs, you can.  Filtering commands are located on prefix =f=.
 
 You can filter goals by derailment time (=NUMBER-OF-DAYS f d=, number
-of days defaults to 3) or by how much percent of daily rate you did
-today (=PERCENTAGE f t=, defaults to 100).  What “today” means is
-governed by options =beeminder-when-the-day-ends= (which see) and
-=beeminder-use-goal-midnight-today-values= (which see).  TL;DR: with
-the default setting, “today” is the stretch of time between 6:00am and
-5:59am the next day.  With these options, you can change that hour
-/or/ make the notion of “today” depend on the goal’s “midnight”
-setting.
+of days defaults to 3), by how much time is left to the goal’s
+“midnight” (=HOURS f u=, defaults to 8), or by how much percent of
+daily rate you did today (=PERCENTAGE f t=, defaults to 100).  What
+“today” means is governed by options =beeminder-when-the-day-ends=
+(which see) and =beeminder-use-goal-midnight-today-values= (which
+see).  TL;DR: with the default setting, “today” is the stretch of time
+between 6:00am and 5:59am the next day.  With these options, you can
+change that hour /or/ make the notion of “today” depend on the goal’s
+“midnight” setting.
 
-You can also set a zero or negative argument to both filtering
-commands.  Try it to see what happens; =beeminder.el= tries to do the
-right thing, which is different for both filters.
+You can also set a zero or negative argument to any filtering command.
+Try it to see what happens; =beeminder.el= tries to do the right
+thing for any filter.
 
-(Currently, you can use just =d= and =t= commands for filtering by
-derailment time and percentage of today's work done.  However, this
-may change in the future.)
+(Currently, you can use just =d=, =u= and =t= keybindings for
+filtering by derailment time, urgency and percentage of today's work
+done.  However, this may change in the future.)
 
 You can also “kill” individual goals, i.e., make them invisible, with
 =f k=.  (This is also bound to =C-k= for convenience).  You can

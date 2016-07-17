@@ -1150,6 +1150,11 @@ If nil, use the global midnight defined by
   :type 'integer
   :group 'beeminder)
 
+(defcustom beeminder-default-filter-urgent-hours 8
+  "Default time (in hours) to deadline to consider a goal urgent."
+  :type 'integer
+  :group 'beeminder)
+
 (defcustom beeminder-show-dirty-donetoday t
   "If non-nil, show dirty goals even if they would be normally
   filtered out by the \"donetoday\" filter."
@@ -1223,6 +1228,27 @@ less than PERCENTAGE * day's amount.  Take the variable
 	      (t
 	       (>= 100*donetoday (- percentage*daily-rate))))))))
 
+(defun beeminder-calculate-midnight-offset (seconds)
+  "Add (* 24 60 60) to SECONDS if negative."
+  (if (> seconds 0)
+      seconds
+    (+ (* 24 60 60) seconds)))
+
+(defun beeminder-urgent-p (goal hours)
+  "Return nil if time to deadline for GOAL is > HOURS.
+If HOURS is negative or zero, return nil if time to deadline is
+<= -HOURS."
+  (let* ((deadline (beeminder-calculate-midnight-offset (beeminder-alist-get 'deadline goal)))
+	 (now (decode-time (beeminder-current-time)))
+	 (now-sec (car now))
+	 (now-min (cadr now))
+	 (now-hour (caddr now))
+	 (now-time (+ now-sec (* 60 now-min) (* 3600 now-hour)))
+	 (time-to-deadline (beeminder-calculate-midnight-offset (- deadline now-time))))
+    (if (> hours 0)
+	(<= time-to-deadline (* 3600 hours))
+      (> time-to-deadline (* -3600 hours)))))
+
 (defun beeminder-not-killed-p (goal kill-list)
   "Return nil if GOAL is in the KILL-LIST."
   (not (member (beeminder-get-slug goal) kill-list)))
@@ -1245,6 +1271,14 @@ less than PERCENTAGE * day's amount.  Take the variable
 						       ((zerop donetoday) "=")
 						       (t ">="))
 						 (abs donetoday))))
+			    (urgent ,#'beeminder-urgent-p
+				    ,beeminder-default-filter-urgent-hours
+				    (lambda (hours)
+				      (format (if beeminder-short-header
+						  "u(%s%dh)"
+						"urgent (%s%d hours to deadline)")
+					      (if (> hours 0) "<=" ">")
+					      (abs hours))))
 			    (killed ,#'beeminder-not-killed-p
 				    '()
 				    (lambda (kill-list)
@@ -1349,10 +1383,19 @@ Disable FILTER if PARAMETER is nil."
 			   (beeminder-filter-parameter percentage
 						       beeminder-default-filter-donetoday)))
 
+(defun beeminder-filter-by-urgent (&optional hours)
+  "Filter out goals with time to deadline greater than HOURS."
+  (interactive "P")
+  (beeminder-enable-filter 'urgent
+			   (beeminder-filter-parameter hours
+						       beeminder-default-filter-urgent-hours)))
+
 (define-key beeminder-mode-map (kbd "d") #'beeminder-filter-by-losedate)
 (define-key beeminder-filter-map (kbd "d") #'beeminder-filter-by-losedate)
 (define-key beeminder-mode-map (kbd "t") #'beeminder-filter-by-donetoday)
 (define-key beeminder-filter-map (kbd "t") #'beeminder-filter-by-donetoday)
+(define-key beeminder-mode-map (kbd "u") #'beeminder-filter-by-urgent)
+(define-key beeminder-filter-map (kbd "u") #'beeminder-filter-by-urgent)
 
 
 ;; Displaying goal details
