@@ -173,6 +173,9 @@ Note that editing a datapoint does /not/ mark the goal as dirty; the
 current design of dirtiness makes it rather hard to fix.  Deleting
 a datapoint works properly in this regard.
 
+There is (rather experimental) support for displaying graphs.  Press
+=i= to download and view the graph for the current goal.
+
 * Org-mode integration
 =beeminder.el= supports two kinds of Org-mode integration: submitting
 data on marking items as DONE or on clocking out.  Both use Org
