@@ -1228,13 +1228,13 @@ less than PERCENTAGE * day's amount.  Take the variable
   (not (member (beeminder-get-slug goal) kill-list)))
 
 (defvar beeminder-filters `((losedate ,#'beeminder-days-p
-				  ,beeminder-default-filter-days
-				  (lambda (days)
-				    (format (if beeminder-short-header
-						"d2d(%s%d)"
-					      "days to derailment (%s%d)")
-					    (if (>= days 0) "<=" ">=")
-					    (abs days))))
+				      ,beeminder-default-filter-days
+				      (lambda (days)
+					(format (if beeminder-short-header
+						    "d2d(%s%d)"
+						  "days to derailment (%s%d)")
+						(if (>= days 0) "<=" ">=")
+						(abs days))))
 			    (donetoday ,#'beeminder-donetoday-p
 				       ,beeminder-default-filter-donetoday
 				       (lambda (donetoday)
