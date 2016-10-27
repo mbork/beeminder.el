@@ -1961,10 +1961,20 @@ that the user may want to submit clock items later."
 		   (slug-str (org-entry-get (point)
 					    "slug"
 					    beeminder-org-inherit-beeminder-properties))
-		   (comment (unless (org-entry-get (point)
-						   "ask-comment"
-						   beeminder-org-inherit-beeminder-properties)
-			      (concat "via Org-mode at " (beeminder-current-time-hmsz-string))))
+		   (comment (let ((comment-prop (org-entry-get (point)
+							       "comment"
+							       beeminder-org-inherit-beeminder-properties)))
+			      (cond
+			       ((string= comment-prop "time")
+				(concat "via Org-mode at " (beeminder-current-time-hmsz-string)))
+			       ((string= comment-prop "ask")
+				nil)
+			       ((or (string= comment-prop "headline")
+				    (null comment-prop))
+				(substring-no-properties (org-get-heading t t)))
+			       ((string= comment-prop "path")
+				(mapconcat #'identity (org-get-outline-path t) "/"))
+			       (t comment-prop))))
 		   (multiplier (cl-case (intern (or (org-entry-get (point)
 								   "unit"
 								   beeminder-org-inherit-beeminder-properties)

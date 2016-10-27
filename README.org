@@ -196,9 +196,13 @@ property inheritance on for Beeminder-related stuff.  (This is
 probably most useful for clocking subtasks.)
 
 If for some reason you want to confirm the submitting each time, you
-may set the =ask-comment= property to anything non-nil (basically,
-this means that it is enough for it to be /present/, since its value
-is the empty string then).
+may set the =comment= property to =ask=.  Then, you will be asked for
+a comment each time.  Other possible values for the =comment= property
+are: =time= (you will get a comment of the form =via Org mode at
+<time>=), =headline= (which is also the default when no =comment=
+property is present), which uses the headline as the comment, =path=,
+which uses the headline together with the whole path, and any other
+string, which is then used as a comment.
 
 ** Marking items as DONE
 Marking an Org heading as DONE can automatically submit a Beeminder
