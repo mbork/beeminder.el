@@ -429,17 +429,14 @@ goal slug and return that goal instead."
 	 (beeminder-read-slug default)))
     (ewoc-data (ewoc-locate beeminder-goals-ewoc))))
 
-(defun beeminder-current-time-hmsz-string (&optional timestamp)
+(defcustom beeminder-time-format "%FT%T%z"
+  "Default time format for Beeminder comments.")
+
+(defun beeminder-current-time-string (&optional timestamp)
   "Return TIMESTAMP (Unix time) as a string.
 Use current time by default.  Format is hh:mm:ss tz."
-  (let ((decoded-time (decode-time (or (when timestamp
-					 (seconds-to-time timestamp))
-				       (beeminder-current-time)))))
-    (format "%02d:%02d:%02d %s"
-	    (caddr decoded-time)
-	    (cadr decoded-time)
-	    (car decoded-time)
-	    (cadr (current-time-zone (apply #'encode-time decoded-time))))))
+  (format-time-string beeminder-time-format
+		      (or timestamp (beeminder-current-time))))
 
 (defvar beeminder-dirty-alist '()
   "Alist of slugs and \"curval\" values of changed goals.
@@ -476,7 +473,7 @@ If `org-read-date' is present, use that; if not, fall back to
   "Generate the default comment for the given TIMESTAMP."
   (concat
    "via Emacs at "
-   (beeminder-current-time-hmsz-string timestamp)))
+   (beeminder-current-time-string timestamp)))
 
 (defun beeminder-ask-for-comment (slug-str amount &optional default-comment)
   "Ask the user for the comment for the goal named SLUG-STR.
@@ -1942,7 +1939,7 @@ property (asks for the comment if it is present)."
 	       (comment (unless (org-entry-get position
 					       "ask-comment"
 					       beeminder-org-inherit-beeminder-properties)
-			  (concat "via Org-mode at " (beeminder-current-time-hmsz-string)))))
+			  (concat "via Org-mode at " (beeminder-current-time-string)))))
 	  (beeminder-submit-datapoint slug-str amount comment)))))
 
 (defun beeminder-org-submit-clock-at-point ()
@@ -1966,7 +1963,7 @@ that the user may want to submit clock items later."
 							       beeminder-org-inherit-beeminder-properties)))
 			      (cond
 			       ((string= comment-prop "time")
-				(concat "via Org-mode at " (beeminder-current-time-hmsz-string)))
+				(concat "via Org-mode at " (beeminder-current-time-string)))
 			       ((string= comment-prop "ask")
 				nil)
 			       ((or (string= comment-prop "headline")
