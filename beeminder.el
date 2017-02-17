@@ -1098,7 +1098,7 @@ variable is somehow messed up)."
   "Save the current filters."
   (interactive)
   (setq beeminder-saved-filters
-	beeminder-current-filters)
+	(copy-alist beeminder-current-filters))
   (beeminder-log (format "current filter settings %s saved." beeminder-current-filters)))
 
 (defun beeminder-retrieve-filters ()
