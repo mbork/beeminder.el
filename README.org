@@ -199,10 +199,13 @@ If for some reason you want to confirm the submitting each time, you
 may set the =comment= property to =ask=.  Then, you will be asked for
 a comment each time.  Other possible values for the =comment= property
 are: =time= (you will get a comment of the form =via Org mode at
-<time>=), =headline= (which is also the default when no =comment=
-property is present), which uses the headline as the comment, =path=,
+<time>=), =headline=, which uses the headline as the comment, =path=,
 which uses the headline together with the whole path, and any other
-string, which is then used as a comment.
+string, which is then used as a comment.  In the latter case, you can
+use a few special markers in that string: =%t= (ISO-8601 timestamp),
+=%h= (headline), =%p= (headline with the path), =%%= (literal “%”
+sign).  In the case of the absence of the =comment= property,
+=beeminder-org-default-comment= is used.
 
 ** Marking items as DONE
 Marking an Org heading as DONE can automatically submit a Beeminder
