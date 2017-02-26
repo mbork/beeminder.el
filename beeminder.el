@@ -1105,7 +1105,7 @@ variable is somehow messed up)."
   "Retrieve saved filters."
   (interactive)
   (setq beeminder-current-filters
-	beeminder-saved-filters)
+	(copy-alist beeminder-saved-filters))
   (beeminder-refresh-goals-list)
   (beeminder-log (format "filter settings %s retrieved." beeminder-current-filters)))
 
