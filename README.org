@@ -177,6 +177,8 @@ a datapoint works properly in this regard.
 There is (rather experimental) support for displaying graphs.  Press
 =i= to download and view the graph for the current goal.
 
+Pressing =W= opens the current goal in a browser.
+
 * Org-mode integration
 =beeminder.el= supports two kinds of Org-mode integration: submitting
 data on marking items as DONE or on clocking out.  Both use Org
@@ -246,7 +248,6 @@ clock item.
 * Planned features
 - More sorting/filtering options (per request).
 - Displaying goal graphs.
-- Visiting the current goal's webpage.
 - Loading more datapoints for selected goal.
 - More statistics for a goal.
 - Road editing (much less likely to be done).

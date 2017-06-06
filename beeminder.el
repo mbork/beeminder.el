@@ -1705,6 +1705,14 @@ The internal representation is an alist."
 
 (define-key beeminder-goal-mode-map (kbd ".") #'beeminder-display-raw-goal-details)
 
+(defun beeminder-view-in-browser (goal)
+  "View GOAL in the web browser."
+  (interactive (list (or beeminder-detailed-goal (current-or-read-goal))))
+  (browse-url (format "https://beeminder.com/%s/%s" beeminder-username (beeminder-alist-get 'slug goal))))
+
+(define-key beeminder-mode-map (kbd "W") #'beeminder-view-in-browser)
+(define-key beeminder-mode-goal-map (kbd "W") #'beeminder-view-in-browser)
+
 
 ;; Downloading more datapoints
 (defun beeminder-download-datapoints (slug-str days)
