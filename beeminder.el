@@ -1711,7 +1711,7 @@ The internal representation is an alist."
   (browse-url (format "https://beeminder.com/%s/%s" beeminder-username (beeminder-alist-get 'slug goal))))
 
 (define-key beeminder-mode-map (kbd "W") #'beeminder-view-in-browser)
-(define-key beeminder-mode-goal-map (kbd "W") #'beeminder-view-in-browser)
+(define-key beeminder-goal-mode-map (kbd "W") #'beeminder-view-in-browser)
 
 
 ;; Downloading more datapoints
