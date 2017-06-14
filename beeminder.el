@@ -1440,7 +1440,7 @@ and insert the result in the goal details info.")
   '((beeminder-display-string-field id 25 t)
     (beeminder-display-time-field timestamp)
     "  "
-    (beeminder-display-string-field value 4)
+    (beeminder-display-string-field value 8)
     "  "
     (beeminder-display-string-field comment))
   "The format for displaying a goal's datapoint.
