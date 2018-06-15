@@ -4,7 +4,7 @@
 
 ;; Author: Marcin Borkowski <mbork@mbork.pl>
 ;; Keywords: calendar
-;; Package-Requires: ((request "0.2.0"))
+;; Package-Requires: ((request "0.2.0") (anaphora "1.0.0"))
 
 ;; This file is NOT part of GNU Emacs.
 

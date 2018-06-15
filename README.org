@@ -28,6 +28,9 @@ https://www.beeminder.com/api/v1/auth_token.json to retrieve it.)  The
 option =beeminder-goal-pp-format= is responsible for how each goal is
 displayed; customize it to change the look of the list.
 
+You need to install packages =request= and =anaphora= (e.g. using the
+built-in Emacs package manager) in order to use =beeminder.el=.
+
 * Usage
 The entry point is =M-x beeminder-list-goals=.  After a while, you
 should see your goals.  Press =h= to see what’s available.  Refresh
