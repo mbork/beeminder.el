@@ -312,9 +312,10 @@ Take `beeminder-when-the-day-ends' into consideration."
 									    (append (list (cons 'datapoints
 												(cdr (assoc slug-str datapoints)))
 											  (cons 'donetoday
-												(cdr (assoc
-												      (cdr (assoc 'slug goal))
-												      today-values)))
+												(or (cdr (assoc
+													  (cdr (assoc 'slug goal))
+													  today-values))
+												    0))
 											  (cons 'history-length beeminder-history-length))
 										    goal))))
 					(setq beeminder-goals (mapcar #'beeminder-join-goal-data goals))
