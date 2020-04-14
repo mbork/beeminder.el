@@ -37,6 +37,7 @@
       (defalias 'increasingp '<))
   (require 'cl)
   (defalias 'cl-reduce 'reduce)
+  (defalias 'cl-acons 'acons)
   (defalias 'cl-find 'find)
   (defalias 'cl-incf 'incf)
   (defalias 'cl-decf 'decf)
@@ -81,7 +82,7 @@ but works in older Emacsen."
   (let ((pair (assoc key (symbol-value alist))))
     (if pair
 	(setcdr pair value)
-      (set alist (acons key value (symbol-value alist))))))
+      (set alist (cl-acons key value (symbol-value alist))))))
 
 (defun beeminder-inc-alist-value (key alist increment)
   "Increment the value corresponding to KEY in ALIST by INCREMENT.
