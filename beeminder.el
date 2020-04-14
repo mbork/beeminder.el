@@ -729,11 +729,15 @@ Midnight is treated as belonging to the previous day, not the following one."
   '((-2 . beeminder-red) (-1 . beeminder-yellow) (1 . beeminder-blue) (2 . beeminder-green))
   "Alist mapping the (normalized) value of lane to goal colors.")
 
-(defun beeminder-normalize-lane (lane-number)
+(defun beeminder-safebuf-to-lane (safebuf)
   "Normalize LANE-NUMBER into the interval -2 .. 2.
 This means to return 2 for LANE-NUMBER greater than 2 and -2 for
 LANE-NUMBER less than -2."
-  (min (max lane-number -2) 2))
+  (cond
+   ((< safebuf 1) -2)
+   ((< safebuf 2) -1)
+   ((< safebuf 3) 1)
+   (t 2)))
 
 (defun beeminder-display-string-field (goal field &optional width invisible)
   "Return GOAL's FIELD (which should be a symbol) as a string.
@@ -793,7 +797,7 @@ and the cdr the list of arguments it should get after the goal."
 			   beeminder-dirty-alist)
       'beeminder-dirty
     (cdr (assoc (* (cdr (assoc 'yaw goal))
-		   (beeminder-normalize-lane (cdr (assoc 'lane goal))))
+		   (beeminder-safebuf-to-lane (cdr (assoc 'safebuf goal))))
 		beeminder-lanes-to-faces-alist))))
 
 (defun beeminder-goal-representation (goal)
