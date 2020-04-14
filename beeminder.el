@@ -1906,7 +1906,7 @@ the graph is already displayed."
 		       (cdr (assoc 'slug (current-or-read-goal))))))
   (let* ((image-file (beeminder-download-graph slug-str))
 	 (image (create-image image-file)))
-    (beeminder-display-goal-details (beeminder-slug-to-goal (intern slug-str))) 
+    (beeminder-display-goal-details (beeminder-slug-to-goal (intern slug-str)))
     (beeminder-insert-graph image)))
 
 (define-key beeminder-goal-mode-map (kbd "i") #'beeminder-display-graph)
