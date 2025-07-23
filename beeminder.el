@@ -1425,6 +1425,10 @@ Disable FILTER if PARAMETER is nil."
     (donetoday . (highlight-subtly (number-to-human-string (cdr (assoc 'donetoday goal)))))
     (datapoints . (propertize (beeminder-format-datapoints goal) 'face
 			      'shadow))
+    (datapointsum . (highlight-subtly (format "%.1f" (apply #'+ (mapcar (lambda (datapoint) (alist-get 'value datapoint)) (cdr (assoc 'datapoints goal)))))))
+    (datapointavg . (highlight-subtly (format "%.1f" (beeminder-mean (mapcar (lambda (datapoint) (alist-get 'value datapoint)) (cdr (assoc 'datapoints goal)))))))
+    (datapointmedian . (highlight-subtly (format "%.1f" (beeminder-median (mapcar (lambda (datapoint) (alist-get 'value datapoint)) (cdr (assoc 'datapoints goal)))))))
+    (datapointdailyavg . (highlight-subtly (format "%.2f" (/ (apply #'+ (mapcar (lambda (datapoint) (alist-get 'value datapoint)) (cdr (assoc 'datapoints goal)))) (alist-get 'history-length goal)))))
     (history-length . (highlight-subtly (let ((hl (cdr (assoc 'history-length goal))))
 					  (if (zerop hl) "all" (format "%s" hl))))))
   "Alist of symbols and corresponding pieces of code to evaluate
@@ -1562,7 +1566,7 @@ goal target: #target on #goaldate at rate #rate per #runit (currently at #curval
 goal type: #goaltype#autodatap
 safe until #losedate (current pledge: #pledge, left to do: #limsum, midnight setting: #midnight)
 
-Recent datapoints (#history-length days):
+Recent datapoints (#history-length days, sum #datapointsum, median #datapointmedian, average datapoint #datapointavg, daily average #datapointdailyavg):
 #datapoints
 "
   "The default template for displaying goal details.
@@ -1807,6 +1811,14 @@ the cdr is the list of datapoints.  If
 ;; 	  (cdr (assoc 'datapoints goal)))
 ;;     datapoints-by-day))
 
+(defun beeminder-mean (list)
+  "Return the mean of numbers in LIST after deleting
+  duplicates."
+  (let ((list list))
+    (/ (apply #'+ list)
+       (length list)
+       1.0)))
+
 (defun beeminder-uniq-mean (list)
   "Return the mean of numbers in LIST after deleting
   duplicates."
@@ -1835,7 +1847,7 @@ the (n/2)-th one."
     ("first" . (lambda (dps) (car (last dps))))
     ("min" . (lambda (dps) (apply #'min dps)))
     ("max" . (lambda (dps) (apply #'max dps)))
-    ("truemean" . (lambda (dps) (/ (apply #'+ dps) (length dps) 1.0)))
+    ("truemean" . beeminder-mean)
     ("uniqmean" . beeminder-uniq-mean)
     ("mean" . beeminder-uniq-mean)
     ("median" . beeminder-median)
