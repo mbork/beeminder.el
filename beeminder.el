@@ -1949,6 +1949,37 @@ the graph is already displayed."
   :type 'string
   :group 'beeminder)
 
+(defcustom beeminder-org-notify-when-enough-p t
+  "If non-nil, notify the user when they worked enough on this goal.
+More precisely, if the current Org task has the `beeminder' property set
+to `clock', set the timer to notify the user after the amount of time
+equal to the daily rate minus the amount done today."
+  :type 'boolean
+  :group 'beeminder)
+
+(defcustom beeminder-org-notify-when-buffer-increased 'beemergency
+  "If non-nil, notify the user when the safety buffer increases.
+If set to symbol `beemergency', do it only on an eep day."
+  :type '(radio (const :tag "Never" nil)
+		(const :tag "On an eep day" beemergency)
+		(const :tag "Always" t))
+  :group 'beeminder)
+
+(defcustom beeminder-org-notification-sound t
+  "Sound used by Beeminder Org notifications.
+See `org-clock-sound'."
+  :type '(choice
+	  (const :tag "No sound" nil)
+	  (const :tag "Standard beep" t)
+	  (file  :tag "Play sound file"))
+  :group 'beeminder)
+
+(defvar beeminder-org-enough-notification-timer nil
+  "Timer used for Beeminder Org notification about enough done today.")
+
+(defvar beeminder-org-buffer-increased-notification-timer nil
+  "Timer used for Beeminder Org notification about buffer increased.")
+
 (defun beeminder-org-string-substitute (string)
   "Substitute strings for percent-sign codes in STRING.
 Codes are: `%t' - current time, `%h' - current headline, `%p' -
@@ -2139,6 +2170,57 @@ property (asks for the comment if it is present)."
 	      (point) "slug" beeminder-org-inherit-beeminder-properties))
     (beeminder-org-submit-clock-at-point)))
 
+(defun beeminder-org-start-notification-timers ()
+  "Start the Beeminder Org timer."
+  (let ((slug-str (org-entry-get
+		   (point)
+		   "slug"
+		   beeminder-org-inherit-beeminder-properties)))
+    (when slug-str
+      (let* ((slug (intern slug-str))
+	     (goal (beeminder-slug-to-goal slug))
+	     (unit (intern (or (org-entry-get
+				(point)
+				"unit"
+				beeminder-org-inherit-beeminder-properties)
+			       "")))
+	     (unit-multiplier (beeminder--minutes-multiplier unit))
+	     (rate (beeminder-get-rate goal))
+	     (donetoday (alist-get 'donetoday goal))
+	     (todo (- rate donetoday))
+	     (safebuf (alist-get 'safebuf goal))
+	     (curval (alist-get 'curval goal))
+	     (safebump (alist-get 'safebump goal))
+	     (bump-todo (- safebump curval donetoday)))
+	(when (and beeminder-org-notify-when-enough-p
+		   (plusp todo))
+	  (setq beeminder-org-enough-notification-timer
+		(run-with-timer (/ (* 60 todo)
+				   unit-multiplier)
+				nil
+				(lambda ()
+				  (org-notify (format "%s %s(s) work on goal %s done, enough for today"
+						      todo unit slug-str)
+					      t)))))
+	(when (and beeminder-org-notify-when-buffer-increased
+		   (or (not (eq beeminder-org-notify-when-buffer-increased 'beemergency))
+		       (zerop safebuf)))
+	  (setq beeminder-org-buffer-increased-notification-timer
+		(run-with-timer (/ (* 60 bump-todo)
+				   unit-multiplier)
+				nil
+				(lambda ()
+				  (org-notify (format "%s %s(s) work on goal %s done, buffer increased"
+						      bump-todo unit slug-str)
+					      t)))))))))
+
+(defun beeminder-org-cancel-notification-timers ()
+  "Cancel the Beeminder Org timer."
+  (when (timerp beeminder-org-enough-notification-timer)
+    (cancel-timer beeminder-org-enough-notification-timer))
+  (when (timerp beeminder-org-buffer-increased-notification-timer)
+    (cancel-timer beeminder-org-buffer-increased-notification-timer)))
+
 (define-minor-mode beeminder-org-integration-mode
   "Toggle a (global) minor mode for Org/Beeminder integration.
 When on, clocking out and marking as DONE for headlines with suitable
@@ -2149,9 +2231,15 @@ When on, clocking out and marking as DONE for headlines with suitable
   (if beeminder-org-integration-mode
       (progn
 	(add-hook 'org-trigger-hook #'beeminder-org-submit-on-done)
-	(add-hook 'org-clock-out-hook #'beeminder-org-submit-on-clock-out))
+	(add-hook 'org-clock-in-hook #'beeminder-org-start-notification-timers)
+	(add-hook 'org-clock-out-hook #'beeminder-org-submit-on-clock-out)
+	(add-hook 'org-clock-out-hook #'beeminder-org-cancel-notification-timers)
+	(add-hook 'org-clock-cancel-hook #'beeminder-org-cancel-notification-timers))
     (remove-hook 'org-trigger-hook #'beeminder-org-submit-on-done)
-    (remove-hook 'org-clock-out-hook #'beeminder-org-submit-on-clock-out)))
+    (remove-hook 'org-clock-in-hook #'beeminder-org-cancel-notification-timers)
+    (remove-hook 'org-clock-out-hook #'beeminder-org-submit-on-clock-out)
+    (remove-hook 'org-clock-out-hook #'beeminder-org-cancel-notification-timers)
+    (remove-hook 'org-clock-cancel-hook #'beeminder-org-cancel-notification-timers)))
 
 
 (provide 'beeminder)
