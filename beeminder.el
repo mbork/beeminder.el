@@ -608,8 +608,7 @@ it using Elisp's sort, and then recreate the EWOC."
 	 "Face for displaying warning notifications.")
 
 (defcustom beeminder-notification-expire-time 8
-  "After that many seconds less important notifications expire.
-TODO: not yet implemented."
+  "After that many seconds less important notifications expire."
   :type 'integer
   :group 'beeminder)
 
