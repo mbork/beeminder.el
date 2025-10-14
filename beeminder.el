@@ -2011,6 +2011,16 @@ property (asks for the comment if it is present)."
 	       (comment (beeminder-org-generate-comment)))
 	  (beeminder-submit-datapoint slug-str amount comment)))))
 
+(defun beeminder--minutes-multiplier (unit)
+  "Return the multiplier to convert minutes to UNIT.
+Default to minutes, that is, a multiplier of 1."
+  (cl-case unit
+    ((hour hours)
+     (/ 1 60.0))
+    ((hail-Mary hail-Marys)		; 1 hail-Mary ≈ 20 seconds
+     3)
+    (t 1)))
+
 (defun beeminder-org-submit-clock-at-point ()
   "Submit the data from the clock item at point to Beeminder.
 This is mainly useful if submitting on clocking out (see
@@ -2028,16 +2038,12 @@ that the user may want to submit clock items later."
 					    "slug"
 					    beeminder-org-inherit-beeminder-properties))
 		   (comment (beeminder-org-generate-comment))
-		   (multiplier (cl-case (intern (or (org-entry-get (point)
-								   "unit"
-								   beeminder-org-inherit-beeminder-properties)
-						    ""))
-				 ((hour hours)
-				  (/ 1 60.0))
-				 ((hail-Mary hail-Marys)
-				  3)
-					; 1 hail-Mary ≈ 20 seconds
-				 (t 1)))
+		   (multiplier (beeminder--minutes-multiplier
+				(intern (or (org-entry-get
+					     (point)
+					     "unit"
+					     beeminder-org-inherit-beeminder-properties)
+					    ""))))
 		   (year-end (org-element-property :year-end timestamp))
 		   (month-end (org-element-property :month-end timestamp))
 		   (day-end (org-element-property :day-end timestamp))
