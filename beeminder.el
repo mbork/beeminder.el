@@ -1846,15 +1846,17 @@ the cdr is the list of datapoints.  If
   "Return a median of numbers in LIST.
 If LIST contains an even number of elements n, return
 the (n/2)-th one."
-  (let ((list list) median-list)
-    (setq list (sort list #'<)
-	  median-list list)
-    (while (cddr list)
-      (setq median-list (cdr median-list)
-	    list (cddr list)))
-    (if (cdr list)
-	(* 0.5 (+ (car median-list) (cadr median-list)))
-      (car median-list))))
+  (if (null list)
+      (/ 0.0 0)
+    (let ((list list) median-list)
+      (setq list (sort list #'<)
+	    median-list list)
+      (while (cddr list)
+	(setq median-list (cdr median-list)
+	      list (cddr list)))
+      (if (cdr list)
+	  (* 0.5 (+ (car median-list) (cadr median-list)))
+	(car median-list)))))
 
 (defvar beeminder-aggregation-methods
   '(("sum" . (lambda (dps) (apply #'+ dps)))
