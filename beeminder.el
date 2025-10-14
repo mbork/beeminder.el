@@ -126,7 +126,7 @@ Updated by `beeminder-get-goals'.")
 
 (defcustom beeminder-default-timeout 30
   "Default timeout for HTTP requests sent to beeminder, in seconds."
-  :type 'number
+  :type 'integer
   :group 'beeminder)
 
 
@@ -253,7 +253,9 @@ Take `beeminder-when-the-day-ends' into consideration."
       last-midnight)))
 
 (defcustom beeminder-history-length 7
-  "Number of days from which to load datapoints.")
+  "Number of days from which to load datapoints."
+  :type 'integer
+  :group 'beeminder)
 
 (defun beeminder-sum-today-value (datapoints start-time stop-time)
   "Sum the value for DATAPOINTS between START-TIME and STOP-TIME."
@@ -432,7 +434,9 @@ goal slug and return that goal instead."
     (ewoc-data (ewoc-locate beeminder-goals-ewoc))))
 
 (defcustom beeminder-time-format "%FT%T%z"
-  "Default time format for Beeminder comments.")
+  "Default time format for Beeminder comments."
+  :type 'string
+  :group 'beeminder)
 
 (defun beeminder-current-time-string (&optional timestamp)
   "Return TIMESTAMP (Unix time) as a string.
@@ -489,7 +493,9 @@ Include AMOUNT in the question, and default to DEFAULT-COMMENT."
 This also serves as a confirmation that the user actually wants
 to submit data to Beeminder (especially that the question
 includes the goal slug and amount), so disabling of this option
-is discouraged.")
+is discouraged."
+  :type 'boolean
+  :group 'beeminder)
 
 (defun beeminder-make-goal-dirty (slug)
   "Make the goal with SLUG dirty."
@@ -1089,7 +1095,7 @@ variable is somehow messed up)."
 (defvar beeminder-current-filters '()
   "Alist of filters currently in effect.")
 
-(defcustom beeminder-saved-filters '()
+(defvar beeminder-saved-filters '()
   "A remembered set of filters for fast retrieval.")
 
 (defun beeminder-save-filters ()
@@ -1158,13 +1164,17 @@ If nil, use the global midnight defined by
 
 (defcustom beeminder-show-everyday t
   "If non-nil, show \"everyday goals\" irrespective of the
-  \"days\" filter.")
+  \"days\" filter."
+  :type 'boolean
+  :group 'beeminder)
 
 (defcustom beeminder-everyday-goals-list
   '()
   "A list of slugs of \"everyday goals\".  These are the goals which
 should be done every day, so even when filtering goals with deadline
-after some number of days, they should be shown.")
+after some number of days, they should be shown."
+  :type '(repeat symbol)
+  :group 'beeminder)
 
 (defun beeminder-toggle-show-everyday (arg)
   "Toggle showing \"everyday goals\" if ARG is zero or nil.
@@ -1432,7 +1442,9 @@ Disable FILTER if PARAMETER is nil."
     (history-length . (highlight-subtly (let ((hl (cdr (assoc 'history-length goal))))
 					  (if (zerop hl) "all" (format "%s" hl))))))
   "Alist of symbols and corresponding pieces of code to evaluate
-and insert the result in the goal details info.")
+and insert the result in the goal details info."
+  :type '(alist :key-type symbol :value-type sexp)
+  :group 'beeminder)
 
 (defun beeminder-display-time-field (alist field)
   "Return ALIST's (unix-time) FIELD formatted."
@@ -1446,7 +1458,9 @@ and insert the result in the goal details info.")
     "  "
     (beeminder-display-string-field comment))
   "The format for displaying a goal's datapoint.
-The format is identical to that of `beeminder-goal-pp-format'.")
+The format is identical to that of `beeminder-goal-pp-format'."
+  :type 'sexp
+  :group 'beeminder)
 
 (defun beeminder-datapoint-representation (datapoint)
   "The string representation of DATAPOINT."
@@ -1572,7 +1586,9 @@ Recent datapoints (#history-length days, sum #datapointsum, median #datapointmed
   "The default template for displaying goal details.
 See the docstring of the function
 `beeminder-insert-goal-template-with-expansion' for the list of
-available keywords.")
+available keywords."
+  :type 'string
+  :group 'beeminder)
 
 (defun beeminder-refresh-goal-details ()
   "Refresh goal details, assuming that the respective buffer
@@ -1925,10 +1941,14 @@ the graph is already displayed."
 ;; Org-mode integration
 
 (defcustom beeminder-org-inherit-beeminder-properties nil
-  "Make beeminder.el use property inheritance.")
+  "Make beeminder.el use property inheritance."
+  :type 'boolean
+  :group 'beeminder)
 
 (defcustom beeminder-org-default-comment "%h at %t"
-  "Default format of the comment")
+  "Default format of the comment"
+  :type 'string
+  :group 'beeminder)
 
 (defun beeminder-org-string-substitute (string)
   "Substitute strings for percent-sign codes in STRING.
@@ -2051,7 +2071,9 @@ that the user may want to submit clock items later."
 (defcustom beeminder-org-submit-all-clocks-default-minutes (* 24 60)
   "By default, only the clocks from this many lastminutes will be
 submitted by `beeminder-org-submit-all-clocks'.  Does not have to
-be an integer (i.e., value like 0.5 means 30 seconds).")
+be an integer (i.e., value like 0.5 means 30 seconds)."
+  :type 'integer
+  :group 'beeminder)
 
 (defun beeminder-org-submit-all-clocks (begin end minutes)
   "Submit all clocks from last MINUTES in the region to Beeminder.
