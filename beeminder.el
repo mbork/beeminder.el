@@ -1827,12 +1827,10 @@ the cdr is the list of datapoints.  If
 ;;     datapoints-by-day))
 
 (defun beeminder-mean (list)
-  "Return the mean of numbers in LIST after deleting
-  duplicates."
-  (let ((list list))
-    (/ (apply #'+ list)
-       (length list)
-       1.0)))
+  "Return the mean of numbers in LIST."
+  (/ (apply #'+ list)
+     (length list)
+     1.0))
 
 (defun beeminder-uniq-mean (list)
   "Return the mean of numbers in LIST after deleting
@@ -2206,7 +2204,8 @@ property (asks for the comment if it is present)."
 					      t)))))
 	(when (and beeminder-org-notify-when-buffer-increased
 		   (or (not (eq beeminder-org-notify-when-buffer-increased 'beemergency))
-		       (zerop safebuf)))
+		       (zerop safebuf))
+		   (plusp bump-todo))
 	  (setq beeminder-org-buffer-increased-notification-timer
 		(run-with-timer (/ (* 60 bump-todo)
 				   unit-multiplier)
