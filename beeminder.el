@@ -30,34 +30,9 @@
 
 (require 'json)
 (require 'request)
-(if (>= emacs-major-version 24)
-    (progn
-      (require 'cl-lib)
-      (require 'anaphora)
-      (defalias 'increasingp '<))
-  (require 'cl)
-  (defalias 'cl-reduce 'reduce)
-  (defalias 'cl-acons 'acons)
-  (defalias 'cl-find 'find)
-  (defalias 'cl-incf 'incf)
-  (defalias 'cl-decf 'decf)
-  (defalias 'cl-case 'case)
-  (defalias 'cl-delete 'delete*)
-  (defmacro setq-local (var val)
-    "This is taken from subr.el."
-    `(set (make-local-variable ',var) ,val))
-  (defmacro aif (cond then &rest else)
-    `(let ((it ,cond))
-       (if it ,then ,@else)))
-  (defmacro awhen (cond &rest body)
-    `(aif ,cond
-	 (progn ,@body)))
-  (defun increasingp (&rest args)
-    "Return t if ARGS are in increasing order."
-    (if (cdr args)
-	(and (< (car args) (cadr args))
-	     (apply #' increasingp (cdr args)))
-      t)))
+(require 'cl-lib)
+(require 'anaphora)
+(defalias 'increasingp '<)
 (require 'ewoc)
 
 ;;; Code:
