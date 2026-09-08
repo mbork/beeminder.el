@@ -2176,7 +2176,7 @@ property (asks for the comment if it is present)."
 				(lambda ()
 				  (org-notify (format "%s %s(s) work on goal %s done, enough for today"
 						      todo unit slug-str)
-					      t)))))
+					      beeminder-org-notification-sound)))))
 	(when (and beeminder-org-notify-when-buffer-increased
 		   (or (not (eq beeminder-org-notify-when-buffer-increased 'beemergency))
 		       (zerop safebuf))
@@ -2188,7 +2188,7 @@ property (asks for the comment if it is present)."
 				(lambda ()
 				  (org-notify (format "%s %s(s) work on goal %s done, buffer increased"
 						      bump-todo unit slug-str)
-					      t)))))))))
+					      beeminder-org-notification-sound)))))))))
 
 (defun beeminder-org-cancel-notification-timers ()
   "Cancel the Beeminder Org timer."
